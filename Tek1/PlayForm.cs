@@ -14,12 +14,12 @@ namespace Tek1
 
     public partial class PlayForm : Form
     {
-        TekView View;
+        TekEdit View;
         bool _lastShowErrors = false;
         public PlayForm()
         {
             InitializeComponent();
-            View = new TekView(split.Panel1, new Point(10,10),
+            View = new TekEdit(split.Panel1, new Point(10,10),
                 new Point(split.Panel1.ClientRectangle.Width - 10,
                           split.Panel1.ClientRectangle.Height - 10));
         }
@@ -130,6 +130,18 @@ namespace Tek1
                 View.Selector.CurrentMode = TekSelect.SelectMode.smMultiple;
             else
                 View.Selector.CurrentMode = TekSelect.SelectMode.smSingle;
+        }
+
+        private void button11_Click(object sender, EventArgs e)
+        {
+            TekArea area;
+            TekFieldView field = View.Selector.CurrentFieldView;
+            if (field != null)
+            {
+                area = View.SelectArea(field.Row, field.Col);
+                Refresh();
+            }
+
         }
     }
 

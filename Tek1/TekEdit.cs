@@ -27,7 +27,7 @@ namespace Tek1
                 return null;
             foreach (TekField field in area.fields)
             {
-                Selector.SelectCurrentField(_view.GetField(field.Row, field.Col);
+                Selector.SelectCurrentField(_view.GetField(field.Row, field.Col));
             }
             _view.Refresh();
             return area;
