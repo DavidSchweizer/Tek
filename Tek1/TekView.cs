@@ -11,7 +11,7 @@ namespace Tek1
 {
     class TekView
     {
-        private TekBoardView _view;
+        protected TekBoardView _view;
         public TekBoard Board { get { return _view.Board; } }
         protected TekMoves Moves = null;
 
@@ -235,6 +235,9 @@ namespace Tek1
         public TekFieldView CurrentFieldView { get { return _currentFieldView; } }
         public List<TekFieldView> MultiselectFieldView = new List<TekFieldView>();
 
+        private SelectMode _currentMode = SelectMode.smSingle;
+        public SelectMode CurrentMode { get { return _currentMode; } set { SetCurrentMode(value); } }
+
         public void SelectCurrentField(TekFieldView newfield)
         {
             if (newfield == null)
@@ -267,9 +270,7 @@ namespace Tek1
             }
         }
 
-        private SelectMode _currentMode = SelectMode.smSingle;
-        public SelectMode CurrentMode { get { return _currentMode; } set { SetCurrentMode(value); } }
-
+        
         public void SetCurrentMode(SelectMode value)
         {
             if (CurrentMode == value)
@@ -563,6 +564,15 @@ namespace Tek1
                     p.Invalidate();
                 }
             
+        }
+
+        public TekFieldView GetField(int row, int col)
+        {
+
+            if (Board != null && row >= 0 && row < Board.Rows && col >= 0 && col < Board.Cols)
+                return _Panels[row, col];
+            else
+                return null;
         }
 
         public TekFieldView SelectField(int row, int col)

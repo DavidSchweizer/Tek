@@ -59,6 +59,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="TekBoard.cs" />
+    <Compile Include="TekEdit.cs" />
     <Compile Include="TekPlay.cs" />
     <Compile Include="TekSolver.cs" />
     <Compile Include="TekView.cs" />
