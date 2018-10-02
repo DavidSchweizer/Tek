@@ -387,6 +387,19 @@ namespace Tek1
             areas.Add(result);
         }
 
+        public void DeleteArea(TekArea area)
+        {
+            foreach (TekField field in area.fields)
+            {
+                field.area = null;
+            }
+            foreach (TekField field in area.fields)
+            {
+                field.SetInfluencers();
+            }
+            areas.Remove(area);
+        }
+
         public bool IsSolved()
         {
             foreach (TekField field in values)

@@ -353,6 +353,8 @@ namespace Tek1
               Color.HotPink, Color.Goldenrod, Color.Salmon,
               Color.SlateGray, Color.SaddleBrown, Color.Fuchsia
             };
+        static System.Drawing.Color NoAreaColor = Color.BlanchedAlmond;
+        static System.Drawing.Color NoAreaSelectedColor = Color.BlueViolet;
         const int MAXCOLOR = 9;
         static int[] AreaColorIndex = null;
         public TekSelect Selector = new TekSelect();
@@ -449,6 +451,20 @@ namespace Tek1
             v.Location = new Point(PADDING / 2 + data.TileSize * c, PADDING / 2 + data.TileSize * r);
        }
 
+        public void SetPanelColors(TekFieldView panel)
+        {
+            TekArea area = panel.Field.area;
+            if (area == null)
+            {
+                panel.NormalColor = NoAreaColor;
+                panel.NormalColor = NoAreaSelectedColor;
+            }
+            else
+            {
+                panel.NormalColor = AreaColors[AreaColorIndex[area.AreaNum]];
+                panel.SelectedColor = SelectedAreaColors[AreaColorIndex[area.AreaNum]];
+            }
+        }
         private void initializePanels()
         {
            
@@ -472,8 +488,8 @@ namespace Tek1
                     
                     newP.Data = data;
                     newP.Field = Board.values[r, c];
-                    newP.NormalColor = AreaColors[AreaColorIndex[newP.Field.area.AreaNum]];
-                    newP.SelectedColor = SelectedAreaColors[AreaColorIndex[newP.Field.area.AreaNum]];
+                    SetPanelColors(newP);
+
                     //newP.Click += new EventHandler(Panel_Click);
                     //newP.MouseClick += new MouseEventHandler(Panel_MouseClick);
                     newP.MouseClick += new MouseEventHandler(Panel_MouseDown);
@@ -512,58 +528,66 @@ namespace Tek1
             }
         }
 
+        private void __SetBorder(TekFieldView p, TekField neighbour, TekFieldView.TekBorder border)
+        {
+            if (neighbour.area == null)
+            {
+                if (p.Field.area == null)
+                    p.Borders[(int)border] = TekFieldView.TekBorderStyle.tbsInternal;
+                else
+                    p.Borders[(int)border] = TekFieldView.TekBorderStyle.tbsExternal;
+            }
+            else if (p.Field.area == null)
+                p.Borders[(int)border] = TekFieldView.TekBorderStyle.tbsExternal;
+            else
+            {
+                if (neighbour.area.AreaNum == p.Field.area.AreaNum)
+                    p.Borders[(int)border] = TekFieldView.TekBorderStyle.tbsInternal;
+                else
+                    p.Borders[(int)border] = TekFieldView.TekBorderStyle.tbsExternal;
+            }
+        }
+
+        protected void _SetBorders(TekFieldView p)
+        {
+            int row = p.Row;
+            int col = p.Col;
+            if (row == 0)
+                p.Borders[(int)TekFieldView.TekBorder.bdTop] = TekFieldView.TekBorderStyle.tbsBoard;
+            else
+            {
+                __SetBorder(p, Board.values[row - 1, col], TekFieldView.TekBorder.bdTop);
+            }
+            if (col == 0)
+                p.Borders[(int)TekFieldView.TekBorder.bdLeft] = TekFieldView.TekBorderStyle.tbsBoard;
+            else
+            {
+                __SetBorder(p, Board.values[row, col - 1], TekFieldView.TekBorder.bdLeft);
+            }
+            if (row == Board.Rows - 1)
+                p.Borders[(int)TekFieldView.TekBorder.bdBottom] = TekFieldView.TekBorderStyle.tbsBoard;
+            else
+            {
+                __SetBorder(p, Board.values[row + 1, col], TekFieldView.TekBorder.bdBottom);
+            }
+            if (col == Board.Cols - 1)
+                p.Borders[(int)TekFieldView.TekBorder.bdRight] = TekFieldView.TekBorderStyle.tbsBoard;
+            else
+            {
+                __SetBorder(p, Board.values[row, col + 1], TekFieldView.TekBorder.bdRight);
+            }
+            p.Invalidate();
+        }
+
         private void SetBorders()
         {
             if (Board == null || _Panels == null)
                 return;
-            int area = Board.values[0, 0].area.AreaNum;
             for (int r = 0; r < Board.Rows; r++)
                 for (int c = 0; c < Board.Cols; c++)
                 {
-                    TekFieldView p = _Panels[r, c];
-                    if (r == 0)
-                        p.Borders[(int)TekFieldView.TekBorder.bdTop] = TekFieldView.TekBorderStyle.tbsBoard;
-                    else
-                    {
-                        TekField f2 = Board.values[r - 1, c];
-                        if (f2.area.AreaNum == p.Field.area.AreaNum)
-                            p.Borders[(int)TekFieldView.TekBorder.bdTop] = TekFieldView.TekBorderStyle.tbsInternal;
-                        else
-                            p.Borders[(int)TekFieldView.TekBorder.bdTop] = TekFieldView.TekBorderStyle.tbsExternal;
-                    }
-                    if (c == 0)
-                        p.Borders[(int)TekFieldView.TekBorder.bdLeft] = TekFieldView.TekBorderStyle.tbsBoard;
-                    else
-                    {
-                        TekField f2 = Board.values[r, c - 1];
-                        if (f2.area.AreaNum == p.Field.area.AreaNum)
-                            p.Borders[(int)TekFieldView.TekBorder.bdLeft] = TekFieldView.TekBorderStyle.tbsInternal;
-                        else
-                            p.Borders[(int)TekFieldView.TekBorder.bdLeft] = TekFieldView.TekBorderStyle.tbsExternal;
-                    }
-                    if (r == Board.Rows - 1)
-                        p.Borders[(int)TekFieldView.TekBorder.bdBottom] = TekFieldView.TekBorderStyle.tbsBoard;
-                    else
-                    {
-                        TekField f2 = Board.values[r + 1, c];
-                        if (f2.area.AreaNum == p.Field.area.AreaNum)
-                            p.Borders[(int)TekFieldView.TekBorder.bdBottom] = TekFieldView.TekBorderStyle.tbsInternal;
-                        else
-                            p.Borders[(int)TekFieldView.TekBorder.bdBottom] = TekFieldView.TekBorderStyle.tbsExternal;
-                    }
-                    if (c == Board.Cols - 1)
-                        p.Borders[(int)TekFieldView.TekBorder.bdRight] = TekFieldView.TekBorderStyle.tbsBoard;
-                    else
-                    {
-                        TekField f2 = Board.values[r, c + 1];
-                        if (f2.area.AreaNum == p.Field.area.AreaNum)
-                            p.Borders[(int)TekFieldView.TekBorder.bdRight] = TekFieldView.TekBorderStyle.tbsInternal;
-                        else
-                            p.Borders[(int)TekFieldView.TekBorder.bdRight] = TekFieldView.TekBorderStyle.tbsExternal;
-                    }
-                    p.Invalidate();
-                }
-            
+                    _SetBorders(_Panels[r, c]);
+                }            
         }
 
         public TekFieldView GetField(int row, int col)
@@ -637,7 +661,7 @@ namespace Tek1
 
         public void SetSelected(bool onoff = true)
         {
-            if (Field != null && Field.initial)
+            if (Field != null && !IgnoreInitial && Field.initial)
                 return;
             _isSelected = onoff;
             if (IsSelected)
@@ -654,9 +678,10 @@ namespace Tek1
         private bool _isMultiSelected;
         public bool IsMultiSelected { get { return _isMultiSelected; } set { SetMultiSelected(value); Refresh(); } }
 
+        static public bool IgnoreInitial = false;
         public void SetMultiSelected(bool onoff = true)
         {
-            if (Field != null && Field.initial)
+            if (Field != null && !IgnoreInitial && Field.initial)
                 return;
             _isMultiSelected = onoff;
             if (IsMultiSelected)

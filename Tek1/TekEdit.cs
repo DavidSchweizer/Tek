@@ -13,6 +13,20 @@ namespace Tek1
         public TekEdit(Control parent, Point TopLeft, Point BottomRight) : base(parent, TopLeft, BottomRight)
         {
             // tbd
+            TekFieldView.IgnoreInitial = true;
+        }
+
+        public void DeleteArea(TekArea area)
+        {
+            if (area == null)
+                return;
+            
+            Board.DeleteArea(area);
+            foreach(TekField field in area.fields)
+            {
+                _view.SetPanelColors(_view.GetField(field.Row, field.Col));
+            }
+            _view.Refresh();
         }
 
         public TekArea SelectArea(int row, int col)

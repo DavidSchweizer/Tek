@@ -143,6 +143,19 @@ namespace Tek1
             }
 
         }
+
+        private void button12_Click(object sender, EventArgs e)
+        {
+            TekArea area;
+            TekFieldView field = View.Selector.CurrentFieldView;
+            if (field != null)
+            {
+                area = View.SelectArea(field.Row, field.Col);
+                View.DeleteArea(area);
+                Refresh();
+            }
+
+        }
     }
 
    
