@@ -457,7 +457,7 @@ namespace Tek1
             if (area == null)
             {
                 panel.NormalColor = NoAreaColor;
-                panel.NormalColor = NoAreaSelectedColor;
+                panel.SelectedColor = NoAreaSelectedColor;
             }
             else
             {
@@ -533,12 +533,12 @@ namespace Tek1
             if (neighbour.area == null)
             {
                 if (p.Field.area == null)
-                    p.Borders[(int)border] = TekFieldView.TekBorderStyle.tbsInternal;
+                    p.Borders[(int)border] = TekFieldView.TekBorderStyle.tbsNone;
                 else
-                    p.Borders[(int)border] = TekFieldView.TekBorderStyle.tbsExternal;
+                    p.Borders[(int)border] = TekFieldView.TekBorderStyle.tbsNone; // tbsExternal;
             }
             else if (p.Field.area == null)
-                p.Borders[(int)border] = TekFieldView.TekBorderStyle.tbsExternal;
+                p.Borders[(int)border] = TekFieldView.TekBorderStyle.tbsNone; // tbsExternal;
             else
             {
                 if (neighbour.area.AreaNum == p.Field.area.AreaNum)
@@ -548,7 +548,7 @@ namespace Tek1
             }
         }
 
-        protected void _SetBorders(TekFieldView p)
+        public void _SetBorders(TekFieldView p)
         {
             int row = p.Row;
             int col = p.Col;

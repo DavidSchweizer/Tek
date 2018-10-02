@@ -24,7 +24,9 @@ namespace Tek1
             Board.DeleteArea(area);
             foreach(TekField field in area.fields)
             {
-                _view.SetPanelColors(_view.GetField(field.Row, field.Col));
+                TekFieldView view = _view.GetField(field.Row, field.Col);
+                _view.SetPanelColors(view);
+                _view._SetBorders(view);
             }
             _view.Refresh();
         }
