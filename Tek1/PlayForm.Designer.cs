@@ -29,98 +29,20 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.button2 = new System.Windows.Forms.Button();
-            this.button3 = new System.Windows.Forms.Button();
-            this.button4 = new System.Windows.Forms.Button();
-            this.button5 = new System.Windows.Forms.Button();
-            this.button6 = new System.Windows.Forms.Button();
             this.ofd1 = new System.Windows.Forms.OpenFileDialog();
             this.sfd1 = new System.Windows.Forms.SaveFileDialog();
             this.ttSolve = new System.Windows.Forms.ToolTip(this.components);
             this.bCheck = new System.Windows.Forms.Button();
-            this.bRestoreSnap = new System.Windows.Forms.Button();
-            this.bDefaultNotes = new System.Windows.Forms.Button();
             this.bSave = new System.Windows.Forms.Button();
-            this.bTakeSnap = new System.Windows.Forms.Button();
             this.bLoad = new System.Windows.Forms.Button();
             this.bSolve = new System.Windows.Forms.Button();
-            this.bBackspace = new System.Windows.Forms.Button();
             this.bReset = new System.Windows.Forms.Button();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.button8 = new System.Windows.Forms.Button();
-            this.button10 = new System.Windows.Forms.Button();
-            this.button9 = new System.Windows.Forms.Button();
-            this.button7 = new System.Windows.Forms.Button();
-            this.button1 = new System.Windows.Forms.Button();
             this.split = new System.Windows.Forms.SplitContainer();
-            this.button11 = new System.Windows.Forms.Button();
-            this.cbMultipleSelect = new System.Windows.Forms.CheckBox();
-            this.button12 = new System.Windows.Forms.Button();
-            this.groupBox1.SuspendLayout();
+            this.playPanel1 = new Tek1.PlayPanel();
             ((System.ComponentModel.ISupportInitialize)(this.split)).BeginInit();
             this.split.Panel2.SuspendLayout();
             this.split.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // button2
-            // 
-            this.button2.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button2.Location = new System.Drawing.Point(15, 29);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(56, 54);
-            this.button2.TabIndex = 1;
-            this.button2.Tag = "1";
-            this.button2.Text = "1";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.Button_ToggleValue_Click);
-            // 
-            // button3
-            // 
-            this.button3.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button3.Location = new System.Drawing.Point(15, 89);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(56, 54);
-            this.button3.TabIndex = 2;
-            this.button3.Tag = "2";
-            this.button3.Text = "2";
-            this.button3.UseVisualStyleBackColor = true;
-            this.button3.Click += new System.EventHandler(this.Button_ToggleValue_Click);
-            // 
-            // button4
-            // 
-            this.button4.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button4.Location = new System.Drawing.Point(15, 149);
-            this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(56, 54);
-            this.button4.TabIndex = 3;
-            this.button4.Tag = "3";
-            this.button4.Text = "3";
-            this.button4.UseVisualStyleBackColor = true;
-            this.button4.Click += new System.EventHandler(this.Button_ToggleValue_Click);
-            // 
-            // button5
-            // 
-            this.button5.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button5.Location = new System.Drawing.Point(15, 209);
-            this.button5.Name = "button5";
-            this.button5.Size = new System.Drawing.Size(56, 54);
-            this.button5.TabIndex = 4;
-            this.button5.Tag = "4";
-            this.button5.Text = "4";
-            this.button5.UseVisualStyleBackColor = true;
-            this.button5.Click += new System.EventHandler(this.Button_ToggleValue_Click);
-            // 
-            // button6
-            // 
-            this.button6.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button6.Location = new System.Drawing.Point(15, 269);
-            this.button6.Name = "button6";
-            this.button6.Size = new System.Drawing.Size(56, 54);
-            this.button6.TabIndex = 5;
-            this.button6.Tag = "5";
-            this.button6.Text = "5";
-            this.button6.UseVisualStyleBackColor = true;
-            this.button6.Click += new System.EventHandler(this.Button_ToggleValue_Click);
             // 
             // ofd1
             // 
@@ -147,33 +69,6 @@
             this.bCheck.UseVisualStyleBackColor = true;
             this.bCheck.Click += new System.EventHandler(this.bCheck_Click);
             // 
-            // bRestoreSnap
-            // 
-            this.bRestoreSnap.BackgroundImage = global::Tek1.Properties.Resources.rstore23;
-            this.bRestoreSnap.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.bRestoreSnap.Location = new System.Drawing.Point(218, 235);
-            this.bRestoreSnap.Name = "bRestoreSnap";
-            this.bRestoreSnap.Size = new System.Drawing.Size(54, 54);
-            this.bRestoreSnap.TabIndex = 14;
-            this.ttSolve.SetToolTip(this.bRestoreSnap, "Restore a snapshot");
-            this.bRestoreSnap.UseVisualStyleBackColor = true;
-            this.bRestoreSnap.Click += new System.EventHandler(this.bRestoreSnap_Click);
-            // 
-            // bDefaultNotes
-            // 
-            this.bDefaultNotes.BackgroundImage = global::Tek1.Properties.Resources.notes;
-            this.bDefaultNotes.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.bDefaultNotes.Cursor = System.Windows.Forms.Cursors.Default;
-            this.bDefaultNotes.Location = new System.Drawing.Point(124, 43);
-            this.bDefaultNotes.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.bDefaultNotes.Name = "bDefaultNotes";
-            this.bDefaultNotes.Size = new System.Drawing.Size(54, 54);
-            this.bDefaultNotes.TabIndex = 16;
-            this.ttSolve.SetToolTip(this.bDefaultNotes, "Show all (default) notes");
-            this.bDefaultNotes.UseCompatibleTextRendering = true;
-            this.bDefaultNotes.UseVisualStyleBackColor = true;
-            this.bDefaultNotes.Click += new System.EventHandler(this.bDefaultNotes_Click);
-            // 
             // bSave
             // 
             this.bSave.BackgroundImage = global::Tek1.Properties.Resources.save_new;
@@ -186,18 +81,6 @@
             this.ttSolve.SetToolTip(this.bSave, "Save the current state to a file");
             this.bSave.UseVisualStyleBackColor = true;
             this.bSave.Click += new System.EventHandler(this.bSave_Click);
-            // 
-            // bTakeSnap
-            // 
-            this.bTakeSnap.BackgroundImage = global::Tek1.Properties.Resources.snappie2;
-            this.bTakeSnap.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.bTakeSnap.Location = new System.Drawing.Point(158, 235);
-            this.bTakeSnap.Name = "bTakeSnap";
-            this.bTakeSnap.Size = new System.Drawing.Size(54, 54);
-            this.bTakeSnap.TabIndex = 13;
-            this.ttSolve.SetToolTip(this.bTakeSnap, "Save a snapshot");
-            this.bTakeSnap.UseVisualStyleBackColor = true;
-            this.bTakeSnap.Click += new System.EventHandler(this.bTakeSnap_Click);
             // 
             // bLoad
             // 
@@ -224,20 +107,6 @@
             this.bSolve.UseVisualStyleBackColor = true;
             this.bSolve.Click += new System.EventHandler(this.bSolveClick);
             // 
-            // bBackspace
-            // 
-            this.bBackspace.BackgroundImage = global::Tek1.Properties.Resources.backspace;
-            this.bBackspace.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.bBackspace.Location = new System.Drawing.Point(93, 163);
-            this.bBackspace.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.bBackspace.Name = "bBackspace";
-            this.bBackspace.Size = new System.Drawing.Size(54, 54);
-            this.bBackspace.TabIndex = 12;
-            this.ttSolve.SetToolTip(this.bBackspace, "Undo the last change");
-            this.bBackspace.UseCompatibleTextRendering = true;
-            this.bBackspace.UseVisualStyleBackColor = true;
-            this.bBackspace.Click += new System.EventHandler(this.bUnPlay_Click);
-            // 
             // bReset
             // 
             this.bReset.BackgroundImage = global::Tek1.Properties.Resources.reset;
@@ -251,81 +120,6 @@
             this.bReset.UseVisualStyleBackColor = true;
             this.bReset.Click += new System.EventHandler(this.bReset_Click);
             // 
-            // groupBox1
-            // 
-            this.groupBox1.Controls.Add(this.bDefaultNotes);
-            this.groupBox1.Controls.Add(this.button8);
-            this.groupBox1.Controls.Add(this.button10);
-            this.groupBox1.Controls.Add(this.button9);
-            this.groupBox1.Controls.Add(this.button7);
-            this.groupBox1.Controls.Add(this.button1);
-            this.groupBox1.Location = new System.Drawing.Point(93, 29);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(196, 114);
-            this.groupBox1.TabIndex = 11;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Notes";
-            // 
-            // button8
-            // 
-            this.button8.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button8.Location = new System.Drawing.Point(40, 48);
-            this.button8.Name = "button8";
-            this.button8.Size = new System.Drawing.Size(30, 29);
-            this.button8.TabIndex = 13;
-            this.button8.Tag = "1";
-            this.button8.Text = "3";
-            this.button8.UseVisualStyleBackColor = true;
-            this.button8.Click += new System.EventHandler(this.ToggleNoteButton_Click);
-            // 
-            // button10
-            // 
-            this.button10.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button10.Location = new System.Drawing.Point(64, 68);
-            this.button10.Name = "button10";
-            this.button10.Size = new System.Drawing.Size(30, 29);
-            this.button10.TabIndex = 15;
-            this.button10.Tag = "1";
-            this.button10.Text = "5";
-            this.button10.UseVisualStyleBackColor = true;
-            this.button10.Click += new System.EventHandler(this.ToggleNoteButton_Click);
-            // 
-            // button9
-            // 
-            this.button9.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button9.Location = new System.Drawing.Point(15, 69);
-            this.button9.Name = "button9";
-            this.button9.Size = new System.Drawing.Size(30, 29);
-            this.button9.TabIndex = 14;
-            this.button9.Tag = "1";
-            this.button9.Text = "4";
-            this.button9.UseVisualStyleBackColor = true;
-            this.button9.Click += new System.EventHandler(this.ToggleNoteButton_Click);
-            // 
-            // button7
-            // 
-            this.button7.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button7.Location = new System.Drawing.Point(64, 25);
-            this.button7.Name = "button7";
-            this.button7.Size = new System.Drawing.Size(30, 29);
-            this.button7.TabIndex = 12;
-            this.button7.Tag = "1";
-            this.button7.Text = "2";
-            this.button7.UseVisualStyleBackColor = true;
-            this.button7.Click += new System.EventHandler(this.ToggleNoteButton_Click);
-            // 
-            // button1
-            // 
-            this.button1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button1.Location = new System.Drawing.Point(15, 25);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(30, 29);
-            this.button1.TabIndex = 11;
-            this.button1.Tag = "1";
-            this.button1.Text = "1";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.ToggleNoteButton_Click);
-            // 
             // split
             // 
             this.split.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -338,60 +132,23 @@
             // 
             // split.Panel2
             // 
-            this.split.Panel2.Controls.Add(this.button12);
-            this.split.Panel2.Controls.Add(this.button11);
-            this.split.Panel2.Controls.Add(this.cbMultipleSelect);
+            this.split.Panel2.Controls.Add(this.playPanel1);
             this.split.Panel2.Controls.Add(this.bCheck);
-            this.split.Panel2.Controls.Add(this.bRestoreSnap);
-            this.split.Panel2.Controls.Add(this.groupBox1);
             this.split.Panel2.Controls.Add(this.bSave);
-            this.split.Panel2.Controls.Add(this.bTakeSnap);
-            this.split.Panel2.Controls.Add(this.button6);
             this.split.Panel2.Controls.Add(this.bLoad);
             this.split.Panel2.Controls.Add(this.bSolve);
-            this.split.Panel2.Controls.Add(this.bBackspace);
-            this.split.Panel2.Controls.Add(this.button5);
-            this.split.Panel2.Controls.Add(this.button2);
             this.split.Panel2.Controls.Add(this.bReset);
-            this.split.Panel2.Controls.Add(this.button3);
-            this.split.Panel2.Controls.Add(this.button4);
             this.split.Size = new System.Drawing.Size(946, 552);
             this.split.SplitterDistance = 614;
             this.split.TabIndex = 10;
             // 
-            // button11
+            // playPanel1
             // 
-            this.button11.Location = new System.Drawing.Point(196, 498);
-            this.button11.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.button11.Name = "button11";
-            this.button11.Size = new System.Drawing.Size(112, 35);
-            this.button11.TabIndex = 18;
-            this.button11.Text = "button11";
-            this.button11.UseVisualStyleBackColor = true;
-            this.button11.Click += new System.EventHandler(this.button11_Click);
-            // 
-            // cbMultipleSelect
-            // 
-            this.cbMultipleSelect.AutoSize = true;
-            this.cbMultipleSelect.Location = new System.Drawing.Point(154, 163);
-            this.cbMultipleSelect.Name = "cbMultipleSelect";
-            this.cbMultipleSelect.Size = new System.Drawing.Size(138, 24);
-            this.cbMultipleSelect.TabIndex = 17;
-            this.cbMultipleSelect.Text = "&Multiple Select";
-            this.cbMultipleSelect.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.cbMultipleSelect.UseVisualStyleBackColor = true;
-            this.cbMultipleSelect.CheckedChanged += new System.EventHandler(this.cbMultipleSelect_CheckedChanged);
-            // 
-            // button12
-            // 
-            this.button12.Location = new System.Drawing.Point(196, 454);
-            this.button12.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.button12.Name = "button12";
-            this.button12.Size = new System.Drawing.Size(112, 35);
-            this.button12.TabIndex = 19;
-            this.button12.Text = "button12";
-            this.button12.UseVisualStyleBackColor = true;
-            this.button12.Click += new System.EventHandler(this.button12_Click);
+            this.playPanel1.Location = new System.Drawing.Point(3, 3);
+            this.playPanel1.Name = "playPanel1";
+            this.playPanel1.Size = new System.Drawing.Size(300, 321);
+            this.playPanel1.TabIndex = 17;
+            this.playPanel1.View = null;
             // 
             // PlayForm
             // 
@@ -401,9 +158,7 @@
             this.Controls.Add(this.split);
             this.KeyPreview = true;
             this.Name = "PlayForm";
-            this.groupBox1.ResumeLayout(false);
             this.split.Panel2.ResumeLayout(false);
-            this.split.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.split)).EndInit();
             this.split.ResumeLayout(false);
             this.ResumeLayout(false);
@@ -413,31 +168,14 @@
         #endregion
 
         private System.Windows.Forms.Button bLoad;
-        private System.Windows.Forms.Button button2;
-        private System.Windows.Forms.Button button3;
-        private System.Windows.Forms.Button button4;
-        private System.Windows.Forms.Button button5;
-        private System.Windows.Forms.Button button6;
         private System.Windows.Forms.Button bSave;
         private System.Windows.Forms.SaveFileDialog sfd1;
         private System.Windows.Forms.Button bSolve;
         private System.Windows.Forms.Button bReset;
         private System.Windows.Forms.ToolTip ttSolve;
-        private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.Button button10;
-        private System.Windows.Forms.Button button9;
-        private System.Windows.Forms.Button button8;
-        private System.Windows.Forms.Button button7;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.Button bBackspace;
-        private System.Windows.Forms.Button bTakeSnap;
-        private System.Windows.Forms.Button bRestoreSnap;
         private System.Windows.Forms.SplitContainer split;
         private System.Windows.Forms.OpenFileDialog ofd1;
         private System.Windows.Forms.Button bCheck;
-        private System.Windows.Forms.Button bDefaultNotes;
-        private System.Windows.Forms.CheckBox cbMultipleSelect;
-        private System.Windows.Forms.Button button11;
-        private System.Windows.Forms.Button button12;
+        private PlayPanel playPanel1;
     }
 }

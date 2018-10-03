@@ -8,7 +8,7 @@ namespace Tek1
 {
     public enum TekMove { tmValue, tmNote, tmClear, tmSnapshot };
 
-    class TekPlay
+    public class TekPlay
     {
         private int _row;
         private int _col;
@@ -40,13 +40,13 @@ namespace Tek1
         }
     }
 
-    class TekMoves
+    public class TekMoves
     {
         private TekBoard _board;
         public TekBoard Board { get { return _board; } }
 
         private Stack<TekPlay> _moves;
-        protected Stack<TekPlay> Moves { get { return _moves; } }
+        public Stack<TekPlay> Moves { get { return _moves; } }
 
         private TekSnapShot _snapshots;
         protected TekSnapShot Snapshots { get { return _snapshots; } }
@@ -139,7 +139,7 @@ namespace Tek1
         }
     }
 
-    class TekSnapShot
+    public class TekSnapShot
     {
         private TekBoard _board;
         public TekBoard Board { get { return _board; } }

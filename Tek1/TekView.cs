@@ -9,10 +9,10 @@ using System.Threading.Tasks;
 
 namespace Tek1
 {
-    class TekView
+    public class TekView
     {
         protected TekBoardView _view;
-        public TekBoard Board { get { return _view.Board; } }
+        public TekBoard Board { get { return _view.Board; } set { SetBoard(value); } }
         protected TekMoves Moves = null;
 
         public TekSelect Selector { get { if (_view == null) return null; return _view.Selector; } }
@@ -228,7 +228,7 @@ namespace Tek1
 
     }
 
-    class TekSelect
+    public class TekSelect
     {
         public enum SelectMode { smNone, smSingle, smMultiple };
         private TekFieldView _currentFieldView = null;
@@ -341,7 +341,7 @@ namespace Tek1
 
 }
 
-    class TekBoardView : Panel
+    public class TekBoardView : Panel
     {
         static System.Drawing.Color[] AreaColors =
             { Color.LightGreen, Color.Orange, Color.LightSkyBlue,
@@ -625,7 +625,7 @@ namespace Tek1
         }
     } // TekBoardView
 
-    class TekFieldView : Panel
+    public class TekFieldView : Panel
     {
         public enum TekBorder { bdTop, bdRight, bdBottom, bdLeft, bdLast };
         public enum TekBorderStyle { tbsNone, tbsInternal, tbsExternal, tbsBoard, tbsSelected };
@@ -828,7 +828,7 @@ namespace Tek1
         }
     }
 
-    class TekPanelData
+    public class TekPanelData
     {
         // data to assist in displaying the fields
         const int MAXTILESIZE = 60;

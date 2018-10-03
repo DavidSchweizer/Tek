@@ -12,17 +12,16 @@ using System.Windows.Forms;
 namespace Tek1
 {
 
-    public partial class PlayForm : Form
+    public partial class EditForm : Form
     {
         TekEdit View;
         bool _lastShowErrors = false;
-        public PlayForm()
+        public EditForm()
         {
             InitializeComponent();
             View = new TekEdit(split.Panel1, new Point(10,10),
                 new Point(split.Panel1.ClientRectangle.Width - 10,
                           split.Panel1.ClientRectangle.Height - 10));
-            playPanel1.View = View;            
         }
 
         private void bLoad_Click(object sender, EventArgs e)
@@ -56,7 +55,13 @@ namespace Tek1
                 View.SaveToFile(sfd1.FileName);
             }
         }
-               
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            View.HandleKeyDown(ref msg, keyData);
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
         private void bSolveClick(object sender, EventArgs e)
         {
             if (View.Board != null && !View.Solve())
@@ -68,6 +73,29 @@ namespace Tek1
             View.ResetValues();
         }
 
+        private void ToggleNoteButton_Click(object sender, EventArgs e)
+        {
+            int value = 0;
+            if ((sender is Button) && Int32.TryParse((sender as Button).Text, out value))
+                View.ToggleSelectedNoteValue(value);
+        }
+
+        private void bUnPlay_Click(object sender, EventArgs e)
+        {
+            View.UnPlay();
+
+        }
+
+        private void bTakeSnap_Click(object sender, EventArgs e)
+        {
+            View.TakeSnapshot(String.Format("snapshot {0}", 1 + View.SnapshotCount()));
+        }
+
+        private void bRestoreSnap_Click(object sender, EventArgs e)
+        {
+            View.RestoreSnapshot("snapshot 1");
+        }
+
         private void panel1_Resize(object sender, EventArgs e)
         {
             if (View != null)
@@ -76,11 +104,53 @@ namespace Tek1
             }
         }
 
+        private void button14_Click(object sender, EventArgs e)
+        {
+        }
+
+        private void cbShowError_CheckedChanged(object sender, EventArgs e)
+        {
+           
+        }
+
         private void bCheck_Click(object sender, EventArgs e)
         {
             _lastShowErrors = View.SetShowErrors(!_lastShowErrors);
         }
 
+        private void bDefaultNotes_Click(object sender, EventArgs e)
+        {
+            View.ShowDefaultNotes();
+        }
+
+        private void cbMultipleSelect_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbMultipleSelect.Checked)
+                View.Selector.CurrentMode = TekSelect.SelectMode.smMultiple;
+            else
+                View.Selector.CurrentMode = TekSelect.SelectMode.smSingle;
+        }
+
+        private void button11_Click(object sender, EventArgs e)
+        {
+            TekBoard board;
+            board = new TekBoard(6, 6);
+            View.Board = board;
+            Refresh();
+        }
+
+        private void button12_Click(object sender, EventArgs e)
+        {
+            TekArea area;
+            TekFieldView field = View.Selector.CurrentFieldView;
+            if (field != null)
+            {
+                area = View.SelectArea(field.Row, field.Col);
+                View.DeleteArea(area);
+                Refresh();
+            }
+
+        }
     }
 
    
