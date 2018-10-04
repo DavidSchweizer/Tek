@@ -149,6 +149,7 @@
             this.playPanel1.Size = new System.Drawing.Size(300, 321);
             this.playPanel1.TabIndex = 17;
             this.playPanel1.View = null;
+            
             // 
             // PlayForm
             // 

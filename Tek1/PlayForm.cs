@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -80,6 +81,7 @@ namespace Tek1
         {
             _lastShowErrors = View.SetShowErrors(!_lastShowErrors);
         }
+
 
     }
 
