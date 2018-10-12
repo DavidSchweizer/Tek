@@ -306,15 +306,25 @@ namespace Tek1
         public int Cols { get { return _cols; } }
         public TekBoard(int rows, int cols)
         {
-            values = new TekField[rows, cols];
             areas = new List<TekArea>();
             _rows = rows;
             _cols = cols;
+            initValues(rows, cols);
+            setNeighbours();
+        }
+
+        private void initValues(int rows, int cols)
+        {
+            values = new TekField[rows, cols];
             for (int r = 0; r < Rows; r++)
                 for (int c = 0; c < Cols; c++)
                 {
                     values[r, c] = new TekField(r, c);
                 }
+        }
+
+        private  void setNeighbours()
+        {
             // set neighbours
             for (int r = 0; r < Rows; r++)
                 for (int r1 = r - 1; r1 <= r + 1; r1++)
@@ -324,13 +334,13 @@ namespace Tek1
                         for (int c = 0; c < Cols; c++)
                             for (int c1 = c - 1; c1 <= c + 1; c1++)
                             {
-                                if ((r1 != r || c1 != c) && c1 >= 0 && c1 < cols)
+                                if ((r1 != r || c1 != c) && c1 >= 0 && c1 < Cols)
                                     values[r, c].AddNeighbour(values[r1, c1]);
                             }
                     }
                 }
         }
-        
+
         public int[,] CopyValues()
         {
             int[,] result = new int[Rows, Cols];
@@ -338,6 +348,20 @@ namespace Tek1
                 for (int c = 0; c < Cols; c++)
                     result[r, c] = values[r, c].Value;
             return result;
+        }
+
+        private TekField[,] CopyFields()
+        {
+            TekField[,] result = new TekField[Rows, Cols];
+            for (int row = 0; row < Rows; row++)
+                for (int col = 0; col < Cols; col++)
+                {
+                    result[row, col] = new TekField(row, col);
+                    result[row, col].Value = values[row, col].Value;
+                    result[row, col].initial = values[row, col].initial;
+                }
+            return result;
+                    
         }
 
         public void LoadValues(int[,] newValues)
@@ -409,6 +433,26 @@ namespace Tek1
                         if (field2.Value == field.Value)
                             return false;
             return true;
+        }
+
+        public void Resize(int rows, int cols)
+        {
+            TekField [,] oldValues = CopyFields();
+
+            foreach (TekArea area in areas)
+                DeleteArea(area);
+            areas.Clear();
+
+            _rows = rows;
+            _cols = cols;
+            initValues(rows, cols);
+            setNeighbours();
+            for (int row = 0; row < Math.Min(Rows-1,oldValues.GetLength(0)); row++)
+                for (int col = 0; col < Math.Min(Cols - 1, oldValues.GetLength(1)); col++)
+                {
+                    values[row, col].Value = oldValues[row, col].Value;
+                    values[row, col].initial = oldValues[row, col].initial;
+                }
         }
 
         public void Dump(StreamWriter sw)

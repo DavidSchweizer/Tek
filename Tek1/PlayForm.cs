@@ -81,8 +81,14 @@ namespace Tek1
             _lastShowErrors = View.SetShowErrors(!_lastShowErrors);
         }
 
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            View.HandleKeyDown(ref msg, keyData);
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
     }
 
-   
-    
+
+
 }

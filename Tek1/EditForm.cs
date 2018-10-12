@@ -123,14 +123,6 @@ namespace Tek1
             View.ShowDefaultNotes();
         }
 
-        private void cbMultipleSelect_CheckedChanged(object sender, EventArgs e)
-        {
-            if (cbMultipleSelect.Checked)
-                View.Selector.CurrentMode = TekSelect.SelectMode.smMultiple;
-            else
-                View.Selector.CurrentMode = TekSelect.SelectMode.smSingle;
-        }
-
         private void button11_Click(object sender, EventArgs e)
         {
             TekBoard board;
@@ -150,6 +142,19 @@ namespace Tek1
                 Refresh();
             }
 
+        }
+
+        private void bCreate_Click(object sender, EventArgs e)
+        {
+            int rows = (int) nudRows.Value, cols = (int) nudCols.Value;
+            if (View.Board == null)
+            {
+                View.Board = new TekBoard(rows, cols);
+            }
+            else
+            {
+                View.ResizeBoard(rows, cols);
+            }
         }
     }
 

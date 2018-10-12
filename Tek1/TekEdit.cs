@@ -16,6 +16,14 @@ namespace Tek1
             TekFieldView.IgnoreInitial = true;
         }
 
+        public void ResizeBoard(int rows, int cols)
+        {
+            if (Board == null)
+                return;
+            Board.Resize(rows, cols);
+            SetBoard(Board);
+        }
+
         public void DeleteArea(TekArea area)
         {
             if (area == null)

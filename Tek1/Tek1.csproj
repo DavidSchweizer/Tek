@@ -70,6 +70,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="TekAreaDef.cs" />
     <Compile Include="TekBoard.cs" />
     <Compile Include="TekEdit.cs" />
     <Compile Include="TekPlay.cs" />
@@ -107,6 +108,7 @@
   <ItemGroup>
     <Content Include="images\backspace.png" />
     <None Include="images\check.png" />
+    <None Include="images\CreateBoard.jpg" />
     <Content Include="images\open-new.png" />
     <Content Include="images\reset.png" />
     <Content Include="images\rstore23.png" />
