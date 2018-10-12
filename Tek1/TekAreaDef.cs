@@ -145,26 +145,6 @@ namespace Tek1
             return result;
         }
 
-        private int Compare(Point p1, Point p2)
-        {
-            if (p1.X < p2.X)
-                return -1;
-            else if (p1.X > p2.X)
-                return 1;
-            else if (p1.Y < p2.Y)
-                return -1;
-            else if (p1.Y > p2.Y)
-                return 1;
-            else return 0;
-        }
-
-        private void Swap(List<Point> list, int index1, int index2)
-        {
-            Point tem = new Point(list[index1].X, list[index1].Y);
-            list[index1] = list[index2];
-            list[index2] = tem;
-        }
-
         public void Shift(int DeltaX, int DeltaY)
         {
             for (int i = 0; i < Points.Count; i++)
@@ -176,20 +156,9 @@ namespace Tek1
         public TekAreaDef Normalized()
         {
             TekAreaDef result = new TekAreaDef(this);
-            for (int i = 0; i < Points.Count; i++) // simple bubblesort
-                for (int j = i + 1; j < Points.Count; j++)
-                {
-                    switch (Compare(result.Points[i], result.Points[j]))
-                    {
-                        case 1:
-                            Swap(result.Points, i, j);
-                            break;
-                        case 0:
-                        case -1: break;
-                    }
-                }
             result.ComputeDeltas();
             result.Shift(-result.xMin, -result.yMin);
+            result.ComputeSize();
             return result;
         }
         
@@ -226,7 +195,7 @@ namespace Tek1
                 Point P = Points[i];
                 result.AddPoint(new Point(P.X, yMax - P.Y));
             }
-            return result;
+            return result.Normalized();
         }
 
         public TekAreaDef FlipHorizontal()
@@ -237,7 +206,7 @@ namespace Tek1
                 Point P = Points[i];
                 result.AddPoint(new Point(xMax - P.X, P.Y));
             }
-            return result;
+            return result.Normalized();
         }
 
         public TekAreaDef Rotate90()
@@ -249,7 +218,7 @@ namespace Tek1
                 Point p = result.Deltas.ElementAt(result.Deltas.Count - 1);
                 result.AddPoint(new Point(this.Points[0].X + p.X, this.Points[0].Y + p.Y));
             }
-            return result;
+            return result.Normalized();
         }
 
         public TekAreaDef Rotate180()
@@ -278,6 +247,27 @@ namespace Tek1
                 if (this.Equals(value))
                     return true;
             return false;
+        }
+
+        public bool canFit(List<Point> list)
+        {
+            int x0 = Int32.MaxValue, y0 = Int32.MaxValue;
+            int x1 = -1, y1 = -1;
+            foreach (Point point in list)
+            {
+                if (point.X < x0)
+                    x0 = point.X;
+                if (point.Y < y0)
+                    y0 = point.Y;
+                if (point.X > x1)
+                    x1 = point.X;
+                if (point.Y > y1)
+                    y1 = point.Y;
+            }
+            foreach (Point point in Points)
+                if (!list.Contains(new Point(x0 + point.X, y0+point.Y)))
+                    return false;
+            return true;
         }
 
         private void AddAlternative(TekAreaDef area, List<TekAreaDef> list)
@@ -418,6 +408,15 @@ namespace Tek1
             Add3FieldAreas();
             Add4FieldAreas();
             Add5FieldAreas();
+        }
+
+        public List<TekAreaDef> FittingAreas(List<Point> list)
+        {
+            List<TekAreaDef> result = new List<TekAreaDef>();
+            foreach (TekAreaDef area in values)
+                if (area.canFit(list))
+                    result.Add(area);
+            return result;
         }
     }
 }

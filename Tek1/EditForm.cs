@@ -159,7 +159,9 @@ namespace Tek1
 
         private void button1_Click(object sender, EventArgs e)
         {
-            View.AddRandomArea();
+            if (!View.AddRandomArea())
+                MessageBox.Show("does not fit");
+
         }
     }
 
