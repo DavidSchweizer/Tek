@@ -156,6 +156,11 @@ namespace Tek1
                 View.ResizeBoard(rows, cols);
             }
         }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            View.AddRandomArea();
+        }
     }
 
    

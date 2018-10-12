@@ -239,7 +239,7 @@ namespace Tek1
             foreach (TekField field in fields)
             {
                 foreach (TekField Neighbour in field.neighbours)
-                    if (this != Neighbour.area && !result.Contains(Neighbour.area))
+                    if (Neighbour.area != null && this != Neighbour.area && !result.Contains(Neighbour.area))
                     {
                         result.Add(Neighbour.area);
                     }
@@ -403,12 +403,13 @@ namespace Tek1
                 }
         }
 
-        public void DefineArea(List<TekField> list)
+        public TekArea DefineArea(List<TekField> list)
         {
             TekArea result = new TekArea(areas.Count());
             foreach (TekField f in list)
                 result.AddField(f);
             areas.Add(result);
+            return result;
         }
 
         public void DeleteArea(TekArea area)

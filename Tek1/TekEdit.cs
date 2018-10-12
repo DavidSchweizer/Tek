@@ -10,10 +10,14 @@ namespace Tek1
 {
     class TekEdit : TekView
     {
+        TekStandardAreas StandardAreas;
+        Random R = new Random();
+
         public TekEdit(Control parent, Point TopLeft, Point BottomRight) : base(parent, TopLeft, BottomRight)
         {
             // tbd
             TekFieldView.IgnoreInitial = true;
+            StandardAreas = new TekStandardAreas();
         }
 
         public void ResizeBoard(int rows, int cols)
@@ -24,19 +28,24 @@ namespace Tek1
             SetBoard(Board);
         }
 
-        public void DeleteArea(TekArea area)
+        private void UpdateArea(TekArea area)
         {
-            if (area == null)
-                return;
-            
-            Board.DeleteArea(area);
-            foreach(TekField field in area.fields)
+            _view.SetAreaColors(Board);
+            foreach (TekField field in area.fields)
             {
                 TekFieldView view = _view.GetField(field.Row, field.Col);
                 _view.SetPanelColors(view);
                 _view._SetBorders(view);
             }
             _view.Refresh();
+        }
+
+        public void DeleteArea(TekArea area)
+        {
+            if (area == null)
+                return;
+            Board.DeleteArea(area);
+            UpdateArea(area);
         }
 
         public TekArea SelectArea(int row, int col)
@@ -55,6 +64,41 @@ namespace Tek1
             }
             _view.Refresh();
             return area;
+        }
+
+        private List<TekField> GetAreaFields(Point TopLeft, TekAreaDef sArea)
+        {
+            List<TekField> fields = new List<TekField>();
+            for (int i = 0; i < sArea.PointCount; i++)
+            {
+                Point P = sArea.GetPoint(i);
+                fields.Add(Board.values[TopLeft.Y + P.Y, TopLeft.X + P.X]);
+            }
+            return fields;
+        }
+
+        private void AddAreaToBoard(Point TopLeft, TekAreaDef sArea)
+        {
+            UpdateArea(Board.DefineArea(GetAreaFields(TopLeft, sArea)));
+        }
+
+        public bool canFit(Point TopLeft, TekAreaDef sArea)
+        {
+            if (TopLeft.X + sArea.xSize >= Board.Cols || TopLeft.Y + sArea.ySize >= Board.Rows)
+                return false;
+            foreach (TekField field in GetAreaFields(TopLeft, sArea))
+                if (field.area != null)
+                    return false;
+            return true;
+        }
+        public void AddRandomArea()
+        {
+            TekAreaDef area = StandardAreas.GetValue(R.Next(0, StandardAreas.Count - 1));
+
+            if (canFit(new Point(0, 0), area))
+                AddAreaToBoard(new Point(0, 0), area);
+            else
+                MessageBox.Show("does not fit");
         }
     }
 }

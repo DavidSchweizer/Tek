@@ -502,9 +502,11 @@ namespace Tek1
             this.Height = PADDING + Board.Rows * data.TileSize;
         }
 
-        private void SetAreaColors(TekBoard board)
+        public void SetAreaColors(TekBoard board)
         {
-            AreaColorIndex = new int[board.areas.Count()];
+            if (board.areas.Count == 0)
+                return;
+            AreaColorIndex = new int[board.areas.Count];
             for (int i = 0; i < AreaColorIndex.Length; i++)
                 AreaColorIndex[i] = -1; // 
             Random R = new Random();

@@ -53,7 +53,7 @@ namespace Tek1
             foreach (Point value in values)
             {
                 if (Points.Count == Const.MAXTEK)
-                    throw new Exception(String.Format("Too many values ({0})for area: already {1} fields present", values.Count, Points.Count));
+                    throw new Exception(String.Format("Too many values ({0})for area: already {1} fields present", values.Length, Points.Count));
                 Points.Add(value);
             }
             Update();

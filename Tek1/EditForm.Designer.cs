@@ -32,22 +32,23 @@
             this.ofd1 = new System.Windows.Forms.OpenFileDialog();
             this.sfd1 = new System.Windows.Forms.SaveFileDialog();
             this.ttSolve = new System.Windows.Forms.ToolTip(this.components);
+            this.bCreate = new System.Windows.Forms.Button();
             this.split = new System.Windows.Forms.SplitContainer();
             this.tc1 = new System.Windows.Forms.TabControl();
             this.tpCreate = new System.Windows.Forms.TabPage();
-            this.tpDefine = new System.Windows.Forms.TabPage();
-            this.nudRows = new System.Windows.Forms.NumericUpDown();
-            this.nudCols = new System.Windows.Forms.NumericUpDown();
-            this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
-            this.bCreate = new System.Windows.Forms.Button();
+            this.label1 = new System.Windows.Forms.Label();
+            this.nudCols = new System.Windows.Forms.NumericUpDown();
+            this.nudRows = new System.Windows.Forms.NumericUpDown();
+            this.tpDefine = new System.Windows.Forms.TabPage();
+            this.button1 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.split)).BeginInit();
             this.split.Panel2.SuspendLayout();
             this.split.SuspendLayout();
             this.tc1.SuspendLayout();
             this.tpCreate.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nudRows)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudCols)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudRows)).BeginInit();
             this.SuspendLayout();
             // 
             // ofd1
@@ -62,6 +63,19 @@
             // 
             this.sfd1.CreatePrompt = true;
             this.sfd1.DefaultExt = "tx";
+            // 
+            // bCreate
+            // 
+            this.bCreate.BackgroundImage = global::Tek1.Properties.Resources.CreateBoard;
+            this.bCreate.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.bCreate.Location = new System.Drawing.Point(151, 253);
+            this.bCreate.Name = "bCreate";
+            this.bCreate.Size = new System.Drawing.Size(44, 43);
+            this.bCreate.TabIndex = 4;
+            this.bCreate.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
+            this.ttSolve.SetToolTip(this.bCreate, "Create or resize the board");
+            this.bCreate.UseVisualStyleBackColor = true;
+            this.bCreate.Click += new System.EventHandler(this.bCreate_Click);
             // 
             // split
             // 
@@ -93,6 +107,7 @@
             // 
             // tpCreate
             // 
+            this.tpCreate.Controls.Add(this.button1);
             this.tpCreate.Controls.Add(this.bCreate);
             this.tpCreate.Controls.Add(this.label2);
             this.tpCreate.Controls.Add(this.label1);
@@ -106,27 +121,23 @@
             this.tpCreate.Text = "Create Board";
             this.tpCreate.UseVisualStyleBackColor = true;
             // 
-            // tpDefine
+            // label2
             // 
-            this.tpDefine.Location = new System.Drawing.Point(4, 29);
-            this.tpDefine.Name = "tpDefine";
-            this.tpDefine.Padding = new System.Windows.Forms.Padding(3);
-            this.tpDefine.Size = new System.Drawing.Size(320, 572);
-            this.tpDefine.TabIndex = 1;
-            this.tpDefine.Text = "Define Areas";
-            this.tpDefine.UseVisualStyleBackColor = true;
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(15, 138);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(119, 20);
+            this.label2.TabIndex = 3;
+            this.label2.Text = "Number of &cols:";
             // 
-            // nudRows
+            // label1
             // 
-            this.nudRows.Location = new System.Drawing.Point(75, 70);
-            this.nudRows.Name = "nudRows";
-            this.nudRows.Size = new System.Drawing.Size(120, 26);
-            this.nudRows.TabIndex = 0;
-            this.nudRows.Value = new decimal(new int[] {
-            6,
-            0,
-            0,
-            0});
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(15, 37);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(124, 20);
+            this.label1.TabIndex = 2;
+            this.label1.Text = "Number of &rows:";
             // 
             // nudCols
             // 
@@ -140,36 +151,37 @@
             0,
             0});
             // 
-            // label1
+            // nudRows
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(15, 37);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(124, 20);
-            this.label1.TabIndex = 2;
-            this.label1.Text = "Number of &rows:";
+            this.nudRows.Location = new System.Drawing.Point(75, 70);
+            this.nudRows.Name = "nudRows";
+            this.nudRows.Size = new System.Drawing.Size(120, 26);
+            this.nudRows.TabIndex = 0;
+            this.nudRows.Value = new decimal(new int[] {
+            6,
+            0,
+            0,
+            0});
             // 
-            // label2
+            // tpDefine
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(15, 138);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(119, 20);
-            this.label2.TabIndex = 3;
-            this.label2.Text = "Number of &cols:";
+            this.tpDefine.Location = new System.Drawing.Point(4, 29);
+            this.tpDefine.Name = "tpDefine";
+            this.tpDefine.Padding = new System.Windows.Forms.Padding(3);
+            this.tpDefine.Size = new System.Drawing.Size(320, 572);
+            this.tpDefine.TabIndex = 1;
+            this.tpDefine.Text = "Define Areas";
+            this.tpDefine.UseVisualStyleBackColor = true;
             // 
-            // bCreate
+            // button1
             // 
-            this.bCreate.BackgroundImage = global::Tek1.Properties.Resources.CreateBoard;
-            this.bCreate.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.bCreate.Location = new System.Drawing.Point(151, 253);
-            this.bCreate.Name = "bCreate";
-            this.bCreate.Size = new System.Drawing.Size(44, 43);
-            this.bCreate.TabIndex = 4;
-            this.bCreate.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
-            this.ttSolve.SetToolTip(this.bCreate, "Create or resize the board");
-            this.bCreate.UseVisualStyleBackColor = true;
-            this.bCreate.Click += new System.EventHandler(this.bCreate_Click);
+            this.button1.Location = new System.Drawing.Point(146, 479);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 5;
+            this.button1.Text = "button1";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // EditForm
             // 
@@ -185,8 +197,8 @@
             this.tc1.ResumeLayout(false);
             this.tpCreate.ResumeLayout(false);
             this.tpCreate.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nudRows)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudCols)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudRows)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -204,5 +216,6 @@
         private System.Windows.Forms.NumericUpDown nudRows;
         private System.Windows.Forms.TabPage tpDefine;
         private System.Windows.Forms.Button bCreate;
+        private System.Windows.Forms.Button button1;
     }
 }
