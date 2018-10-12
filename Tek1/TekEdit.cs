@@ -95,7 +95,7 @@ namespace Tek1
 
         public bool canFit(Point TopLeft, TekAreaDef sArea)
         {
-            if (TopLeft.X + sArea.xSize >= Board.Cols || TopLeft.Y + sArea.ySize >= Board.Rows)
+            if (TopLeft.X + sArea.xSize > Board.Cols || TopLeft.Y + sArea.ySize > Board.Rows)
                 return false;
             foreach (TekField field in GetAreaFields(TopLeft, sArea))
                 if (field.area != null)
@@ -103,11 +103,32 @@ namespace Tek1
             return true;
         }
 
-        private List<Point> FirstEmptyArea()
+
+        public int canFit(List<Point> points, TekAreaDef sArea)
+        {
+            if (points.Count == 0)
+                return -1;
+            int index = 0;
+            int xMin = points[index].X;
+            int yMin = points[index].Y;
+            for (int i = 1; i < points.Count; i++)
+            {
+                if (points[i].X <= xMin && points[i].Y <= yMin)
+                {
+                    index = i;
+                    xMin = points[index].X;
+                    yMin = points[index].Y;
+                }
+            }
+            if (canFit(points[index], sArea))
+                return index;
+            else return -1;
+        }
+
+        private Point FirstEmptyPoint(int r0, int c0)
         {
 
-            int r, c;
-            r = c = 0;
+            int r = r0, c = c0;
             while (r < Board.Rows && c < Board.Cols)
             {
                 if (Board.values[r, c].area == null)
@@ -118,59 +139,58 @@ namespace Tek1
                     c = 0; r++;
                 }
             }
-            List<Point> result = new List<Point>();
             if (r < Board.Rows && c < Board.Cols)
+                return new Point(c, r);
+            else
+                return new Point(-1, -1);
+        }
+
+        private List<Point> FirstEmptyArea()
+        {
+
+            List<Point> result = new List<Point>();
+            Point P = FirstEmptyPoint(0, 0);
+            if (P.X != -1 && P.Y != -1)
             {
-                int r0 = r, c0 = c;
+                result.Add(P);
+                int r = P.Y, c = P.X + 1;
                 while (r < Board.Rows && c < Board.Cols && Board.values[r, c].area == null)
                 {
-                    result.Add(new Point(r, c));
-                    if (r < Board.Rows - 1)
-                        r++;
-
-                    else if (c < Board.Cols - 1)
+                    result.Add(new Point(c, r));
+                    if (c < Board.Cols - 1)
                         c++;
-                    else 
-                        r = 
+                    else
+                    {
+                        r++;
+                        c = P.X;
+                    }
                 }
-
-            } 
-
+            }
+            return result;
         }
 
         public bool AddRandomArea()
         {
-            int areaIndex0 = R.Next(0, StandardAreas.Count - 1);
+            int standardAreaIndex0 = R.Next(0, StandardAreas.Count - 1);
 
             // find next open area
 
-            int areaIndex = areaIndex0;
+            List<Point> areaPoints = FirstEmptyArea();
+
+            int standardAreaIndex = standardAreaIndex0;
             while (true)
             {
-                TekAreaDef area = StandardAreas.GetValue(areaIndex);
-                int r, c;
-                r = c = 0;
-                while (r < Board.Rows && c < Board.Cols)
-                {
-                    if (Board.values[r, c].area == null && canFit(new Point(r, c), area))
-                        break;
-                    c++;
-                    if (c >= Board.Cols)
-                    {
-                        c = 0; r++;
-                    }
-                }
-                if (canFit(new Point(r, c), area))
-                {
-                    AddAreaToBoard(new Point(r, c), area);
+                TekAreaDef area = StandardAreas.GetValue(standardAreaIndex);
+                int iPoint = canFit(areaPoints, area);
+                if (iPoint != -1)
+                { 
+                    AddAreaToBoard(areaPoints[iPoint], area);
                     return true;
                 }
                 else
                 {
-                    areaIndex++;
-                    if (areaIndex >= StandardAreas.Count)
-                        areaIndex = 0;
-                    if (areaIndex == areaIndex0)
+                    standardAreaIndex = (standardAreaIndex + 1) % StandardAreas.Count;
+                    if (standardAreaIndex == standardAreaIndex0)
                         return false;
                 }
             }
