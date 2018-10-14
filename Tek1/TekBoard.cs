@@ -492,6 +492,12 @@ namespace Tek1
             }
             return result;
         }
+
+        public bool IsValidAreas()
+        {
+            return ValidAreasErrors().Count == 0;
+        }
+
         public void SetDefaultNotes()
         {
             foreach (TekField field in values)

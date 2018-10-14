@@ -100,6 +100,8 @@ namespace Tek1
 
         protected void DebugLog(string format, params object[] args)
         {
+            if (DBG == null)
+                DBG = new StreamWriter("debugLogLog.dmp");
             if (DBG != null)
             {
                 DBG.WriteLine(format, args);
@@ -109,18 +111,21 @@ namespace Tek1
 
         public bool BruteForceSolve()
         {
-
             TekField Field0 = SortedFields[0];
-            DebugLog("trying: {0}", Field0.AsString());
+            DebugLog("bfc");
             if (Field0.PossibleValues.Count == 0)
                 return Board.IsSolved();
             for (int i = 0; i < Field0.PossibleValues.Count; i++)
             {
                 SetFieldValue(Field0, Field0.PossibleValues[i]);
+                DebugLog("set value {0}", Field0.AsString(true));
                 if (BruteForceSolve())
                     return true;
                 else // backtrack 
+                {
                     SetFieldValue(Field0, 0);
+                    DebugLog("backtrack {0}", Field0.AsString(true));
+                }
             } // if we get here, this branch has no solution
             return false;
         }

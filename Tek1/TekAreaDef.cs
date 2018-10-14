@@ -25,7 +25,11 @@ namespace Tek1
         public int yMin { get { return _yMin; } }
         public int yMax { get { return _yMax; } }
 
-
+        public bool TemplateArea { get; set; }
+        // set to true when used to generate symmetric versions, to be used when a simple list is sufficient
+        private string _Description;
+        public string Description { get { return _Description; } }
+        // to help identify templates while debugging
         private void initLists()
         {
             Deltas = new List<Point>();
@@ -43,11 +47,12 @@ namespace Tek1
             foreach (Point point in value.Points)
                 Points.Add(new Point(point.X, point.Y));
             Update();
+            _Description = value.Description;
         }
 
         public int PointCount { get { return Points.Count;  } }
 
-        public TekAreaDef(params Point[] values)
+        public TekAreaDef(string description =  "", params Point[] values)
         {
             initLists();
             foreach (Point value in values)
@@ -57,6 +62,7 @@ namespace Tek1
                 Points.Add(value);
             }
             Update();
+            _Description = description;
         }
 
         private void ComputeDeltas()
@@ -168,8 +174,8 @@ namespace Tek1
             TekAreaDef N2 = other.Normalized();
             if (N1.Points.Count != N2.Points.Count)
                 return false;
-            for (int i = 0; i < N1.Points.Count; i++)
-                if (N1.Points[i].X != N2.Points[i].X || N1.Points[i].Y != N2.Points[i].Y)
+            foreach (Point P1 in N1.Points)
+                if (!N2.Points.Contains(P1))
                     return false;
             return true;
         }
@@ -189,7 +195,7 @@ namespace Tek1
 
         public TekAreaDef FlipVertical()
         {
-            TekAreaDef result = new TekAreaDef();
+            TekAreaDef result = new TekAreaDef(String.Format("{0} vert flip", Description));
             for (int i = 0; i < Points.Count; i++)
             {
                 Point P = Points[i];
@@ -200,7 +206,7 @@ namespace Tek1
 
         public TekAreaDef FlipHorizontal()
         {
-            TekAreaDef result = new TekAreaDef();
+            TekAreaDef result = new TekAreaDef(String.Format("{0} hori flip", Description));
             for (int i = 0; i < Points.Count; i++)
             {
                 Point P = Points[i];
@@ -211,7 +217,7 @@ namespace Tek1
 
         public TekAreaDef Rotate90()
         {
-            TekAreaDef result = new TekAreaDef(this.Points[0]);
+            TekAreaDef result = new TekAreaDef(String.Format("{0} rot 90", Description), this.Points[0]);
             foreach (Point value in this.Deltas)
             {
                 result.Deltas.Add(new Point(-value.Y, value.X));
@@ -226,9 +232,9 @@ namespace Tek1
             return Rotate90().Rotate90();
         }
 
-        public void Dump(StreamWriter sw, string msg = "")
+        public void Dump(StreamWriter sw)
         {
-            sw.Write(String.Format("{0}  [(size:({1},{2})]\n\tpoints: ", msg, xSize, ySize));
+            sw.Write(String.Format("{0}  [(size:({1},{2})]\n\tpoints: ", Description, xSize, ySize));
             foreach (Point value in Points)
             {
                 sw.Write(" ({0},{1})", value.X, value.Y);
@@ -265,7 +271,7 @@ namespace Tek1
                     y1 = point.Y;
             }
             foreach (Point point in Points)
-                if (!list.Contains(new Point(x0 + point.X, y0+point.Y)))
+                if (!list.Contains(new Point(x0 + point.X, y0 + point.Y)))
                     return false;
             return true;
         }
@@ -286,7 +292,9 @@ namespace Tek1
         public List<TekAreaDef> GetAlternatives()
         {
             List<TekAreaDef> result = new List<TekAreaDef>();
-            AddAlternative(this.Normalized(), result);
+            TekAreaDef thisArea = this.Normalized();
+            thisArea.TemplateArea = this.TemplateArea;
+            AddAlternative(thisArea, result);
             // rotations
             AddAlternative(this.Rotate90(), result);
             AddAlternative(this.Rotate180(), result);
@@ -356,48 +364,54 @@ namespace Tek1
 
         private void AddAlternatives(TekAreaDef value)
         {
+            value.TemplateArea = true;
             foreach (TekAreaDef val in value.GetAlternatives())
                 if (!val.IsInList(values))
                     values.Add(val);
         }
         private void Add1FieldAreas()
         {
-            AddAlternatives(new TekAreaDef(new Point(0, 0)));           
+            AddAlternatives(new TekAreaDef("Size: 1", new Point(0, 0)));           
         }
         private void Add2FieldAreas()
         {
-            AddAlternatives(new TekAreaDef(new Point(0, 0), new Point(0, 1)));
+            AddAlternatives(new TekAreaDef("Size: 2", new Point(0, 0), new Point(0, 1)));
         }
         private void Add3FieldAreas()
         {
             // straight
-            AddAlternatives(new TekAreaDef(new Point(0, 0), new Point(0, 1), new Point(0, 2)));
+            AddAlternatives(new TekAreaDef("Size: 3 (straight)", new Point(0, 0), new Point(0, 1), new Point(0, 2)));
             // cornered
-            AddAlternatives(new TekAreaDef(new Point(0, 0), new Point(0, 1), new Point(1, 0)));
+            AddAlternatives(new TekAreaDef("Size: 3 (cornered)", new Point(0, 0), new Point(0, 1), new Point(1, 0)));
         }
         private void Add4FieldAreas()
         {
             // straight
-            AddAlternatives(new TekAreaDef(new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(0, 3)));
+            AddAlternatives(new TekAreaDef("Size: 4 (straight)", new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(0, 3)));
             // cornered 1
-            AddAlternatives(new TekAreaDef(new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 2)));
+            AddAlternatives(new TekAreaDef("Size: 4 (cornered v1)",  new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 2)));
             // cornered 2
-            AddAlternatives(new TekAreaDef(new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 1)));
+            AddAlternatives(new TekAreaDef("Size: 4 (cornered v2)", new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 1)));
             // big square
-            AddAlternatives(new TekAreaDef(new Point(0, 0), new Point(0, 1), new Point(1, 0), new Point(1, 1)));
+            AddAlternatives(new TekAreaDef("Size: 4 (square)", new Point(0, 0), new Point(0, 1), new Point(1, 0), new Point(1, 1)));
         }
         private void Add5FieldAreas()
         {
             // straight
-            AddAlternatives(new TekAreaDef(new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(0, 3), new Point(0,4)));
+            AddAlternatives(new TekAreaDef("Size: 5 (straight)", new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(0, 3), new Point(0,4)));
             // cornered 1
-            AddAlternatives(new TekAreaDef(new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(0, 3), new Point(1, 3)));
+            AddAlternatives(new TekAreaDef("Size: 5 (cornered v1)", new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(0, 3), new Point(1, 3)));
             // cornered 2
-            AddAlternatives(new TekAreaDef(new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 1), new Point(1, 2)));
+            AddAlternatives(new TekAreaDef("Size: 5 (cornered v2)", new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 1), new Point(1, 2)));
             // cornered 3
-            AddAlternatives(new TekAreaDef(new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 2), new Point(2, 2)));
+            AddAlternatives(new TekAreaDef("Size: 5 (cornered v3)", new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 2), new Point(2, 2)));
             // cornered 4
-            AddAlternatives(new TekAreaDef(new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 1), new Point(2, 1)));
+            AddAlternatives(new TekAreaDef("Size: 5 (cornered v4)", new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 1), new Point(2, 1)));
+            // cross 
+            AddAlternatives(new TekAreaDef("Size: 5 (cross)", new Point(1, 0), new Point(1, 1), new Point(1, 2), new Point(0, 1), new Point(2, 1)));
+            // windmill
+            AddAlternatives(new TekAreaDef("Size: 5 (windmill)", new Point(0, 0), new Point(1, 0), new Point(1, 1), new Point(1, 2), new Point(2, 2)));
+
         }
 
         public TekStandardAreas()
@@ -410,13 +424,41 @@ namespace Tek1
             Add5FieldAreas();
         }
 
-        public List<TekAreaDef> FittingAreas(List<Point> list)
+        public List<TekAreaDef> TemplateAreas()
+        {
+            List<TekAreaDef> result = new List<TekAreaDef>();
+            foreach (TekAreaDef value in values)
+                if (value.TemplateArea)
+                    result.Add(value);
+            return result;
+        }
+
+        public List<TekAreaDef> AreasFromTemplate(TekAreaDef template)
+        {
+            List<TekAreaDef> result = new List<TekAreaDef>();
+            int index0 = values.IndexOf(template);
+            if (index0 != -1 && values.ElementAt(index0).TemplateArea)
+            {
+                result.Add(template);
+                for (int i = index0 + 1; i < values.Count && !values.ElementAt(i).TemplateArea; i++)
+                    result.Add(values.ElementAt(i));
+            }
+            return result;
+        }
+
+
+
+        public List<TekAreaDef> FittingAreas(List<Point> list, int nPoints)
         {
             List<TekAreaDef> result = new List<TekAreaDef>();
             foreach (TekAreaDef area in values)
-                if (area.canFit(list))
+            {
+                if (area.PointCount == nPoints && area.canFit(list))
                     result.Add(area);
+            }
             return result;
         }
+
+
     }
 }

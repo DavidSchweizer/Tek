@@ -506,10 +506,11 @@ namespace Tek1
         {
             if (board.areas.Count == 0)
                 return;
+            int index0 = 0;
             AreaColorIndex = new int[board.areas.Count];
             for (int i = 0; i < AreaColorIndex.Length; i++)
-                AreaColorIndex[i] = -1; // 
-            Random R = new Random();
+                AreaColorIndex[i] = -1;
+                       
             foreach (TekArea area in board.areas)
             {
                 List<TekArea> neighbours = area.GetAdjacentAreas();
@@ -517,7 +518,6 @@ namespace Tek1
                 foreach (TekArea area2 in neighbours)
                     if (AreaColorIndex[area2.AreaNum] != -1)
                         inUseByNeighbours.Add(AreaColorIndex[area2.AreaNum]);
-                int index0 = R.Next(MAXCOLOR);
                 int index = (index0 + 1) % MAXCOLOR;
                 while (index != index0)
                 {

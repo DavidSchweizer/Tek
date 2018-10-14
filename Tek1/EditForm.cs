@@ -26,11 +26,7 @@ namespace Tek1
 
         private void bLoad_Click(object sender, EventArgs e)
         {
-            if (ofd1.ShowDialog() == DialogResult.OK)
-            {
-                View.LoadFromFile(ofd1.FileName);
-                this.Text = ofd1.FileName;
-            }
+
         }
 
         private void Button_ToggleValue_Click(object sender, EventArgs e)
@@ -46,14 +42,7 @@ namespace Tek1
 
         private void bSave_Click(object sender, EventArgs e)
         {
-            if (View.Board == null)
-                return;
-            sfd1.FileName = ofd1.FileName;
-            sfd1.InitialDirectory = ofd1.InitialDirectory;
-            if (sfd1.ShowDialog() == DialogResult.OK)
-            {
-                View.SaveToFile(sfd1.FileName);
-            }
+
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -64,8 +53,7 @@ namespace Tek1
 
         private void bSolveClick(object sender, EventArgs e)
         {
-            if (View.Board != null && !View.Solve())
-                MessageBox.Show("can not be solved");
+
         }
 
         private void bReset_Click(object sender, EventArgs e)
@@ -159,8 +147,44 @@ namespace Tek1
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if (!View.AddRandomArea())
-                MessageBox.Show("does not fit");
+            if (View.Board == null)
+                return;
+            View.FillRandomAreas();
+
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            if (View.Board == null)
+                return;
+            View.ResetBoard();
+        }
+
+        private void bLoad_Click_1(object sender, EventArgs e)
+        {
+            if (ofd1.ShowDialog() == DialogResult.OK)
+            {
+                View.LoadFromFile(ofd1.FileName);
+                this.Text = ofd1.FileName;
+            }
+        }
+
+        private void bSave_Click_1(object sender, EventArgs e)
+        {
+            if (View.Board == null)
+                return;
+            sfd1.FileName = ofd1.FileName;
+            sfd1.InitialDirectory = ofd1.InitialDirectory;
+            if (sfd1.ShowDialog() == DialogResult.OK)
+            {
+                View.SaveToFile(sfd1.FileName);
+            }
+        }
+
+        private void bSolve_Click(object sender, EventArgs e)
+        {
+            if (!View.Solve())
+                MessageBox.Show("can not be solved");
 
         }
     }
