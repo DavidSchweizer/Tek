@@ -44,6 +44,9 @@ namespace Tek1
         abstract public bool HeuristicApplies(params TekField[] fields);
 
         abstract public void HeuristicPlay();
+
+        public bool Apply(List <Fields> SortedFields)
+
     }
     public class SingleValueHeuristic: TekHeuristic
     {

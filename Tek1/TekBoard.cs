@@ -23,6 +23,7 @@ namespace Tek1
         public List<TekField> neighbours;
         public List<TekField> influencers;
         public List<int> PossibleValues;
+        public List<int> ExcludedValues; // values excluded by heuristic solution process
         public List<int> Notes;
         private int _row, _col;
         public int Row { get { return _row; } }
@@ -39,6 +40,7 @@ namespace Tek1
             PossibleValues = new List<int>();
             for (int i = 1; i <= Const.MAXTEK; i++)
                 PossibleValues.Add(i);
+            ExcludedValues = new List<int>();
             Notes = new List<int>();
             area = null;        
         }
@@ -97,6 +99,17 @@ namespace Tek1
             foreach (int value in values)
                 Notes.Add(value);
         }
+
+        public void ExcludeValue(int value, bool onoff = true)
+        {
+            if (!onoff)
+            {
+                ExcludedValues.Remove(value);
+            }
+            else if (!ExcludedValues.Contains(value))
+                ExcludedValues.Add(value);
+            UpdatePossibleValues(false);
+        }
 			
         public void UpdatePossibleValues(bool cascade = false)
         {
@@ -106,7 +119,8 @@ namespace Tek1
             if (Value == 0)
             {
                 for (int i = 1; i <= ((area == null) ? Const.MAXTEK : area.fields.Count); i++)
-                    PossibleValues.Add(i);
+                    if (!ExcludedValues.Contains(i))
+                        PossibleValues.Add(i);
                 foreach (TekField field in influencers)
                     if (field.Value > 0)
                         PossibleValues.Remove(field.Value);
