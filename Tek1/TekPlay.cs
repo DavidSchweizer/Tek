@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Tek1
 {
-    public enum TekMove { tmValue, tmNote, tmClear, tmSnapshot };
+    public enum TekMove { tmValue, tmNote, tmClear, tmExclude, tmSnapshot };
 
     public class TekPlay
     {
@@ -76,6 +76,7 @@ namespace Tek1
         {
             return Snapshots.Count();
         }
+
         private void PushMove(int row, int col, TekMove move, int value, string name="")
         {
             switch(move)
@@ -91,25 +92,73 @@ namespace Tek1
                     break;
             }
         }
-        
+
+        public void PlayValue(TekField field, int value)
+        {
+            PushMove(field.Row, field.Col, TekMove.tmValue, value);
+            field.ToggleValue(value);
+        }
+
         public void PlayValue(int row, int col, int value)
         {
-            PushMove(row, col, TekMove.tmValue, value);
-            Board.values[row, col].ToggleValue(value);
+            PlayValue(Board.values[row, col], value);
+        }
+
+        public void ExcludeValue(TekField field, int value)
+        {
+            PushMove(field.Row, field.Col, TekMove.tmExclude, value);
+            field.ExcludeValue(value, true);
+            if (field.Notes.Contains(value))
+                PlayNote(field, value);
+        }
+
+        public void ExcludeValues(TekField field, params int[] values)
+        {
+            for (int i = 0; i < values.Length; i++)
+                ExcludeValue(field, values[i]);
+
+        }
+        public void ExcludeValue(int row, int col, int value)
+        {
+            ExcludeValue(Board.values[row, col], value);
+        }
+        public void ExcludeValues(int row, int col, int value)
+        {
+            ExcludeValues(Board.values[row, col], value);
+        }
+
+        public void PlayNote(TekField field, int value)
+        {
+            PushMove(field.Row, field.Col, TekMove.tmNote, value);
+            field.ToggleNote(value);
+        }
+
+        public void PlayNotes(TekField field, params int[] values)
+        {
+            for (int i = 0; i < values.Length; i++)
+                PlayNote(field, values[i]);
         }
 
         public void PlayNote(int row, int col, int value)
         {
-            PushMove(row, col, TekMove.tmNote, value);
-            Board.values[row, col].ToggleNote(value);
+            PlayNote(Board.values[row, col], value);
+        }
+        public void PlayNotes(int row, int col, params int[] values)
+        {
+            PlayNotes(Board.values[row, col], values);
+        }
+
+        public void PlayClear(TekField field)
+        {
+            PushMove(field.Row, field.Col, TekMove.tmClear, field.Value);
+            field.ClearNotes();
+            if (!field.initial)
+                field.Value = 0;
         }
 
         public void PlayClear(int row, int col)
         {
-            PushMove(row, col, TekMove.tmClear, Board.values[row,col].Value);
-            Board.values[row, col].ClearNotes();
-            if (!Board.values[row,col].initial)
-                Board.values[row, col].Value = 0;
+            PlayClear(Board.values[row, col]);
         }
 
         public void UnPlay()
@@ -124,6 +173,9 @@ namespace Tek1
                         break;
                     case TekMove.tmNote:
                         Board.values[move.Row, move.Col].ToggleNote(move.Value);
+                        break;
+                    case TekMove.tmExclude:
+                        Board.values[move.Row, move.Col].ExcludeValue(move.Value, false);
                         break;
                     case TekMove.tmClear:
                         Board.values[move.Row, move.Col].ToggleValue(move.Value);
@@ -148,7 +200,10 @@ namespace Tek1
         protected List<int[,]> Values {  get { return _ssValues; } }
 
         protected List<List<int>[,]> _ssNotes;
-        protected List<List<int>[,]> Notes {  get { return _ssNotes; } }
+        protected List<List<int>[,]> Notes { get { return _ssNotes; } }
+
+        protected List<List<int>[,]> _ssExcludedValues;
+        protected List<List<int>[,]> ExcludedValues { get { return _ssExcludedValues; } }
 
         protected List<string> _snapshots;
         public List<string> Snapshots { get { return _snapshots; } }
@@ -158,6 +213,7 @@ namespace Tek1
         {
             _ssValues = new List<int[,]>();
             _ssNotes = new List<List<int>[,]>();
+            _ssExcludedValues = new List<List<int>[,]>();
             _snapshots = new List<string>();
             _board = board;
         }
@@ -166,6 +222,7 @@ namespace Tek1
         {
             Values.Add(Board.CopyValues());
             Notes.Add(Board.CopyNotes());
+            ExcludedValues.Add(Board.CopyExcludedValues());
             Snapshots.Add(name);
         }
 
@@ -176,8 +233,10 @@ namespace Tek1
                 return;
             Board.LoadValues(Values.ElementAt(index));
             Board.LoadNotes(Notes.ElementAt(index));
+            Board.LoadExcludedValues(ExcludedValues.ElementAt(index));
             Values.RemoveAt(index);
             Notes.RemoveAt(index);
+            ExcludedValues.RemoveAt(index);
             Snapshots.RemoveAt(index);
         }
 

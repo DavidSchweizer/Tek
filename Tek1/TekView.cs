@@ -13,7 +13,7 @@ namespace Tek1
     {
         protected TekBoardView _view;
         public TekBoard Board { get { return _view.Board; } set { SetBoard(value); } }
-        protected TekMoves Moves = null;
+        public TekMoves Moves = null;
 
         public TekSelect Selector { get { if (_view == null) return null; return _view.Selector; } }
 
@@ -119,6 +119,10 @@ namespace Tek1
             return true;
         }
 
+        public void Refresh()
+        {
+            _view.Refresh();
+        }
         public bool ToggleSelectedNoteValue(int value)
         {
             if (Board != null && _view.Selector.CurrentFieldView != null)

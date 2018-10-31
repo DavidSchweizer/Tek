@@ -187,6 +187,28 @@ namespace Tek1
                 MessageBox.Show("can not be solved");
 
         }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            int LastIndex = 0;
+            View.LoadFromFile("8x8-1.tx");
+            View.ShowDefaultNotes();
+            TekHeuristics heuristics = new TekHeuristics();
+            TekHeuristic heuristic = heuristics.FindHeuristic(View.Board);
+            while (heuristic != null && LastIndex < View.Board.MaxFieldIndex())
+            {
+                MessageBox.Show( heuristic.AsString());
+                if (!heuristic.HeuristicPlay(View.Moves))
+                    LastIndex = heuristic.LastIndex;
+                View.Refresh();
+                heuristic = heuristics.FindHeuristic(View.Board, LastIndex);
+            }
+            if (View.Board.IsSolved())
+                MessageBox.Show("Solved!");
+            else
+                MessageBox.Show("Can not be solved using these heuristics...");
+                
+        }
     }
 
    

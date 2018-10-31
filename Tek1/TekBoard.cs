@@ -31,6 +31,7 @@ namespace Tek1
         public int FieldIndex { get { return _FieldIndex; } }
         public int Row { get { return _row; } }
         public int Col { get { return _col; } }
+        public bool AutoNotes { get; set; }
 
         public TekField(int arow, int acol) 
         {
@@ -46,7 +47,8 @@ namespace Tek1
                 PossibleValues.Add(i);
             ExcludedValues = new List<int>();
             Notes = new List<int>();
-            area = null;        
+            area = null;
+            AutoNotes = false;
         }
 
         public int Value { get { return _value;  } set { SetValue(value); } }
@@ -81,7 +83,8 @@ namespace Tek1
         {
             Notes.Clear();
             foreach (int value in PossibleValues)
-                ToggleNote(value);
+                if (!ExcludedValues.Contains(value))
+                    ToggleNote(value);
         }
 
         public void ClearNotes()
@@ -114,7 +117,21 @@ namespace Tek1
                 ExcludedValues.Add(value);
             UpdatePossibleValues(false);
         }
-			
+
+        public List<int> CopyExcludedValues()
+        {
+            List<int> result = new List<int>();
+            foreach (int value in ExcludedValues)
+                result.Add(value);
+            return result;
+        }
+        public void LoadExcludedValues(List<int> values)
+        {
+            ExcludedValues.Clear();
+            foreach (int value in values)
+                ExcludedValues.Add(value);
+        }
+
         public void UpdatePossibleValues(bool cascade = false)
         {
             if (_cascading) // protection against endless loops 
@@ -129,6 +146,8 @@ namespace Tek1
                     if (field.Value > 0)
                         PossibleValues.Remove(field.Value);
             }
+            if (AutoNotes)
+                SetDefaultNotes();
             if (!cascade)
                 return;
             _cascading = true;
@@ -322,6 +341,10 @@ namespace Tek1
         private int _rows, _cols;
         public int Rows { get { return _rows; } }
         public int Cols { get { return _cols; } }
+
+        private bool _AutoNotes;
+        public bool AutoNotes { get { return _AutoNotes; } set { foreach (TekField field in values) field.AutoNotes = value;  } }
+
         public TekBoard(int rows, int cols)
         {
             areas = new List<TekArea>();
@@ -329,6 +352,15 @@ namespace Tek1
             _cols = cols;
             initValues(rows, cols);
             setNeighbours();
+        }
+
+        public int MaxFieldIndex()
+        {
+            int result = 0;
+            foreach (TekField field in values)
+                if (field.FieldIndex > result)
+                    result = field.FieldIndex;
+            return result;
         }
 
         private void initValues(int rows, int cols)
@@ -406,6 +438,24 @@ namespace Tek1
                 field.LoadNotes(notes[field.Row, field.Col]);
             }
         }
+        public List<int>[,] CopyExcludedValues()
+        {
+            List<int>[,] result = new List<int>[Rows, Cols];
+            foreach (TekField field in values)
+            {
+                result[field.Row, field.Col] = field.CopyExcludedValues();
+            }
+            return result;
+        }
+
+        public void LoadExcludedValues(List<int>[,] excludedvalues)
+        {
+            foreach (TekField field in values)
+            {
+                field.LoadNotes(excludedvalues[field.Row, field.Col]);
+            }
+        }
+
         public bool IsInRange(int row, int col)
         {
             return row >= 0 && row < Rows && col >= 0 && col < Cols;

@@ -12,6 +12,7 @@ namespace Tek1
         public string Description { get { return _description; } }
         public List<TekField> HeuristicFields;
         public List<int> HeuristicValues;
+        public int LastIndex = 0;
         
 
         public TekHeuristic()
@@ -24,36 +25,75 @@ namespace Tek1
             HeuristicFields = new List<TekField>();
             HeuristicValues = new List<int>();
         }
+        public string AsString()
+        {
+            string result = String.Format("{0} [fields: ", Description);
 
+            foreach(TekField field in HeuristicFields)
+                result = result + String.Format("{0} ", field.AsString());
+            result = result + ". values: ";
+            foreach (int value in HeuristicValues)
+                result = result + String.Format("{0} ", value);
+            return result + "]";
+        }
         public void Reset()
         {
             HeuristicFields.Clear();
             HeuristicValues.Clear();
+            LastIndex = 0;
         }
 
-         abstract public 
-        public bool Applies(TekBoard board)
+        public void AddField(TekField field)
         {
-            if ()
+            if (!HeuristicFields.Contains(field))
+                HeuristicFields.Add(field);
         }
-        public bool AppliesSingleField(TekBoard board)
+
+        public void AddValue(int value)
         {
+            if (!HeuristicValues.Contains(value))
+                HeuristicValues.Add(value);
+        }
+
+        public bool Applies(TekBoard board, int StartField = 0)
+        {
+            Reset();
             foreach(TekField field in board.values)
             {
-                if (HeuristicApplies(field))
+                if (field.FieldIndex < StartField)
+                    continue;
+                if (HeuristicApplies(board, field))
                 {
-                    HeuristicFields.Add(field);
+                    LastIndex = field.FieldIndex;
                     return true;
                 }
             }
             return false;
         }
 
-        abstract public bool HeuristicApplies(params TekField[] fields);
+        abstract public bool HeuristicApplies(TekBoard board, TekField field);
 
-        abstract public void HeuristicPlay();
+        abstract public bool HeuristicPlay(TekMoves moves);
 
-        //abstract public bool Apply(List<TekField> SortedFields);
+        public bool PlayValue(TekMoves moves, TekField field, int value)
+        {
+            bool result = field.Value == 0;
+            moves.PlayValue(field, value);
+            return result;
+        }
+
+        public bool ExcludeValues(TekMoves moves, TekField field)
+        {
+            bool result = false;
+            foreach(int value in HeuristicValues)
+            {
+                if (field.PossibleValues.Contains(value))
+                    result = true;
+                moves.ExcludeValue(field, value);
+            }
+            return result;
+        }
+
     }
 
     public class SingleValueHeuristic : TekHeuristic
@@ -62,17 +102,20 @@ namespace Tek1
         {
 
         }
-        public override bool HeuristicApplies(params TekField[] fields)
+        public override bool HeuristicApplies(TekBoard board, TekField field)
         {
-            if (fields.Length != 1)
-                return false;
-            else
-                return fields[0].PossibleValues.Count == 1;
+            if (field.PossibleValues.Count == 1)
+            {
+                AddField(field);
+                AddValue(field.PossibleValues[0]);
+                return true;
+            }
+            return false;
         }
 
-        public override void HeuristicPlay()
+        public override bool HeuristicPlay(TekMoves moves)
         {
-            //Moves.PlayValue(Fields[0].Row, Fields[0].Col, Fields[0].PossibleValues[0]);
+            return PlayValue(moves, HeuristicFields[0], HeuristicValues[0]);
         }
     }
     public class HiddenSingleValueHeuristic : TekHeuristic
@@ -81,56 +124,105 @@ namespace Tek1
         {
 
         }
-        public override bool HeuristicApplies(params TekField[] fields)
+        public override bool HeuristicApplies(TekBoard board, TekField field)
         {
-            if (fields.Length != 1)
+            if (field.PossibleValues.Count == 0)
                 return false;
             else
             {
-                int[] numberOfValues = new int[1+Const.MAXTEK];
-                TekArea area = fields[0].area;
-                int maxT = (area.fields.Count < Const.MAXTEK ? area.fields.Count : Const.MAXTEK);
-                foreach (TekField field2 in area.fields)
+                int[] numberOfValueAtIndex = new int[field.PossibleValues.Count];
+                foreach (TekField field2 in field.area.fields)
                 {
-                    if (field2 == fields[0])
+                    if (field2 == field)
                         continue;
-                    for (int i = 1; i <= maxT; i++)
-                        if (field2.PossibleValues.Contains(i))
-                            numberOfValues[i]++;
+                    for (int i = 0; i < field.PossibleValues.Count; i++)
+                        if (field2.PossibleValues.Contains(field.PossibleValues[i]))
+                            numberOfValueAtIndex[i]++;
                 }
-                for (int i = 1; i <= maxT; i++)
-                    if (numberOfValues[i] == 0 && fields[0].PossibleValues.Contains(i))
+                for (int i = 0; i < field.PossibleValues.Count; i++)
+                    if (numberOfValueAtIndex[i] == 0) // so, field is the only option for this value
                     {
-                        HeuristicValues.Add(i);
+                        AddField(field);
+                        AddValue(field.PossibleValues[i]);
                         return true;
                     }
                 return false;
             }
         }
 
-        public override void HeuristicPlay()
+        public override bool HeuristicPlay(TekMoves moves)
         {
-           // Moves.PlayValue(Fields[0].Row, Fields[0].Col, HeuristicValues[0]);
+            return PlayValue(moves, HeuristicFields[0], HeuristicValues[0]);
+        }
+    }
+
+    public class DoubleValueHeuristic : TekHeuristic
+    {
+        public DoubleValueHeuristic() : base("Double Value")
+        {
+
+        }
+        public override bool HeuristicApplies(TekBoard board, TekField field)
+        {
+            if (field.PossibleValues.Count == 2)
+            {
+                foreach (TekField field2 in field.area.fields)
+                {
+                    if (field2 == field || field2.PossibleValues.Count != 2)
+                        continue;
+                    foreach (int value in field.PossibleValues)
+                        if (!field2.PossibleValues.Contains(value))
+                            return false;
+                    AddField(field);
+                    AddField(field2);
+                    foreach (int value in field.PossibleValues)
+                        AddValue(value);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public override bool HeuristicPlay(TekMoves moves)
+        {
+            bool result = false;
+            TekField field1 = HeuristicFields[0];
+            TekField field2 = HeuristicFields[1];
+            // exclude values IN area
+            foreach (TekField field in field1.area.fields)
+                if (field != field1 && field != field2 && ExcludeValues(moves, field))
+                    result = true;
+            // exclude values in overlapping fields in other areas
+            foreach (TekField field in field1.neighbours)
+                if (field2.neighbours.Contains(field))
+                {
+                    if (field.PossibleValues.Contains(HeuristicValues[0]) && ExcludeValues(moves, field))
+                        result = true;
+                }
+            return result;
         }
     }
 
     public class TekHeuristics
     {
         List<TekHeuristic> Heuristics;
+        int LastIndex = 0;
+        int LastHeuristic
 
         public TekHeuristics()
         {
             Heuristics = new List<TekHeuristic>();
             Heuristics.Add(new SingleValueHeuristic());
             Heuristics.Add(new HiddenSingleValueHeuristic());
+            Heuristics.Add(new DoubleValueHeuristic());
         }
 
-        public TekHeuristic FindHeuristic(TekBoard board)
+        public TekHeuristic FindHeuristic(TekBoard board, int LastIndex = 0)
         {
+            board.AutoNotes = true;
             foreach(TekHeuristic heuristic in Heuristics)
             {
-                heuristic.Reset();
-                if (heuristic.Applies(board))
+               if (heuristic.Applies(board, LastIndex))
                     return heuristic;
             }
             return null;
