@@ -16,6 +16,8 @@ namespace Tek1
 
     public class TekField
     {
+        static int __FieldIndex = 0;
+        private int _FieldIndex;
         private bool _cascading = false;
         public int _value;
         public bool initial;
@@ -26,6 +28,7 @@ namespace Tek1
         public List<int> ExcludedValues; // values excluded by heuristic solution process
         public List<int> Notes;
         private int _row, _col;
+        public int FieldIndex { get { return _FieldIndex; } }
         public int Row { get { return _row; } }
         public int Col { get { return _col; } }
 
@@ -34,6 +37,7 @@ namespace Tek1
             _row = arow;
             _col = acol;
             _value = 0;
+            _FieldIndex = __FieldIndex++;
             initial = false;
             neighbours = new List<TekField>();
             influencers = new List<TekField>();

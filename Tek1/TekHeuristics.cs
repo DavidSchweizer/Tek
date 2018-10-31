@@ -31,14 +31,20 @@ namespace Tek1
             HeuristicValues.Clear();
         }
 
-        public bool Applies(params TekField[] fields)
+         abstract public 
+        public bool Applies(TekBoard board)
         {
-            if (HeuristicApplies(fields))
+            if ()
+        }
+        public bool AppliesSingleField(TekBoard board)
+        {
+            foreach(TekField field in board.values)
             {
-                HeuristicFields.Clear();
-                for (int i = 0; i < fields.Length; i++)
-                    HeuristicFields.Add(fields[i]);
-                return true;
+                if (HeuristicApplies(field))
+                {
+                    HeuristicFields.Add(field);
+                    return true;
+                }
             }
             return false;
         }
