@@ -332,6 +332,26 @@ namespace Tek1
         {
             sw.WriteLine(AsString());
         }
+
+        public int MaxValue()
+        {
+            return (fields.Count < Const.MAXTEK ? fields.Count : Const.MAXTEK);
+        }
+
+        public Dictionary<int, List<TekField>> GetFieldsForValues()
+        {
+            Dictionary<int, List<TekField>> result = new Dictionary<int,List<TekField>>();
+            for (int i = 1; i <= MaxValue(); i++)
+                result.Add(i, new List<TekField>());
+            foreach (TekField f in fields)
+                if (f.Value > 0)
+                    result[f.Value].Add(f);
+                else
+                    foreach (int value in f.PossibleValues)
+                        result[value].Add(f);                
+            return result;
+        }
+
     } // TekArea
 
     public class TekBoard

@@ -158,7 +158,7 @@ namespace Tek1
 
     public class DoubleValueHeuristic : TekHeuristic
     {
-        public DoubleValueHeuristic() : base("Double Value")
+        public DoubleValueHeuristic() : base("Pair of Values")
         {
 
         }
@@ -168,17 +168,21 @@ namespace Tek1
             {
                 foreach (TekField field2 in field.area.fields)
                 {
-                    if (field2 == field || field2.PossibleValues.Count != 2)
+                    if (field2 == field || field2.PossibleValues.Count != 2 || field2.FieldIndex < field.FieldIndex)
                         continue;
+                    int match = 0;
                     foreach (int value in field.PossibleValues)
-                        if (!field2.PossibleValues.Contains(value))
-                            return false;
+                        if (field2.PossibleValues.Contains(value))
+                            match++;
+                    if (match < 2)
+                        continue;
                     AddField(field);
                     AddField(field2);
                     foreach (int value in field.PossibleValues)
                         AddValue(value);
                     return true;
                 }
+                return false;
             }
             return false;
         }
@@ -187,14 +191,9 @@ namespace Tek1
         {
             bool result = false;
             TekField field1 = HeuristicFields[0];
-            TekField field2 = HeuristicFields[1];
-            // exclude values IN area
-            foreach (TekField field in field1.area.fields)
-                if (field != field1 && field != field2 && ExcludeValues(moves, field))
-                    result = true;
-            // exclude values in overlapping fields in other areas
-            foreach (TekField field in field1.neighbours)
-                if (field2.neighbours.Contains(field))
+            TekField field2 = HeuristicFields[1];            
+            foreach (TekField field in field1.influencers)
+                if (field != field1 && field != field2 && field2.influencers.Contains(field))
                 {
                     if (field.PossibleValues.Contains(HeuristicValues[0]) && ExcludeValues(moves, field))
                         result = true;
@@ -203,6 +202,59 @@ namespace Tek1
         }
     }
 
+    public class HiddenPairHeuristic : TekHeuristic
+    {
+        public HiddenPairHeuristic() : base("Hidden Pair")
+        {
+
+        }
+        public override bool HeuristicApplies(TekBoard board, TekField field)
+        {
+            Dictionary<int, List<TekField>> valuesFields = field.area.GetFieldsForValues();
+            List<TekField> candidates = new List<TekField>();
+            foreach (int value in field.PossibleValues)
+            {
+                if (!valuesFields[value].Contains(field))
+                    continue;
+                valuesFields[value].Remove(field);
+                if (valuesFields[value].Count == 1)                
+                    candidates.Add(valuesFields[value][0]); 
+            }
+            
+            // candidates contains all fields with a shared value and no other fields for this value
+            // or,better,the target field and the candidate are a (hidden) pair. 
+            for (int i = 0; i < candidates.Count; i++)
+                for (int j = i+1; j < candidates.Count;j++)
+                    if (candidates[i] == candidates[j] && 
+                        ((field.PossibleValues.Count > 2 || candidates[i].PossibleValues.Count > 2))
+                        ) // this is a confirmed HIDDEN pair
+                    {
+                        AddField(field);
+                        AddField(candidates[i]);
+                        foreach(int value in field.PossibleValues)
+                        {
+                            if (valuesFields[value].Contains(candidates[i]))
+                                AddValue(value);
+                        }
+                        return true;
+                    }
+            return false;
+        }
+
+        public override bool HeuristicPlay(TekMoves moves)
+        {
+            bool result = false;
+            TekField field1 = HeuristicFields[0];
+            TekField field2 = HeuristicFields[1];
+            foreach (TekField field in field1.influencers)
+                if (field != field1 && field != field2 && field2.influencers.Contains(field))
+                {
+                    if (field.PossibleValues.Contains(HeuristicValues[0]) && ExcludeValues(moves, field))
+                        result = true;
+                }
+            return result;
+        }
+    }
     public class TekHeuristics
     {
         List<TekHeuristic> Heuristics;
@@ -214,6 +266,7 @@ namespace Tek1
             Heuristics.Add(new SingleValueHeuristic());
             Heuristics.Add(new HiddenSingleValueHeuristic());
             Heuristics.Add(new DoubleValueHeuristic());
+            Heuristics.Add(new HiddenPairHeuristic());
             LastHeuristic = null;
         }
 

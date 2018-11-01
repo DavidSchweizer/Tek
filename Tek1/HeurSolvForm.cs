@@ -170,19 +170,30 @@ namespace Tek1
             View.ShowDefaultNotes();
             TekHeuristics heuristics = new TekHeuristics();
             TekHeuristic heuristic = heuristics.FindHeuristic(View.Board);
+            int heurFound = 1;
             while (heuristic != null)
             {
-                listBox1.Items.Add(heuristic.AsString());
+                listBox1.Items.Add(String.Format("{0}: {1}", heurFound++, heuristic.AsString()));
                 listBox1.Refresh();
+                //MessageBox.Show("next...");
                 if (heuristic.HeuristicPlay(View.Moves))
                     View.Refresh();
-                heuristic = heuristics.FindHeuristic(View.Board);
+               heuristic = heuristics.FindHeuristic(View.Board);
             }
             if (View.Board.IsSolved())
                 MessageBox.Show("Solved!");
             else
                 MessageBox.Show("Can not be solved using these heuristics...");
                 
+        }
+
+        private void listBox1_DoubleClick(object sender, EventArgs e)
+        {
+            using(StreamWriter sw = new StreamWriter("heurs.dmp"))
+            {
+                foreach (string s in listBox1.Items)
+                        sw.WriteLine(s);
+            }
         }
     }
 
