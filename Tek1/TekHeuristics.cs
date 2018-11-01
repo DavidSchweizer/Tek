@@ -217,7 +217,7 @@ namespace Tek1
     }
 
     public class HiddenPairHeuristic : TekHeuristic
-    {
+    {// this could perhaps be replaced by Triplets
         public HiddenPairHeuristic() : base("Hidden Pair")
         {
 
@@ -228,8 +228,6 @@ namespace Tek1
             List<TekField> candidates = new List<TekField>();
             foreach (int value in field.PossibleValues)
             {
-                if (!valuesFields[value].Contains(field))
-                    continue;
                 valuesFields[value].Remove(field);
                 if (valuesFields[value].Count == 1)
                     candidates.Add(valuesFields[value][0]);
@@ -264,6 +262,71 @@ namespace Tek1
             return result;
         }
     }
+
+    public class TripletHeuristic : TekHeuristic
+    {
+        public TripletHeuristic() : base("Triplets")
+        {
+
+        }
+
+        public override bool HeuristicApplies(TekBoard board, TekField field)
+            Dit moet even anders!
+        {
+            Dictionary<int, List<TekField>> valuesFields = field.area.GetFieldsForValues();
+            List<TekField> candidates = new List<TekField>();
+            List<int> TripletValues = new List<int>();
+            if (field.PossibleValues.Count > 3 || field.PossibleValues.Count < 2)
+                return false;
+            foreach (int value in field.PossibleValues)
+            {
+                TripletValues.Add(value);
+                valuesFields[value].Remove(field);
+                if (valuesFields[value].Count == 1 && !candidates.Contains(valuesFields[value][0]))
+                    candidates.Add(valuesFields[value][0]);
+                if (valuesFields[value].Count == 2 && !candidates.Contains(valuesFields[value][1]))
+                    candidates.Add(valuesFields[value][1]);
+            }
+            int i = candidates.Count-1;
+            while (i >= 0)
+            {
+                TekField f = candidates[i];
+                 foreach(int value in f.PossibleValues)
+                 { 
+                        if ()
+
+
+            // candidates contains all fields with shared value(s) and no other fields for this value
+            // or,better,the target field and the candidate are a (hidden) pair.
+
+            for (int i = 0; i < candidates.Count; i++)
+                for (int j = i + 1; j < candidates.Count; j++)
+                    if (candidates[i] == candidates[j] &&
+                        ((field.PossibleValues.Count > 2 || candidates[i].PossibleValues.Count > 2))
+                        ) // this is a confirmed HIDDEN pair
+                    {
+                        AddField(field);
+                        AddField(candidates[i]);
+                        foreach (int value in field.PossibleValues)
+                        {
+                            if (valuesFields[value].Contains(candidates[i]) && valuesFields[value].Count == 1)
+                                AddValue(value);
+                        }
+                        return true;
+                    }
+            return false;
+        }
+
+        public override bool HeuristicPlay(TekMoves moves)
+        {
+            bool result = false;
+            foreach (TekField field in HeuristicFields)
+                if (ExcludeOtherValues(moves, field))
+                    result = true;
+            return result;
+        }
+    }
+
     public class TekHeuristics
     {
         List<TekHeuristic> Heuristics;
