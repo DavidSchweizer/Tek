@@ -178,6 +178,10 @@ namespace Tek1
                 //MessageBox.Show("next...");
                 if (heuristic.HeuristicPlay(View.Moves))
                     View.Refresh();
+                //if (heurFound == 19)
+                //{ this forces an hidden pair, just for test purposes
+                //    View.Board.values[3, 4].PossibleValues.Remove(2);
+                //}
                heuristic = heuristics.FindHeuristic(View.Board);
             }
             if (View.Board.IsSolved())

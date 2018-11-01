@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Tek1
@@ -85,13 +86,26 @@ namespace Tek1
         public bool ExcludeValues(TekMoves moves, TekField field)
         {
             bool result = false;
-            foreach(int value in HeuristicValues)
+            foreach (int value in HeuristicValues)
             {
                 if (field.PossibleValues.Contains(value))
                     result = true;
                 moves.ExcludeValue(field, value);
             }
             return result;
+        }
+
+        public bool ExcludeOtherValues(TekMoves moves, TekField field)
+        {
+            List<int> excludingValues = new List<int>();
+            foreach (int value in field.PossibleValues)
+            {
+                if (!HeuristicValues.Contains(value))
+                    excludingValues.Add(value);
+            }
+            foreach (int value in excludingValues)
+                moves.ExcludeValue(field, value);
+            return excludingValues.Count > 0;
         }
 
     }
@@ -217,41 +231,36 @@ namespace Tek1
                 if (!valuesFields[value].Contains(field))
                     continue;
                 valuesFields[value].Remove(field);
-                if (valuesFields[value].Count == 1)                
-                    candidates.Add(valuesFields[value][0]); 
+                if (valuesFields[value].Count == 1)
+                    candidates.Add(valuesFields[value][0]);
             }
-            
-            // candidates contains all fields with a shared value and no other fields for this value
-            // or,better,the target field and the candidate are a (hidden) pair. 
-            for (int i = 0; i < candidates.Count; i++)
-                for (int j = i+1; j < candidates.Count;j++)
-                    if (candidates[i] == candidates[j] && 
-                        ((field.PossibleValues.Count > 2 || candidates[i].PossibleValues.Count > 2))
-                        ) // this is a confirmed HIDDEN pair
-                    {
-                        AddField(field);
-                        AddField(candidates[i]);
-                        foreach(int value in field.PossibleValues)
-                        {
-                            if (valuesFields[value].Contains(candidates[i]))
-                                AddValue(value);
-                        }
-                        return true;
-                    }
+
+                    // candidates contains all fields with a shared value and no other fields for this value
+                    // or,better,the target field and the candidate are a (hidden) pair. 
+                    for (int i = 0; i < candidates.Count; i++)
+                        for (int j = i + 1; j < candidates.Count; j++)
+                            if (candidates[i] == candidates[j] &&
+                                ((field.PossibleValues.Count > 2 || candidates[i].PossibleValues.Count > 2))
+                                ) // this is a confirmed HIDDEN pair
+                            {
+                                AddField(field);
+                                AddField(candidates[i]);
+                                foreach (int value in field.PossibleValues)
+                                {
+                                    if (valuesFields[value].Contains(candidates[i]) && valuesFields[value].Count == 1)
+                                        AddValue(value);
+                                }
+                                return true;
+                            }
             return false;
         }
 
         public override bool HeuristicPlay(TekMoves moves)
         {
             bool result = false;
-            TekField field1 = HeuristicFields[0];
-            TekField field2 = HeuristicFields[1];
-            foreach (TekField field in field1.influencers)
-                if (field != field1 && field != field2 && field2.influencers.Contains(field))
-                {
-                    if (field.PossibleValues.Contains(HeuristicValues[0]) && ExcludeValues(moves, field))
-                        result = true;
-                }
+            foreach (TekField field in HeuristicFields)
+                if (ExcludeOtherValues(moves, field))
+                    result = true;
             return result;
         }
     }

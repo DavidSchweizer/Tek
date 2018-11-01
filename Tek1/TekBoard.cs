@@ -363,7 +363,7 @@ namespace Tek1
         public int Cols { get { return _cols; } }
 
         private bool _AutoNotes;
-        public bool AutoNotes { get { return _AutoNotes; } set { foreach (TekField field in values) field.AutoNotes = value;  } }
+        public bool AutoNotes { get { return _AutoNotes; } set { _AutoNotes = value; foreach (TekField field in values) field.AutoNotes = value;  } }
 
         public TekBoard(int rows, int cols)
         {
