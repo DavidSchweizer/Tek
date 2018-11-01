@@ -206,8 +206,7 @@ namespace Tek1
     public class TekHeuristics
     {
         List<TekHeuristic> Heuristics;
-        int LastIndex = 0;
-        int LastHeuristic
+        TekHeuristic LastHeuristic;
 
         public TekHeuristics()
         {
@@ -215,17 +214,30 @@ namespace Tek1
             Heuristics.Add(new SingleValueHeuristic());
             Heuristics.Add(new HiddenSingleValueHeuristic());
             Heuristics.Add(new DoubleValueHeuristic());
+            LastHeuristic = null;
         }
 
-        public TekHeuristic FindHeuristic(TekBoard board, int LastIndex = 0)
+        public TekHeuristic FindHeuristic(TekBoard board)
         {
             board.AutoNotes = true;
             foreach(TekHeuristic heuristic in Heuristics)
             {
-               if (heuristic.Applies(board, LastIndex))
+                int index;
+                if (heuristic == LastHeuristic)
+                    index = heuristic.LastIndex + 1;
+                else
+                    index = 0;
+
+                if (heuristic.Applies(board, index))
+                {
+                    LastHeuristic = heuristic;
                     return heuristic;
+                }
             }
+            LastHeuristic = null;
             return null;
         }
     }
+
+    
 }

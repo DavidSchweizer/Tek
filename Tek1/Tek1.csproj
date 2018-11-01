@@ -45,11 +45,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="EditForm.cs">
+    <Compile Include="HeurSolvForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="EditForm.Designer.cs">
-      <DependentUpon>EditForm.cs</DependentUpon>
+    <Compile Include="HeurSolvForm.Designer.cs">
+      <DependentUpon>HeurSolvForm.cs</DependentUpon>
     </Compile>
     <Compile Include="PlayForm.cs">
       <SubType>Form</SubType>
@@ -77,8 +77,8 @@
     <Compile Include="TekPlay.cs" />
     <Compile Include="TekSolver.cs" />
     <Compile Include="TekView.cs" />
-    <EmbeddedResource Include="EditForm.resx">
-      <DependentUpon>EditForm.cs</DependentUpon>
+    <EmbeddedResource Include="HeurSolvForm.resx">
+      <DependentUpon>HeurSolvForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PlayForm.resx">
       <DependentUpon>PlayForm.cs</DependentUpon>

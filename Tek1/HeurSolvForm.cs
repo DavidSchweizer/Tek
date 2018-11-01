@@ -12,11 +12,11 @@ using System.Windows.Forms;
 namespace Tek1
 {
 
-    public partial class EditForm : Form
+    public partial class HeurSolvForm : Form
     {
         TekEdit View;
         bool _lastShowErrors = false;
-        public EditForm()
+        public HeurSolvForm()
         {
             InitializeComponent();
             View = new TekEdit(split.Panel1, new Point(10,10),
@@ -134,74 +134,49 @@ namespace Tek1
 
         private void bCreate_Click(object sender, EventArgs e)
         {
-            int rows = (int) nudRows.Value, cols = (int) nudCols.Value;
-            if (View.Board == null)
-            {
-                View.Board = new TekBoard(rows, cols);
-            }
-            else
-            {
-                View.ResizeBoard(rows, cols);
-            }
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if (View.Board == null)
-                return;
-            View.FillRandomAreas();
-
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            if (View.Board == null)
-                return;
-            View.ResetBoard();
         }
 
         private void bLoad_Click_1(object sender, EventArgs e)
         {
-            if (ofd1.ShowDialog() == DialogResult.OK)
-            {
-                View.LoadFromFile(ofd1.FileName);
-                this.Text = ofd1.FileName;
-            }
         }
 
         private void bSave_Click_1(object sender, EventArgs e)
         {
-            if (View.Board == null)
-                return;
-            sfd1.FileName = ofd1.FileName;
-            sfd1.InitialDirectory = ofd1.InitialDirectory;
-            if (sfd1.ShowDialog() == DialogResult.OK)
-            {
-                View.SaveToFile(sfd1.FileName);
-            }
         }
 
         private void bSolve_Click(object sender, EventArgs e)
         {
-            if (!View.Solve())
-                MessageBox.Show("can not be solved");
-
         }
 
         private void button3_Click(object sender, EventArgs e)
         {
-            int LastIndex = 0;
             View.LoadFromFile("8x8-1.tx");
+
+            using (StreamWriter sw = new StreamWriter("boarddump.dmp"))
+            {
+                foreach (TekField field in View.Board.values)
+                    field.Dump(sw);
+            }
+            listBox1.Items.Clear();
+
             View.ShowDefaultNotes();
             TekHeuristics heuristics = new TekHeuristics();
             TekHeuristic heuristic = heuristics.FindHeuristic(View.Board);
-            while (heuristic != null && LastIndex < View.Board.MaxFieldIndex())
+            while (heuristic != null)
             {
-                MessageBox.Show( heuristic.AsString());
-                if (!heuristic.HeuristicPlay(View.Moves))
-                    LastIndex = heuristic.LastIndex;
-                View.Refresh();
-                heuristic = heuristics.FindHeuristic(View.Board, LastIndex);
+                listBox1.Items.Add(heuristic.AsString());
+                listBox1.Refresh();
+                if (heuristic.HeuristicPlay(View.Moves))
+                    View.Refresh();
+                heuristic = heuristics.FindHeuristic(View.Board);
             }
             if (View.Board.IsSolved())
                 MessageBox.Show("Solved!");
