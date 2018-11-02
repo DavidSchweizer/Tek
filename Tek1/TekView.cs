@@ -185,6 +185,14 @@ namespace Tek1
            _view.SelectField(v.Field.Row + deltaR, v.Field.Col + deltaC);
            // v.Refresh();
         }
+        public void SelectFields(params TekField[] fields)
+        {
+            _view.Selector.SetCurrentMode(TekSelect.SelectMode.smMultiple);
+            _view.Selector.ClearMultiSelect();
+            foreach (TekField field in fields)
+                _view.SelectField(field.Row, field.Col);
+            _view.Refresh();
+        }
 
         public void HandleKeyDown(ref Message msg, Keys keyData)
         {
@@ -311,6 +319,12 @@ namespace Tek1
                 }
                 _currentFieldView.Refresh();
             }
+        }
+
+        public void ClearMultiSelect()
+        {
+            foreach (TekFieldView v in MultiselectFieldView)
+                v.SetMultiSelected(false);
         }
         public void Reset()
         {

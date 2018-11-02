@@ -175,9 +175,10 @@ namespace Tek1
             {
                 listBox1.Items.Add(String.Format("{0}: {1}", heurFound++, heuristic.AsString()));
                 listBox1.Refresh();
-                //MessageBox.Show("next...");
-                if (heuristic.HeuristicPlay(View.Moves))
-                    View.Refresh();
+                View.SelectFields(heuristic.HeuristicFields.ToArray());
+              MessageBox.Show("next...");
+                heuristic.ExecuteAction(View.Moves);
+                View.Refresh();
                 //if (heurFound == 19)
                 //{ this forces an hidden pair, just for test purposes
                 //    View.Board.values[3, 4].PossibleValues.Remove(2);
@@ -187,7 +188,7 @@ namespace Tek1
             if (View.Board.IsSolved())
                 MessageBox.Show("Solved!");
             else
-                MessageBox.Show("Can not be solved using these heuristics...");
+                MessageBox.Show("Can not further be solved using these heuristics...");
                 
         }
 

@@ -209,7 +209,34 @@ namespace Tek1
             foreach (TekField field in neighbours)
                 AddInfluencer(field);
         }
-
+        public List<TekField> CommonInfluencers(params TekField[] fields)
+        {
+            List<TekField> result = new List<TekField>();
+            foreach(TekField f in influencers)
+            {
+                bool isCommon = true;
+                for (int i = 0; i < fields.Length && isCommon; i++)
+                    if (fields.Contains(f) || !fields[i].influencers.Contains(f))
+                        isCommon = false;
+                if (isCommon)
+                    result.Add(f);
+            }
+            return result;
+        }
+        public List<int> CommonPossibleValues(params TekField[] fields)
+        {
+            List<int> result = new List<int>();
+            for(int value = 1; value <= Const.MAXTEK; value++)
+            {
+                bool isCommon = this.PossibleValues.Contains(value);
+                for (int i = 0; i < fields.Length && isCommon; i++)
+                    if (!fields[i].PossibleValues.Contains(value))
+                        isCommon = false;
+                if (isCommon)
+                    result.Add(value);
+            }
+            return result;
+        }
         public string AsString(bool includeValue = false, bool includeArea=false)
         {
             string result = String.Format("[{0},{1} ({2})]", Row, Col, FieldIndex);
@@ -301,7 +328,7 @@ namespace Tek1
             SetInfluencers();            
         }
 
-        public bool IsAdjacent()
+        public bool FieldsAreConnected()
         {
             if (fields.Count() <= 1)
                 return true;
@@ -349,6 +376,24 @@ namespace Tek1
                 else
                     foreach (int value in f.PossibleValues)
                         result[value].Add(f);                
+            return result;
+        }
+
+        public List<TekField> GetFieldsWithPossibleValues(params int[] values)
+        {
+            List<TekField> result = new List<TekField>();
+            foreach (TekField f in fields)
+            {
+                bool hasValues = true;
+                foreach (int value in values)
+                    if (f.PossibleValues.Contains(value))
+                    {
+                        hasValues = false;
+                        break;
+                    }
+                if (hasValues)
+                    result.Add(f);
+            }
             return result;
         }
 
@@ -575,7 +620,7 @@ namespace Tek1
             // every area contains only adjacent fields
             foreach(TekArea area in areas)
             {
-                if (!area.IsAdjacent())
+                if (!area.FieldsAreConnected())
                     result.Add(String.Format("Area {0} is not valid", area.AsString()));
             }
             return result;
