@@ -174,9 +174,11 @@ namespace Tek1
             while (heuristic != null)
             {
                 listBox1.Items.Add(String.Format("{0}: {1}", heurFound++, heuristic.AsString()));
+                listBox1.SelectedIndex = listBox1.Items.Count - 1;
                 listBox1.Refresh();
                 View.SelectFields(heuristic.HeuristicFields.ToArray());
-              MessageBox.Show("next...");
+                if (checkBox1.Checked)
+                    MessageBox.Show("next...");
                 heuristic.ExecuteAction(View.Moves);
                 View.Refresh();
                 //if (heurFound == 19)

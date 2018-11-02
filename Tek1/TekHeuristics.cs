@@ -38,17 +38,17 @@ namespace Tek1
         }
         public string AsString()
         {
-           string result = String.Format("{0}-{1} [located fields: ", Description, actionDescriptions[(int)Action]);
+           string result = String.Format("{0} [fields: ", Description);
 
             foreach (TekField field in HeuristicFields)
                 result = result + String.Format("{0} ", field.AsString());
-            result = result + "; affected fields: ";
+            result = result + "; affects: ";
             foreach (TekField field in AffectedFields)
                 result = result + String.Format("{0} ", field.AsString());
-            result = result + ". values: ";
+            result = result + "| values: ";
             foreach (int value in HeuristicValues)
                 result = result + String.Format("{0} ", value);
-            return result + "]";
+            return result + "] " + actionDescriptions[(int)Action];
         }
         public void Reset(bool totalReset = false)
         {
@@ -390,6 +390,44 @@ namespace Tek1
 
     } // TripletHeuristic
 
+    public class BlockingHeuristic : TekHeuristic
+    {
+        public BlockingHeuristic() : base("Blocking", HeuristicAction.haExcludeValue)
+        {
+        }
+
+        public override bool HeuristicApplies(TekBoard board, TekField field)
+        {
+            List<TekArea> AdjacentAreas = field.area.GetAdjacentAreas();
+            foreach (TekArea area in AdjacentAreas)
+            {
+                Dictionary<int, List<TekField>> FieldsPerValueInArea = area.GetFieldsForValues();
+                foreach (int value in field.PossibleValues)
+                {
+                    if (FieldsPerValueInArea.Keys.Contains(value))
+                    {
+                        bool blocking = true;
+                        foreach (TekField field2 in FieldsPerValueInArea[value])
+                            if (!field.influencers.Contains(field2))
+                            {
+                                blocking = false;
+                                break;
+                            }
+                        if (blocking)
+                        {
+                            AddHeuristicField(field);
+                            AddAffectedField(field);
+                            AddValue(value);
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+    } // BlockingHeuristic
+
     public class TekHeuristics
     {
         List<TekHeuristic> Heuristics;
@@ -403,6 +441,7 @@ namespace Tek1
             Heuristics.Add(new DoubleValueHeuristic());
             Heuristics.Add(new HiddenPairHeuristic());
             Heuristics.Add(new TripletHeuristic());
+            Heuristics.Add(new BlockingHeuristic());
             LastHeuristic = null;
         }
 

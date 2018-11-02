@@ -325,6 +325,7 @@ namespace Tek1
         {
             foreach (TekFieldView v in MultiselectFieldView)
                 v.SetMultiSelected(false);
+            MultiselectFieldView.Clear();
         }
         public void Reset()
         {
