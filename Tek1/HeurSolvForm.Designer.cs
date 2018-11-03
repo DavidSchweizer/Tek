@@ -35,11 +35,12 @@
             this.split = new System.Windows.Forms.SplitContainer();
             this.tc1 = new System.Windows.Forms.TabControl();
             this.tpCreate = new System.Windows.Forms.TabPage();
+            this.bCancel = new System.Windows.Forms.Button();
+            this.bNext = new System.Windows.Forms.Button();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.listBox1 = new System.Windows.Forms.ListBox();
-            this.button3 = new System.Windows.Forms.Button();
-            this.bNext = new System.Windows.Forms.Button();
-            this.bCancel = new System.Windows.Forms.Button();
+            this.bStart = new System.Windows.Forms.Button();
+            this.bReset = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.split)).BeginInit();
             this.split.Panel2.SuspendLayout();
             this.split.SuspendLayout();
@@ -92,11 +93,12 @@
             // 
             // tpCreate
             // 
+            this.tpCreate.Controls.Add(this.bReset);
             this.tpCreate.Controls.Add(this.bCancel);
             this.tpCreate.Controls.Add(this.bNext);
             this.tpCreate.Controls.Add(this.checkBox1);
             this.tpCreate.Controls.Add(this.listBox1);
-            this.tpCreate.Controls.Add(this.button3);
+            this.tpCreate.Controls.Add(this.bStart);
             this.tpCreate.Location = new System.Drawing.Point(4, 22);
             this.tpCreate.Margin = new System.Windows.Forms.Padding(2);
             this.tpCreate.Name = "tpCreate";
@@ -105,6 +107,32 @@
             this.tpCreate.TabIndex = 0;
             this.tpCreate.Text = "Heuristics";
             this.tpCreate.UseVisualStyleBackColor = true;
+            // 
+            // bCancel
+            // 
+            this.bCancel.Enabled = false;
+            this.bCancel.Location = new System.Drawing.Point(320, 353);
+            this.bCancel.Margin = new System.Windows.Forms.Padding(2);
+            this.bCancel.Name = "bCancel";
+            this.bCancel.Size = new System.Drawing.Size(50, 27);
+            this.bCancel.TabIndex = 15;
+            this.bCancel.Text = "Cancel";
+            this.bCancel.UseVisualStyleBackColor = true;
+            this.bCancel.Visible = false;
+            this.bCancel.Click += new System.EventHandler(this.button1_Click_1);
+            // 
+            // bNext
+            // 
+            this.bNext.Enabled = false;
+            this.bNext.Location = new System.Drawing.Point(223, 352);
+            this.bNext.Margin = new System.Windows.Forms.Padding(2);
+            this.bNext.Name = "bNext";
+            this.bNext.Size = new System.Drawing.Size(50, 27);
+            this.bNext.TabIndex = 14;
+            this.bNext.Text = "&Next";
+            this.bNext.UseVisualStyleBackColor = true;
+            this.bNext.Visible = false;
+            this.bNext.Click += new System.EventHandler(this.bNext_Click);
             // 
             // checkBox1
             // 
@@ -131,42 +159,28 @@
             this.listBox1.TabIndex = 12;
             this.listBox1.DoubleClick += new System.EventHandler(this.listBox1_DoubleClick);
             // 
-            // button3
+            // bStart
             // 
-            this.button3.Location = new System.Drawing.Point(4, 352);
-            this.button3.Margin = new System.Windows.Forms.Padding(2);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(50, 27);
-            this.button3.TabIndex = 11;
-            this.button3.Text = "start!";
-            this.button3.UseVisualStyleBackColor = true;
-            this.button3.Click += new System.EventHandler(this.button3_Click);
+            this.bStart.AccessibleRole = System.Windows.Forms.AccessibleRole.None;
+            this.bStart.Location = new System.Drawing.Point(4, 352);
+            this.bStart.Margin = new System.Windows.Forms.Padding(2);
+            this.bStart.Name = "bStart";
+            this.bStart.Size = new System.Drawing.Size(50, 27);
+            this.bStart.TabIndex = 11;
+            this.bStart.Text = "start!";
+            this.bStart.UseVisualStyleBackColor = true;
+            this.bStart.Click += new System.EventHandler(this.button3_Click);
             // 
-            // bNext
+            // bReset
             // 
-            this.bNext.Enabled = false;
-            this.bNext.Location = new System.Drawing.Point(223, 352);
-            this.bNext.Margin = new System.Windows.Forms.Padding(2);
-            this.bNext.Name = "bNext";
-            this.bNext.Size = new System.Drawing.Size(50, 27);
-            this.bNext.TabIndex = 14;
-            this.bNext.Text = "&Next";
-            this.bNext.UseVisualStyleBackColor = true;
-            this.bNext.Visible = false;
-            this.bNext.Click += new System.EventHandler(this.bNext_Click);
-            // 
-            // bCancel
-            // 
-            this.bCancel.Enabled = false;
-            this.bCancel.Location = new System.Drawing.Point(320, 353);
-            this.bCancel.Margin = new System.Windows.Forms.Padding(2);
-            this.bCancel.Name = "bCancel";
-            this.bCancel.Size = new System.Drawing.Size(50, 27);
-            this.bCancel.TabIndex = 15;
-            this.bCancel.Text = "Cancel";
-            this.bCancel.UseVisualStyleBackColor = true;
-            this.bCancel.Visible = false;
-            this.bCancel.Click += new System.EventHandler(this.button1_Click_1);
+            this.bReset.Location = new System.Drawing.Point(69, 353);
+            this.bReset.Margin = new System.Windows.Forms.Padding(2);
+            this.bReset.Name = "bReset";
+            this.bReset.Size = new System.Drawing.Size(50, 27);
+            this.bReset.TabIndex = 16;
+            this.bReset.Text = "reset!";
+            this.bReset.UseVisualStyleBackColor = true;
+            this.bReset.Click += new System.EventHandler(this.bReset_Click_1);
             // 
             // HeurSolvForm
             // 
@@ -194,10 +208,11 @@
         private System.Windows.Forms.OpenFileDialog ofd1;
         private System.Windows.Forms.TabControl tc1;
         private System.Windows.Forms.TabPage tpCreate;
-        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.Button bStart;
         private System.Windows.Forms.ListBox listBox1;
         private System.Windows.Forms.CheckBox checkBox1;
         private System.Windows.Forms.Button bCancel;
         private System.Windows.Forms.Button bNext;
+        private System.Windows.Forms.Button bReset;
     }
 }

@@ -161,7 +161,9 @@ namespace Tek1
 
         private void button3_Click(object sender, EventArgs e)
         {
-            View.LoadFromFile("8x8-1.tx");
+            bStart.Enabled = false;
+
+            View.LoadFromFile("8x8-9.tx");
 
             using (StreamWriter sw = new StreamWriter("boarddump.dmp"))
             {
@@ -232,6 +234,13 @@ namespace Tek1
             bNext.Visible = checkBox1.Checked;
             bCancel.Enabled = checkBox1.Checked;
             bCancel.Visible = checkBox1.Checked;
+        }
+
+        private void bReset_Click_1(object sender, EventArgs e)
+        {
+            View.ResetValues();
+
+            bStart.Enabled = true;
         }
     }
 

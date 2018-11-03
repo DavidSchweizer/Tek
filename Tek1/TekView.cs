@@ -114,6 +114,8 @@ namespace Tek1
             if (Board == null)
                 return false;
             Board.ResetValues();
+            if (Board.AutoNotes)
+                Board.SetDefaultNotes();
             Moves.Clear();
             _view.Refresh();
             return true;
@@ -317,7 +319,8 @@ namespace Tek1
                         _currentFieldView.SetSelected(true);
                         break;
                 }
-                _currentFieldView.Refresh();
+                if (_currentFieldView != null)
+                    _currentFieldView.Refresh();
             }
         }
 
