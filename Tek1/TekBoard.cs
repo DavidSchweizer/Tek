@@ -237,9 +237,13 @@ namespace Tek1
             }
             return result;
         }
-        public string AsString(bool includeValue = false, bool includeArea=false)
+        public string AsString(bool includeValue = false, bool includeArea = false, bool includeFieldIndex = false)
         {
-            string result = String.Format("[{0},{1} ({2})]", Row, Col, FieldIndex);
+            string result = String.Format("[{0},{1}", Row, Col);
+            if (includeFieldIndex)
+                result = result + String.Format("({0})", FieldIndex);
+            result = result + "]";
+
             if (includeValue)
                 result += String.Format(" value:{0}{1}", Value == 0 ? "-" : Value.ToString(), initial ? "i" : " ");
             if (includeArea)

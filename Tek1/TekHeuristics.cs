@@ -20,7 +20,7 @@ namespace Tek1
         public List<TekField> SkipFields;
         public List<TekField> AffectedFields;
         public List<int> HeuristicValues;
-        public int LastIndex = 0;
+//        public int LastIndex = 0;
         
 
         public TekHeuristic()
@@ -57,7 +57,7 @@ namespace Tek1
             if (totalReset)
                 SkipFields.Clear();
             HeuristicValues.Clear();
-            LastIndex = 0;
+            //LastIndex = 0;
         }
 
         private void AddOnce(List<TekField> list, TekField field)
@@ -93,7 +93,7 @@ namespace Tek1
                     continue;
                 if (HeuristicApplies(board, field))
                 {
-                    LastIndex = field.FieldIndex;
+//                    LastIndex = field.FieldIndex;
                     return true;
                 }
                 else Reset();
@@ -249,19 +249,7 @@ namespace Tek1
             return false;
         }
 
-        //public override bool HeuristicPlay(TekMoves moves)
-        //{
-        //    bool result = false;
-        //    TekField field1 = HeuristicFields[0];
-        //    TekField field2 = HeuristicFields[1];            
-        //    foreach (TekField field in field1.influencers)
-        //        if (field != field1 && field != field2 && field2.influencers.Contains(field))
-        //        {
-        //            if (field.PossibleValues.Contains(HeuristicValues[0]) && ExcludeValues(moves, field))
-        //                result = true;
-        //        }
-        //    return result;
-        //}
+
     }
 
     public class HiddenPairHeuristic : TekHeuristic
@@ -450,11 +438,11 @@ namespace Tek1
             board.AutoNotes = true;
             foreach(TekHeuristic heuristic in Heuristics)
             {
-                int index;
-                if (heuristic == LastHeuristic)
-                    index = heuristic.LastIndex + 1;
-                else
-                    index = 0;
+                int index = 0;
+//                if (heuristic == LastHeuristic)
+ //                   index = heuristic.LastIndex + 1;
+   //             else
+     //               index = 0;
 
                 if (heuristic.Applies(board, index))
                 {
