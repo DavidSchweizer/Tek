@@ -66,9 +66,15 @@ namespace Tek1
                 list.Add(field);
         }
 
-        public void AddHeuristicField(TekField field)
+        protected void AddHeuristicField(TekField field)
         {
             AddOnce(HeuristicFields, field);
+        }
+
+        public void AddHeuristicFields(params TekField[] fields)
+        {
+            foreach(TekField field in fields)
+                AddOnce(HeuristicFields, field);
         }
         public void AddAffectedField(TekField field)
         {
@@ -89,8 +95,8 @@ namespace Tek1
             {
                 if (field.Value > 0 || SkipFields.Contains(field))
                     continue;
-                if (field.FieldIndex < StartField)
-                    continue;
+//                if (field.FieldIndex < StartField)
+  //                  continue;
                 if (HeuristicApplies(board, field))
                 {
 //                    LastIndex = field.FieldIndex;
@@ -156,6 +162,40 @@ namespace Tek1
                     }
                     break;
               }
+        }
+
+        bool IsPair(TekField field1, TekField field2)
+        // hidden pairs are ignored
+        {
+            if (!field1.Influencers.Contains(field2))
+                return false;
+            if (field1.PossibleValues.Count != 2 || field2.PossibleValues.Count != 2)
+                return false;
+            foreach (int value in field1.PossibleValues)
+                if (!field2.PossibleValues.Contains(value))
+                    return false;
+            return true;
+        }
+
+        protected bool IsTriplet(TekField field1, TekField field2, TekField field3)
+        // hidden triplets are ignored
+        {
+            // assume same area
+            if (field1.area != field2.area || field1.area != field3.area || field2.area != field3.area)
+                return false;
+            // 2 or 3 values per field
+            if (field1.PossibleValues.Count < 2 || field1.PossibleValues.Count > 3)
+                return false;
+            if (field2.PossibleValues.Count < 2 || field2.PossibleValues.Count > 3)
+                return false;
+            if (field3.PossibleValues.Count < 2 || field3.PossibleValues.Count > 3)
+                return false;
+            // no pairs!
+            if (IsPair(field1, field2) || IsPair(field1, field3) || IsPair(field2, field3))
+                return false;
+            // find the common possible values: should be 3
+            List<int> commonValues = field1.CommonPossibleValues(field2, field3);
+            return commonValues.Count == 3;
         }
 
     } // TekHeuristic
@@ -308,6 +348,17 @@ namespace Tek1
             Dictionary<int, List<TekField>> FieldsPerValueInArea = field.area.GetFieldsForValues();
             List<int> CandidateValues = new List<int>();
             List<TekField> CandidateFields = new List<TekField>();
+
+            foreach (TekField field2 in field.Influencers)
+            {
+                foreach(TekField field3 in field.Influencers)
+                    if (field != field2 && field != field3 && field2 != field3)
+                        if (IsTriplet(field, field2, field3))
+                        {
+                            AddHeuristicField(field);
+                        }
+            }
+
             foreach (int value in field.PossibleValues)
             {
                 FieldsPerValueInArea[value].Remove(field);
@@ -396,7 +447,7 @@ namespace Tek1
                     {
                         bool blocking = true;
                         foreach (TekField field2 in FieldsPerValueInArea[value])
-                            if (!field.influencers.Contains(field2))
+                            if (!field.Influencers.Contains(field2))
                             {
                                 blocking = false;
                                 break;

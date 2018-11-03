@@ -199,7 +199,7 @@ namespace Tek1
                 //}
                heuristic = heuristics.FindHeuristic(View.Board);
             }
-            View.Selector.ClearMultiSelect()
+            View.Selector.ClearMultiSelect();
             if (View.Board.IsSolved())
                 MessageBox.Show("Solved!");
             else

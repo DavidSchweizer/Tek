@@ -23,7 +23,7 @@ namespace Tek1
         public bool initial;
         public TekArea area;
         public List<TekField> neighbours;
-        public List<TekField> influencers;
+        public List<TekField> Influencers;
         public List<int> PossibleValues;
         public List<int> ExcludedValues; // values excluded by heuristic solution process
         public List<int> Notes;
@@ -41,7 +41,7 @@ namespace Tek1
             _FieldIndex = __FieldIndex++;
             initial = false;
             neighbours = new List<TekField>();
-            influencers = new List<TekField>();
+            Influencers = new List<TekField>();
             PossibleValues = new List<int>();
             for (int i = 1; i <= Const.MAXTEK; i++)
                 PossibleValues.Add(i);
@@ -142,7 +142,7 @@ namespace Tek1
                 for (int i = 1; i <= ((area == null) ? Const.MAXTEK : area.fields.Count); i++)
                     if (!ExcludedValues.Contains(i))
                         PossibleValues.Add(i);
-                foreach (TekField field in influencers)
+                foreach (TekField field in Influencers)
                     if (field.Value > 0)
                         PossibleValues.Remove(field.Value);
             }
@@ -153,7 +153,7 @@ namespace Tek1
             _cascading = true;
             try
             {
-                foreach (TekField field in influencers)
+                foreach (TekField field in Influencers)
                     field.UpdatePossibleValues();
             }
             finally
@@ -168,7 +168,7 @@ namespace Tek1
                 return PossibleValues.Count > 0;
             else
             {
-                foreach (TekField field in influencers)
+                foreach (TekField field in Influencers)
                     if (field.Value == Value)
                         return false;
                 return true;
@@ -188,18 +188,18 @@ namespace Tek1
 
         public void AddInfluencer(TekField f)
         {
-            if (!influencers.Contains(f)) // don't add more than once
-                influencers.Add(f);
+            if (!Influencers.Contains(f)) // don't add more than once
+                Influencers.Add(f);
         }
 
         public bool HasInfluencer(TekField f)
         {
-            return influencers.Contains(f);
+            return Influencers.Contains(f);
         }
 
         public void SetInfluencers()
         {
-            influencers.Clear();
+            Influencers.Clear();
             // add area
             if (area != null)
                 foreach (TekField field in area.fields)
@@ -212,11 +212,11 @@ namespace Tek1
         public List<TekField> CommonInfluencers(params TekField[] fields)
         {
             List<TekField> result = new List<TekField>();
-            foreach(TekField f in influencers)
+            foreach(TekField f in Influencers)
             {
                 bool isCommon = true;
                 for (int i = 0; i < fields.Length && isCommon; i++)
-                    if (fields.Contains(f) || !fields[i].influencers.Contains(f))
+                    if (fields.Contains(f) || !fields[i].Influencers.Contains(f))
                         isCommon = false;
                 if (isCommon)
                     result.Add(f);
@@ -270,7 +270,7 @@ namespace Tek1
             if ((flags & FLD_DMP_INFLUENCERS) != 0)
             {
                 sw.Write("Influencrs:");
-                foreach (TekField t in influencers)
+                foreach (TekField t in Influencers)
                     sw.Write("{0} ", t.AsString());
                 sw.WriteLine();
             }
@@ -567,7 +567,7 @@ namespace Tek1
             foreach (TekField field in values)
                 if (field.Value == 0)
                     return false;
-                else foreach (TekField field2 in field.influencers)
+                else foreach (TekField field2 in field.Influencers)
                         if (field2.Value == field.Value)
                             return false;
             return true;
