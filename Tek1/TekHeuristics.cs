@@ -29,7 +29,6 @@ namespace Tek1
             _description = description;
             _action = action;
             HeuristicFields = new List<TekField>();
-            SkipFields = new List<TekField>();
             AffectedFields = new List<TekField>();
             HeuristicValues = new List<int>();
         }
@@ -387,7 +386,7 @@ namespace Tek1
         public override bool HeuristicApplies(TekBoard board, TekField field)
         {
             foreach (TekField field2 in field.Influencers)
-                if (field2.PossibleValues.Count == 3)
+                if (field2.PossibleValues.Count == 2 || field2.PossibleValues.Count == 3)
                     foreach (TekField field3 in field.CommonInfluencers(field2))
                         if (field3.PossibleValues.Count == 2)
                         {
