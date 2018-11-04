@@ -17,7 +17,6 @@ namespace Tek1
         public HeuristicAction Action { get { return _action; } }
         public string Description { get { return _description; } }
         public List<TekField> HeuristicFields;
-        public List<TekField> SkipFields;
         public List<TekField> AffectedFields;
         public List<int> HeuristicValues;
 
@@ -52,8 +51,6 @@ namespace Tek1
         {
             HeuristicFields.Clear();
             AffectedFields.Clear();
-            if (totalReset)
-                SkipFields.Clear();
             HeuristicValues.Clear();
             //LastIndex = 0;
         }
@@ -96,13 +93,10 @@ namespace Tek1
             Reset();
             foreach (TekField field in board.values)
             {
-                if (field.Value > 0 || SkipFields.Contains(field))
+                if (field.Value > 0 )
                     continue;
-                //                if (field.FieldIndex < StartField)
-                //                  continue;
-                if (HeuristicApplies(board, field))
+               if (HeuristicApplies(board, field))
                 {
-                    //                    LastIndex = field.FieldIndex;
                     return true;
                 }
                 else Reset();
@@ -111,8 +105,6 @@ namespace Tek1
         }
 
         abstract public bool HeuristicApplies(TekBoard board, TekField field);
-
-        //abstract public bool HeuristicPlay(TekMoves moves);
 
         public void SetValue(TekMoves moves, TekField field, int value)
         {
@@ -124,7 +116,7 @@ namespace Tek1
         {
             foreach (int value in HeuristicValues)
             {
-                if (field.PossibleValues.Contains(value))
+                if (field.ValuePossible(value))
                     moves.ExcludeValue(field, value);
             }
         }
@@ -138,7 +130,7 @@ namespace Tek1
                     excludingValues.Add(value);
             }
             foreach (int value in excludingValues)
-                if (field.PossibleValues.Contains(value))
+                if (field.ValuePossible(value))
                     moves.ExcludeValue(field, value);
         }
 
@@ -175,7 +167,7 @@ namespace Tek1
             if (field1.PossibleValues.Count != 2 || field2.PossibleValues.Count != 2)
                 return false;
             foreach (int value in field1.PossibleValues)
-                if (!field2.PossibleValues.Contains(value))
+                if (!field2.ValuePossible(value))
                     return false;
             return true;
         }
@@ -192,9 +184,9 @@ namespace Tek1
                 return false;
             if (field3.PossibleValues.Count < 2 || field3.PossibleValues.Count > 3)
                 return false;          
-            // find the common possible values: should be 3
-            List<int> commonValues = field1.CommonPossibleValues(field2, field3);
-            return commonValues.Count == 3;
+            // find the total possible values: should be 3
+            List<int> totalValues = field1.TotalPossibleValues(field2, field3);
+            return totalValues.Count == 3;
         }
 
         protected bool IsInvalidThreePairs(TekField field1, TekField field2, TekField field3)
@@ -291,7 +283,7 @@ namespace Tek1
                     {
                         bool isAffected = false;
                         foreach (int value in field.PossibleValues)
-                            if (f.PossibleValues.Contains(value))
+                            if (f.ValuePossible(value))
                             {
                                 isAffected = true;
                                 break;
@@ -385,6 +377,36 @@ namespace Tek1
             return false;
         }
     } // TripletHeuristic
+
+    public class TripletHeuristic2 : TekHeuristic
+    {
+        public TripletHeuristic2() : base("Triplets (cascade)", HeuristicAction.haExcludeValue)
+        {
+        }
+
+        public override bool HeuristicApplies(TekBoard board, TekField field)
+        {
+            foreach (TekField field2 in field.Influencers)
+                if (field2.PossibleValues.Count == 3)
+                    foreach (TekField field3 in field.CommonInfluencers(field2))
+                        if (field3.PossibleValues.Count == 2)
+                        {
+                            foreach(TekField field4 in field2.CommonInfluencers(field3))
+                                if (field4 != field && field4.PossibleValues.Count == 2 && IsTriplet(field2, field3, field4, false))
+                                {
+                                    foreach (int value in field.TotalPossibleValues(field2, field3))
+                                        if (field.ValuePossible(value) && field2.ValuePossible(value) && field3.ValuePossible(value) && !field4.ValuePossible(value))
+                                        {
+                                            AddHeuristicFields(field2, field3, field4);
+                                            AddAffectedField(field);
+                                            AddValue(value);
+                                            return true;
+                                        }
+                                }
+                        }
+            return false;
+        }
+    } // TripletHeuristic2
 
     public class BlockingHeuristic : TekHeuristic
     {
@@ -499,8 +521,7 @@ namespace Tek1
     public class TekHeuristics
     {
         List<TekHeuristic> Heuristics;
-        TekHeuristic LastHeuristic;
-
+        
         public TekHeuristics()
         {
             Heuristics = new List<TekHeuristic>();
@@ -512,7 +533,7 @@ namespace Tek1
             Heuristics.Add(new BlockingHeuristic());
             Heuristics.Add(new BlockingThreePairsHeuristic());
             Heuristics.Add(new AlternatingChainHeuristic());
-            LastHeuristic = null;
+            Heuristics.Add(new TripletHeuristic2());
         }
 
         public TekHeuristic FindHeuristic(TekBoard board)
@@ -523,11 +544,9 @@ namespace Tek1
                 int index = 0;
                 if (heuristic.Applies(board, index))
                 {
-                    LastHeuristic = heuristic;
                     return heuristic;
                 }
             }
-            LastHeuristic = null;
             return null;
         }
     }

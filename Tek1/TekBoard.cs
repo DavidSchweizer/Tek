@@ -223,17 +223,36 @@ namespace Tek1
             }
             return result;
         }
+
+        public bool ValuePossible(int value)
+        {
+            return PossibleValues.Contains(value);
+        }
         public List<int> CommonPossibleValues(params TekField[] fields)
         {
             List<int> result = new List<int>();
             for(int value = 1; value <= Const.MAXTEK; value++)
             {
-                bool isCommon = this.PossibleValues.Contains(value);
+                bool isCommon = this.ValuePossible(value);
                 for (int i = 0; i < fields.Length && isCommon; i++)
-                    if (!fields[i].PossibleValues.Contains(value))
+                    if (!fields[i].ValuePossible(value))
                         isCommon = false;
                 if (isCommon)
                     result.Add(value);
+            }
+            return result;
+        }
+        public List<int> TotalPossibleValues(params TekField[] fields)
+        {
+            List<int> result = new List<int>();
+            for (int value = 1; value <= Const.MAXTEK; value++)
+            {
+                if (this.ValuePossible(value))
+                    result.Add(value);
+                else
+                    foreach(TekField field in fields)
+                       if(field.ValuePossible(value) && !result.Contains(value))
+                          result.Add(value);
             }
             return result;
         }
@@ -390,7 +409,7 @@ namespace Tek1
             {
                 bool hasValues = true;
                 foreach (int value in values)
-                    if (f.PossibleValues.Contains(value))
+                    if (f.ValuePossible(value))
                     {
                         hasValues = false;
                         break;
