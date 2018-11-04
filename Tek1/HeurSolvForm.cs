@@ -163,7 +163,7 @@ namespace Tek1
         {
             bStart.Enabled = false;
 
-            View.LoadFromFile("8x8-9.tx");
+            View.LoadFromFile("8x8-8.tx");
 
             using (StreamWriter sw = new StreamWriter("boarddump.dmp"))
             {

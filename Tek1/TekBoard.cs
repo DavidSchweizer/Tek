@@ -667,6 +667,9 @@ namespace Tek1
 
     public class TekBoardParser
     {
+        const string COMMENTPATTERN = @"#.*";
+        private Regex commentPattern;
+
         const string SIZEPATTERN = @"size=(?<rows>[1-9]\d*),(?<cols>[1-9]\d*)";
         const string SIZEFORMAT = @"size={0},{1}";
         private Regex sizePattern;
@@ -686,6 +689,7 @@ namespace Tek1
 
         public TekBoardParser()
         {
+            commentPattern = new Regex(COMMENTPATTERN);
             sizePattern = new Regex(SIZEPATTERN);
             areaPattern1 = new Regex(AREAPATTERN1);
             areaPattern2 = new Regex(AREAPATTERN2);
@@ -718,6 +722,12 @@ namespace Tek1
             {
                 _Export(board, wr);
             }    
+        }
+
+        private bool ParseComment(string input)
+        {
+            Match match = commentPattern.Match(input);
+            return match.Success;
         }
 
         private TekBoard ParseSize(string input)
@@ -851,6 +861,8 @@ namespace Tek1
                     continue;
                 else
                 {
+                    if (ParseComment(s))
+                        continue;                   
                     if (board == null)
                     {
                         board = ParseSize(s);
