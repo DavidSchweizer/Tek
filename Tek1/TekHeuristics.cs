@@ -13,15 +13,12 @@ namespace Tek1
         static string[] actionDescriptions = { "none", "set value", "exclude value(s)", "exclude complement value(s)" };
 
         string _description;
-        private HeuristicAction _action; 
+        private HeuristicAction _action;
         public HeuristicAction Action { get { return _action; } }
         public string Description { get { return _description; } }
         public List<TekField> HeuristicFields;
-        public List<TekField> SkipFields;
         public List<TekField> AffectedFields;
         public List<int> HeuristicValues;
-        public int LastIndex = 0;
-        
 
         public TekHeuristic()
         {
@@ -32,32 +29,29 @@ namespace Tek1
             _description = description;
             _action = action;
             HeuristicFields = new List<TekField>();
-            SkipFields = new List<TekField>();
             AffectedFields = new List<TekField>();
             HeuristicValues = new List<int>();
         }
         public string AsString()
         {
-           string result = String.Format("{0}-{1} [located fields: ", Description, actionDescriptions[(int)Action]);
+            string result = String.Format("{0} [fields: ", Description);
 
             foreach (TekField field in HeuristicFields)
                 result = result + String.Format("{0} ", field.AsString());
-            result = result + "; affected fields: ";
+            result = result + "; affects: ";
             foreach (TekField field in AffectedFields)
                 result = result + String.Format("{0} ", field.AsString());
-            result = result + ". values: ";
+            result = result + "| values: ";
             foreach (int value in HeuristicValues)
                 result = result + String.Format("{0} ", value);
-            return result + "]";
+            return result + "] " + actionDescriptions[(int)Action];
         }
         public void Reset(bool totalReset = false)
         {
             HeuristicFields.Clear();
             AffectedFields.Clear();
-            if (totalReset)
-                SkipFields.Clear();
             HeuristicValues.Clear();
-            LastIndex = 0;
+            //LastIndex = 0;
         }
 
         private void AddOnce(List<TekField> list, TekField field)
@@ -66,34 +60,42 @@ namespace Tek1
                 list.Add(field);
         }
 
-        public void AddHeuristicField(TekField field)
+        protected void AddHeuristicField(TekField field)
         {
             AddOnce(HeuristicFields, field);
         }
-        public void AddAffectedField(TekField field)
+
+        protected void AddHeuristicFields(params TekField[] fields)
+        {
+            foreach (TekField field in fields)
+                AddOnce(HeuristicFields, field);
+        }
+        protected void AddAffectedField(TekField field)
         {
             AddOnce(AffectedFields, field);
 
         }
 
-        public void AddValue(int value)
+        protected void AddValue(int value)
         {
             if (!HeuristicValues.Contains(value))
                 HeuristicValues.Add(value);
+        }
+        protected void AddValues(params int[] values)
+        {
+            foreach (int value in values)
+                AddValue(value);
         }
 
         public bool Applies(TekBoard board, int StartField = 0)
         {
             Reset();
-            foreach(TekField field in board.values)
+            foreach (TekField field in board.values)
             {
-                if (field.Value > 0 || SkipFields.Contains(field))
+                if (field.Value > 0 )
                     continue;
-                if (field.FieldIndex < StartField)
-                    continue;
-                if (HeuristicApplies(board, field))
+               if (HeuristicApplies(board, field))
                 {
-                    LastIndex = field.FieldIndex;
                     return true;
                 }
                 else Reset();
@@ -102,8 +104,6 @@ namespace Tek1
         }
 
         abstract public bool HeuristicApplies(TekBoard board, TekField field);
-
-        //abstract public bool HeuristicPlay(TekMoves moves);
 
         public void SetValue(TekMoves moves, TekField field, int value)
         {
@@ -115,7 +115,7 @@ namespace Tek1
         {
             foreach (int value in HeuristicValues)
             {
-                if (field.PossibleValues.Contains(value))
+                if (field.ValuePossible(value))
                     moves.ExcludeValue(field, value);
             }
         }
@@ -129,14 +129,14 @@ namespace Tek1
                     excludingValues.Add(value);
             }
             foreach (int value in excludingValues)
-                if (field.PossibleValues.Contains(value))
+                if (field.ValuePossible(value))
                     moves.ExcludeValue(field, value);
         }
 
         public void ExecuteAction(TekMoves moves)
         {
-              switch(Action)
-              {
+            switch (Action)
+            {
                 case HeuristicAction.haNone:
                     break;
 
@@ -155,9 +155,68 @@ namespace Tek1
                         ExcludeComplementValues(moves, field);
                     }
                     break;
-              }
+            }
         }
 
+        protected bool IsPair(TekField field1, TekField field2)
+        // hidden pairs are ignored
+        {
+            if (!field1.Influencers.Contains(field2))
+                return false;
+            if (field1.PossibleValues.Count != 2 || field2.PossibleValues.Count != 2)
+                return false;
+            foreach (int value in field1.PossibleValues)
+                if (!field2.ValuePossible(value))
+                    return false;
+            return true;
+        }
+
+        protected bool IsTriplet(TekField field1, TekField field2, TekField field3, bool inSameArea = true)
+        // hidden triplets are ignored
+        {
+            if (inSameArea && (field1.area != field2.area || field1.area != field3.area || field2.area != field3.area))
+                return false;
+            // 2 or 3 values per field
+            if (field1.PossibleValues.Count < 2 || field1.PossibleValues.Count > 3)
+                return false;
+            if (field2.PossibleValues.Count < 2 || field2.PossibleValues.Count > 3)
+                return false;
+            if (field3.PossibleValues.Count < 2 || field3.PossibleValues.Count > 3)
+                return false;          
+            // find the total possible values: should be 3
+            List<int> totalValues = field1.TotalPossibleValues(field2, field3);
+            return totalValues.Count == 3;
+        }
+
+        protected bool IsInvalidThreePairs(TekField field1, TekField field2, TekField field3)
+        {
+            if (field1.CommonPossibleValues(field2, field3).Count != 2 || !IsPair(field1, field2) || !IsPair(field1, field3) || !IsPair(field2, field3))
+                return false;
+            return (field1.Influencers.Contains(field2) && field1.Influencers.Contains(field3) && field2.Influencers.Contains(field3));
+        }
+
+        static protected List<TekField> ChainBackTracking = new List<TekField>();
+        protected void InitializeChain()
+        { ChainBackTracking.Clear(); }
+
+        protected bool ChainExists(TekField field, TekField target, bool isOdd)
+        {
+            if (field.Influencers.Contains(target))
+                return !isOdd;
+            else
+            {
+                foreach (TekField f in field.Influencers)
+                    if (f.Value == 0 && !ChainBackTracking.Contains(f))
+                    {
+                        ChainBackTracking.Add(f);
+                        if (IsPair(field, f) && ChainExists(f, target, !isOdd))
+                            return true;
+                        else
+                            ChainBackTracking.Remove(f);
+                    }
+            }
+            return false;
+        }
     } // TekHeuristic
 
     public class SingleValueHeuristic : TekHeuristic
@@ -210,58 +269,33 @@ namespace Tek1
         }
         public override bool HeuristicApplies(TekBoard board, TekField field)
         {
-            if (field.PossibleValues.Count == 2)
-            {
-                foreach (TekField field2 in field.area.fields)
-                {
-                    if (field == field2)
-                        continue;
-                    bool hasAllValues = field2.PossibleValues.Count == 2;
-                    if (hasAllValues)
-                        foreach (int value in field.PossibleValues)
-                        {
-                            if (!field2.PossibleValues.Contains(value))
-                                hasAllValues = false;
-                        }
-                    if (hasAllValues)
-                    {
-                        AddHeuristicField(field);
-                        AddHeuristicField(field2);
-                        foreach (TekField f in field.CommonInfluencers(field2))
-                        {
-                            bool isAffected = false;
-                            foreach (int value in field.PossibleValues)
-                                if (f.PossibleValues.Contains(value))
-                                {
-                                    isAffected = true;
-                                    break;
-                                }
-                            if (isAffected)
-                                AddAffectedField(f);
-                        }
-                        foreach (int value in field.PossibleValues)
-                            AddValue(value);
-                        return AffectedFields.Count > 0;
-                    }
-                }
+            if (field.PossibleValues.Count != 2)
                 return false;
+            foreach (TekField field2 in field.Influencers)
+            {
+                if (field == field2)
+                    continue;
+                if (IsPair(field, field2))
+                {
+                    AddHeuristicFields(field, field2);
+                    foreach (TekField f in field.CommonInfluencers(field2))
+                    {
+                        bool isAffected = false;
+                        foreach (int value in field.PossibleValues)
+                            if (f.ValuePossible(value))
+                            {
+                                isAffected = true;
+                                break;
+                            }
+                        if (isAffected)
+                            AddAffectedField(f);
+                    }
+                    AddValues(field.PossibleValues.ToArray());
+                    return AffectedFields.Count > 0;
+                }
             }
             return false;
         }
-
-        //public override bool HeuristicPlay(TekMoves moves)
-        //{
-        //    bool result = false;
-        //    TekField field1 = HeuristicFields[0];
-        //    TekField field2 = HeuristicFields[1];            
-        //    foreach (TekField field in field1.influencers)
-        //        if (field != field1 && field != field2 && field2.influencers.Contains(field))
-        //        {
-        //            if (field.PossibleValues.Contains(HeuristicValues[0]) && ExcludeValues(moves, field))
-        //                result = true;
-        //        }
-        //    return result;
-        //}
     }
 
     public class HiddenPairHeuristic : TekHeuristic
@@ -297,14 +331,12 @@ namespace Tek1
             }
             if (field2 == null)
                 return false;
-            AddHeuristicField(field);
-            AddHeuristicField(field2);
+            AddHeuristicFields(field, field2);
             if (field.PossibleValues.Count > 2)
                 AddAffectedField(field);
             if (field2.PossibleValues.Count > 2)
                 AddAffectedField(field2);
-            AddValue(value1);
-            AddValue(value2);
+            AddValues(value1, value2);
             return AffectedFields.Count > 0;
         }
     }
@@ -317,84 +349,178 @@ namespace Tek1
 
         public override bool HeuristicApplies(TekBoard board, TekField field)
         {
-            Dictionary<int, List<TekField>> FieldsPerValueInArea = field.area.GetFieldsForValues();
-            List<int> CandidateValues = new List<int>();
-            List<TekField> CandidateFields = new List<TekField>();
-            foreach (int value in field.PossibleValues)
+            foreach (TekField field2 in field.Influencers)
             {
-                FieldsPerValueInArea[value].Remove(field);
-                if (FieldsPerValueInArea[value].Count >= 1 && FieldsPerValueInArea[value].Count <= 2)
+                foreach(TekField field3 in field.Influencers)
+                    if (field != field2 && field != field3 && field2 != field3)
+                        if (IsTriplet(field, field2, field3))
+                        {
+                            AddHeuristicFields(field, field2, field3);
+                            AddValues(field.CommonPossibleValues(field2, field3).ToArray());
+                            // determine affected fields
+                            foreach(TekField f in field.CommonInfluencers(field2, field3))
+                            {
+                                foreach(int value in f.PossibleValues)
+                                    if (HeuristicValues.Contains(value))
+                                    {
+                                        AddAffectedField(f);
+                                        break;
+                                    }
+                            }
+                            if (AffectedFields.Count > 0)
+                                return true;
+                            else
+                                Reset();
+                        }
+            }
+            return false;
+        }
+    } // TripletHeuristic
+
+    public class TripletHeuristic2 : TekHeuristic
+    {
+        public TripletHeuristic2() : base("Triplets (cascade)", HeuristicAction.haExcludeValue)
+        {
+        }
+
+        public override bool HeuristicApplies(TekBoard board, TekField field)
+        {
+            foreach (TekField field2 in field.Influencers)
+                if (field2.PossibleValues.Count == 2 || field2.PossibleValues.Count == 3)
+                    foreach (TekField field3 in field.CommonInfluencers(field2))
+                        if (field3.PossibleValues.Count == 2)
+                        {
+                            foreach(TekField field4 in field2.CommonInfluencers(field3))
+                                if (field4 != field && field4.PossibleValues.Count == 2 && IsTriplet(field2, field3, field4, false))
+                                {
+                                    foreach (int value in field.TotalPossibleValues(field2, field3))
+                                        if (field.ValuePossible(value) && field2.ValuePossible(value) && field3.ValuePossible(value) && !field4.ValuePossible(value))
+                                        {
+                                            AddHeuristicFields(field2, field3, field4);
+                                            AddAffectedField(field);
+                                            AddValue(value);
+                                            return true;
+                                        }
+                                }
+                        }
+            return false;
+        }
+    } // TripletHeuristic2
+
+    public class BlockingHeuristic : TekHeuristic
+    {
+        public BlockingHeuristic() : base("Blocking", HeuristicAction.haExcludeValue)
+        {
+        }
+
+        public override bool HeuristicApplies(TekBoard board, TekField field)
+        {
+            List<TekArea> AdjacentAreas = field.area.GetAdjacentAreas();
+            foreach (TekArea area in AdjacentAreas)
+            {
+                Dictionary<int, List<TekField>> FieldsPerValueInArea = area.GetFieldsForValues();
+                foreach (int value in field.PossibleValues)
                 {
-                    foreach (TekField f in FieldsPerValueInArea[value])
+                    if (FieldsPerValueInArea.Keys.Contains(value))
                     {
-                        CandidateValues.Add(value);
-                        CandidateFields.Add(f);
+                        bool blocking = true;
+                        foreach (TekField field2 in FieldsPerValueInArea[value])
+                            if (!field.Influencers.Contains(field2))
+                            {
+                                blocking = false;
+                                break;
+                            }
+                        if (blocking)
+                        {
+                            AddHeuristicField(field);
+                            AddAffectedField(field);
+                            AddValue(value);
+                            return true;
+                        }
                     }
                 }
             }
-            //TekField field2 = null, field3 = null;
-            //int value1 = 0, value2 = 0, value3 = 0;
-            //for (int i = 0; i < CandidateFields.Count && field2 == null && field3 == null; i++)
-            //{
-            //    for (int j = i + 1; j < CandidateFields.Count && field2 == null && field3 == null; j++)
-            //        if (CandidateFields[j] == CandidateFields[i])
-            //        {
-            //            field2 = CandidateFields[i];
-            //            value1 = CandidateValues[i];
-            //            value2 = CandidateValues[j];
-            //            for(int k = j+1; k < CandidateFields.Count && field2 == null && field3 == null; k++)
-            //                if(CandidateFields[k]==CandidateFields[j])
-            //        }
-            //}
-            List<TekField> candidates = new List<TekField>();
-            List<int> TripletValues = new List<int>();
-            if (field.PossibleValues.Count > 3 || field.PossibleValues.Count < 2)
-                return false;
-           // foreach (int value in field.PossibleValues)
-           // {
-           //     TripletValues.Add(value);
-           //     valuesFields[value].Remove(field);
-           //     if (valuesFields[value].Count == 1 && !candidates.Contains(valuesFields[value][0]))
-           //         candidates.Add(valuesFields[value][0]);
-           //     if (valuesFields[value].Count == 2 && !candidates.Contains(valuesFields[value][1]))
-           //         candidates.Add(valuesFields[value][1]);
-           // }
-           //while (i >= 0)
-           // {
-           //     TekField f = candidates[i];
-           //      foreach(int value in f.PossibleValues)
-           //      { 
-           //             if ()
-
-
-           // // candidates contains all fields with shared value(s) and no other fields for this value
-           // // or,better,the target field and the candidate are a (hidden) pair.
-
-           // for (int i = 0; i < candidates.Count; i++)
-           //     for (int j = i + 1; j < candidates.Count; j++)
-           //         if (candidates[i] == candidates[j] &&
-           //             ((field.PossibleValues.Count > 2 || candidates[i].PossibleValues.Count > 2))
-           //             ) // this is a confirmed HIDDEN pair
-           //         {
-           //             AddField(field);
-           //             AddField(candidates[i]);
-           //             foreach (int value in field.PossibleValues)
-           //             {
-           //                 if (valuesFields[value].Contains(candidates[i]) && valuesFields[value].Count == 1)
-           //                     AddValue(value);
-           //             }
-           //             return true;
-           //         }
             return false;
         }
+    } // BlockingHeuristic
 
-    } // TripletHeuristic
+    public class BlockingThreePairsHeuristic : TekHeuristic
+    {
+        public BlockingThreePairsHeuristic() : base("Blocking (three pairs)", HeuristicAction.haExcludeValue)
+        {
+        }
+
+        public override bool HeuristicApplies(TekBoard board, TekField field)
+        {
+            if (field.PossibleValues.Count == 0)
+                return false;
+            for (int i = 0; i < field.PossibleValues.Count; i++) // note: foreach can not work since we modify during processing!
+            {
+                try
+                {
+                    field.Value = field.PossibleValues[i];// trying this value
+                    foreach (TekField field1 in field.Influencers) // field must at least influence two other fields (which could now be pairs)
+                        foreach (TekField field2 in field.Influencers)
+                            if (field1 != field2)
+                                foreach (TekField field3 in field1.CommonInfluencers(field2)) 
+                                    // and if there is a third field as well we might have the invalid configuration
+                                    if (IsInvalidThreePairs(field1, field2, field3))
+                                    {
+                                        AddHeuristicField(field);
+                                        AddAffectedField(field);
+                                        AddValue(field.Value);
+                                        return true;
+                                    }
+                }
+                finally 
+                {
+                    field.Value = 0;
+                }
+            }
+            return false;
+        }
+    } // BlockingThreePairsHeuristic
+
+    public class AlternatingChainHeuristic : TekHeuristic
+    {
+        public AlternatingChainHeuristic() : base("Alternating Chain", HeuristicAction.haExcludeValue)
+        {
+        }
+
+        public override bool HeuristicApplies(TekBoard board, TekField field)
+        {
+            if (field.PossibleValues.Count != 2)
+                return false;
+            List<TekField> candidates = new List<TekField>();
+
+            foreach (TekField f in field.Influencers)
+                if (IsPair(field, f))
+                    candidates.Add(f);
+            if (candidates.Count < 2)
+                return false;
+            InitializeChain();
+            foreach (TekField field2 in candidates)
+            {
+                ChainBackTracking.Add(field);
+                ChainBackTracking.Add(field2);
+                foreach (TekField target in field2.Influencers)
+                    if (target != field && target.Value == 0 && !IsPair(field, target) && ChainExists(field, target, false))
+                    {
+                        AddHeuristicField(field);
+                        AddAffectedField(target);
+                        AddValues(field.PossibleValues.ToArray());
+                        return true;
+                    }
+                ChainBackTracking.Remove(field2);
+            }
+            return false;
+        }
+    } // AlternatingChainHeuristic
 
     public class TekHeuristics
     {
         List<TekHeuristic> Heuristics;
-        TekHeuristic LastHeuristic;
-
+        
         public TekHeuristics()
         {
             Heuristics = new List<TekHeuristic>();
@@ -403,7 +529,10 @@ namespace Tek1
             Heuristics.Add(new DoubleValueHeuristic());
             Heuristics.Add(new HiddenPairHeuristic());
             Heuristics.Add(new TripletHeuristic());
-            LastHeuristic = null;
+            Heuristics.Add(new BlockingHeuristic());
+            Heuristics.Add(new BlockingThreePairsHeuristic());
+            Heuristics.Add(new AlternatingChainHeuristic());
+            Heuristics.Add(new TripletHeuristic2());
         }
 
         public TekHeuristic FindHeuristic(TekBoard board)
@@ -411,19 +540,12 @@ namespace Tek1
             board.AutoNotes = true;
             foreach(TekHeuristic heuristic in Heuristics)
             {
-                int index;
-                if (heuristic == LastHeuristic)
-                    index = heuristic.LastIndex + 1;
-                else
-                    index = 0;
-
+                int index = 0;
                 if (heuristic.Applies(board, index))
                 {
-                    LastHeuristic = heuristic;
                     return heuristic;
                 }
             }
-            LastHeuristic = null;
             return null;
         }
     }

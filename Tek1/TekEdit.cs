@@ -42,6 +42,8 @@ namespace Tek1
 
         public void ResetBoard()
         {
+            if (Board == null)
+                return;
             int i = Board.areas.Count - 1;
             while (i >= 0)
             { 

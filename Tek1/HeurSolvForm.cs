@@ -16,6 +16,9 @@ namespace Tek1
     {
         TekEdit View;
         bool _lastShowErrors = false;
+        bool Canceled = false;
+        bool Paused;
+
         public HeurSolvForm()
         {
             InitializeComponent();
@@ -158,7 +161,9 @@ namespace Tek1
 
         private void button3_Click(object sender, EventArgs e)
         {
-            View.LoadFromFile("8x8-1.tx");
+            bStart.Enabled = false;
+
+            View.LoadFromFile("8x8-8.tx");
 
             using (StreamWriter sw = new StreamWriter("boarddump.dmp"))
             {
@@ -171,20 +176,32 @@ namespace Tek1
             TekHeuristics heuristics = new TekHeuristics();
             TekHeuristic heuristic = heuristics.FindHeuristic(View.Board);
             int heurFound = 1;
-            while (heuristic != null)
+            Canceled = false;
+            while (heuristic != null &&  !Canceled)
             {
                 listBox1.Items.Add(String.Format("{0}: {1}", heurFound++, heuristic.AsString()));
+                listBox1.SelectedIndex = listBox1.Items.Count - 1;
                 listBox1.Refresh();
                 View.SelectFields(heuristic.HeuristicFields.ToArray());
-              MessageBox.Show("next...");
+                if (checkBox1.Checked)
+                {
+                    Paused = true;
+                    while (Paused)
+                    {
+                        Application.DoEvents(); // Delphi style, is supposed to be unsafe
+                        if (Canceled)
+                            break;
+                    }
+                }
                 heuristic.ExecuteAction(View.Moves);
                 View.Refresh();
                 //if (heurFound == 19)
-                //{ this forces an hidden pair, just for test purposes
+                //{ // this forces an hidden pair, just for test purposes
                 //    View.Board.values[3, 4].PossibleValues.Remove(2);
                 //}
                heuristic = heuristics.FindHeuristic(View.Board);
             }
+            View.Selector.ClearMultiSelect();
             if (View.Board.IsSolved())
                 MessageBox.Show("Solved!");
             else
@@ -199,6 +216,31 @@ namespace Tek1
                 foreach (string s in listBox1.Items)
                         sw.WriteLine(s);
             }
+        }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            Canceled = true;
+        }
+
+        private void bNext_Click(object sender, EventArgs e)
+        {
+            Paused = false;
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            bNext.Enabled = checkBox1.Checked;
+            bNext.Visible = checkBox1.Checked;
+            bCancel.Enabled = checkBox1.Checked;
+            bCancel.Visible = checkBox1.Checked;
+        }
+
+        private void bReset_Click_1(object sender, EventArgs e)
+        {
+            View.ResetValues();
+
+            bStart.Enabled = true;
         }
     }
 
