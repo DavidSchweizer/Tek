@@ -659,7 +659,12 @@ namespace Tek1
         const string NOTESPATTERN2 = @"(?<value>[1-5])+";
         const string NOTESFORMAT1 = @"notes=({0},{1})";
         const string NOTESFORMAT2 = @"{0} ";
+        const string EXCLUDESPATTERN1 = @"notes=\((?<row>\d+),(?<col>\d+)\)(?<value>[1-5])+(?<rest>(.*))?";
+        const string EXCLUDESPATTERN2 = @"(?<value>[1-5])+";
+        const string EXCLUDESFORMAT1 = @"excludes=({0},{1})";
+        const string EXCLUDESFORMAT2 = @"{0} ";
         private Regex notesPattern1, notesPattern2;
+        private Regex excludesPattern1, excludesPattern2;
 
         public TekBoardParser()
         {
@@ -669,6 +674,8 @@ namespace Tek1
             valuePattern = new Regex(VALUEPATTERN);
             notesPattern1 = new Regex(NOTESPATTERN1);
             notesPattern2 = new Regex(NOTESPATTERN2);
+            excludesPattern1 = new Regex(EXCLUDESPATTERN1);
+            excludesPattern2 = new Regex(EXCLUDESPATTERN2);
         }
 
         private void ParseError(string format, params object[] list)
@@ -777,38 +784,79 @@ namespace Tek1
                 return false;
         }
 
-        private bool ParseNotes(string input, TekBoard board)
+        private enum MultiValues { mvNotes, mvExcludes };
+        static string[] MultiValueString = { @"notes", @"excludes" };
+        private bool ParseMultiValues(string input, TekBoard board, MultiValues mvType)
         {
-            int row, col, value ;
+            int row, col, value;
             TekField field = null;
+            Regex pattern1 = null, pattern2 = null;
 
-            Match match = notesPattern1.Match(input);
+            switch (mvType)
+            {
+                case MultiValues.mvNotes:
+                    pattern1 = notesPattern1;
+                    pattern2 = notesPattern2;
+                    break;
+                case MultiValues.mvExcludes:
+                    pattern1 = excludesPattern1;
+                    pattern2 = excludesPattern2;
+                    break;
+            }
+
+            Match match = pattern1.Match(input);
             if (match.Success)
             {
                 if (field == null && Int32.TryParse(match.Groups["row"].Value, out row) &&
                     Int32.TryParse(match.Groups["col"].Value, out col))
                 {
                     if (!board.IsInRange(row, col))
-                        ParseError("Invalid field in notes line {0}: ({1},{2})", input, row, col);
+                        ParseError("Invalid field in {0} line {1}: ({2},{3})", MultiValueString[(int)mvType], input, row, col);
                     field = board.values[row, col];
                 }
                 if (field != null && Int32.TryParse(match.Groups["value"].Value, out value))
                 {
-                    field.ToggleNote(value);
-                    match = notesPattern2.Match(match.Groups["rest"].Value);
+                    switch (mvType)
+                    { 
+                        case MultiValues.mvNotes:
+                            field.ToggleNote(value);
+                            break;                      
+                        case MultiValues.mvExcludes:
+                            field.ExcludeValue(value);
+                            break;
+                    }
+                    match = pattern2.Match(match.Groups["rest"].Value);
                     while (match.Success)
                     {
                         if (Int32.TryParse(match.Groups["value"].Value, out value))
                         {
-                            field.ToggleNote(value);
+                            switch (mvType)
+                            {
+                                case MultiValues.mvNotes:
+                                    field.ToggleNote(value);
+                                    break;
+                                case MultiValues.mvExcludes:
+                                    field.ExcludeValue(value);
+                                    break;
+                            }
                             match = match.NextMatch();
                         }
                         else
-                            ParseError("Invalid value in notes line {0}: ({1})", input, match.Groups["value"].Value);
+                            ParseError("Invalid value in {0} line {1}: ({2})", MultiValueString[(int)mvType], input, match.Groups["value"].Value);
                     }
-                }                
+                }
             }
             return field != null;
+        }
+
+        private bool ParseNotes(string input, TekBoard board)
+        {
+            return ParseMultiValues(input, board, MultiValues.mvNotes);
+        }
+
+        private bool ParseExcludes(string input, TekBoard board)
+        {
+            return ParseMultiValues(input, board, MultiValues.mvExcludes);
         }
 
         private void UpdatePossibleValues(TekBoard board)
