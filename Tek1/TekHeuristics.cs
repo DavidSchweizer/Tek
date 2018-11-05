@@ -73,7 +73,6 @@ namespace Tek1
         protected void AddAffectedField(TekField field)
         {
             AddOnce(AffectedFields, field);
-
         }
 
         protected void AddValue(int value)
@@ -356,7 +355,7 @@ namespace Tek1
                         if (IsTriplet(field, field2, field3))
                         {
                             AddHeuristicFields(field, field2, field3);
-                            AddValues(field.CommonPossibleValues(field2, field3).ToArray());
+                            AddValues(field.TotalPossibleValues(field2, field3).ToArray());
                             // determine affected fields
                             foreach(TekField f in field.CommonInfluencers(field2, field3))
                             {
@@ -419,7 +418,7 @@ namespace Tek1
             foreach (TekArea area in AdjacentAreas)
             {
                 Dictionary<int, List<TekField>> FieldsPerValueInArea = area.GetFieldsForValues();
-                foreach (int value in field.PossibleValues)
+                 foreach (int value in field.PossibleValues)
                 {
                     if (FieldsPerValueInArea.Keys.Contains(value))
                     {
@@ -431,16 +430,16 @@ namespace Tek1
                                 break;
                             }
                         if (blocking)
-                        {
+                        {                            
                             AddHeuristicField(field);
                             AddAffectedField(field);
-                            AddValue(value);
-                            return true;
+                            AddValue(value);                            
                         }
                     }
                 }
+                ;
             }
-            return false;
+            return AffectedFields.Count > 0 && HeuristicValues.Count > 0;
         }
     } // BlockingHeuristic
 

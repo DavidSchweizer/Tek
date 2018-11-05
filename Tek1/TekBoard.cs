@@ -556,6 +556,7 @@ namespace Tek1
                 {
                     field.Value = 0;
                     field.Notes.Clear();
+                    field.ExcludedValues.Clear();
                 }
         }
 
