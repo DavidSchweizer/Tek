@@ -685,7 +685,7 @@ namespace Tek1
         const string NOTESPATTERN2 = @"(?<value>[1-5])+";
         const string NOTESFORMAT1 = @"notes=({0},{1})";
         const string NOTESFORMAT2 = @"{0} ";
-        const string EXCLUDESPATTERN1 = @"notes=\((?<row>\d+),(?<col>\d+)\)(?<value>[1-5])+(?<rest>(.*))?";
+        const string EXCLUDESPATTERN1 = @"excludes=\((?<row>\d+),(?<col>\d+)\)(?<value>[1-5])+(?<rest>(.*))?";
         const string EXCLUDESPATTERN2 = @"(?<value>[1-5])+";
         const string EXCLUDESFORMAT1 = @"excludes=({0},{1})";
         const string EXCLUDESFORMAT2 = @"{0} ";
@@ -917,7 +917,7 @@ namespace Tek1
                     }
                     else
                     {
-                        if (!(ParseNotes(s, board) || ParseArea(s, board) || ParseValue(s, board)))
+                        if (!(ParseNotes(s, board) || ParseExcludes(s, board) || ParseArea(s, board) || ParseValue(s, board)))
                         {
                             ParseError("Error parsing line {0}", s);
                         }
@@ -954,6 +954,15 @@ namespace Tek1
             }
             wr.WriteLine();
         }
+        private void ExportExcludes(TekField field, StreamWriter wr)
+        {
+            wr.Write(EXCLUDESFORMAT1, field.Row, field.Col);
+            foreach (int value in field.ExcludedValues)
+            {
+                wr.Write(EXCLUDESFORMAT2, value);
+            }
+            wr.WriteLine();
+        }
 
         private void _Export(TekBoard board, StreamWriter wr)
         {
@@ -968,6 +977,8 @@ namespace Tek1
                     ExportValue(value, wr);
                 if (value.Notes.Count > 0)
                     ExportNotes(value, wr);
+                if (value.ExcludedValues.Count > 0)
+                    ExportExcludes(value, wr);
             }
         }
     } // TekBoardParser

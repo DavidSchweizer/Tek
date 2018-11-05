@@ -499,17 +499,24 @@ namespace Tek1
             if (candidates.Count < 2)
                 return false;
             InitializeChain();
+            ChainBackTracking.Add(field);
             foreach (TekField field2 in candidates)
             {
-                ChainBackTracking.Add(field);
                 ChainBackTracking.Add(field2);
                 foreach (TekField target in field2.Influencers)
-                    if (target != field && target.Value == 0 && !IsPair(field, target) && ChainExists(field, target, false))
+                    if (target != field && target.Value == 0 && !IsPair(field, target))
                     {
-                        AddHeuristicField(field);
-                        AddAffectedField(target);
-                        AddValues(field.PossibleValues.ToArray());
-                        return true;
+                        bool noInfluence = true;
+                        foreach (int value in field.PossibleValues)
+                            if (target.ValuePossible(value))
+                                noInfluence = false;
+                        if (!noInfluence && ChainExists(field, target, false))                        
+                        {
+                            AddHeuristicField(field);
+                            AddAffectedField(target);
+                            AddValues(field.PossibleValues.ToArray());
+                        }
+                        return AffectedFields.Count > 0;
                     }
                 ChainBackTracking.Remove(field2);
             }

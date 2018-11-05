@@ -25,6 +25,9 @@ namespace Tek1
             View = new TekEdit(split.Panel1, new Point(10,10),
                 new Point(split.Panel1.ClientRectangle.Width - 10,
                           split.Panel1.ClientRectangle.Height - 10));
+            View.LoadFromFile("test.tx");
+            //View.SelectFields(View.Board.values[3, 3]);
+            //View.ToggleSelectedValue(3);
         }
 
         private void bLoad_Click(object sender, EventArgs e)
@@ -162,9 +165,6 @@ namespace Tek1
         private void button3_Click(object sender, EventArgs e)
         {
             bStart.Enabled = false;
-
-            View.LoadFromFile("8x8-8.tx");
-
             using (StreamWriter sw = new StreamWriter("boarddump.dmp"))
             {
                 foreach (TekField field in View.Board.values)
@@ -205,7 +205,11 @@ namespace Tek1
             if (View.Board.IsSolved())
                 MessageBox.Show("Solved!");
             else
+            {
                 MessageBox.Show("Can not further be solved using these heuristics...");
+                TekBoardParser parser = new TekBoardParser();
+                parser.Export(View.Board, "test.tx");
+            }
                 
         }
 
