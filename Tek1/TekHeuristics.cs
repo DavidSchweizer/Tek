@@ -497,6 +497,8 @@ namespace Tek1
                     candidates.Add(f);
             if (candidates.Count < 2)
                 return false;
+            TekChains chains = new TekChains(board);
+            using (StreamWriter sw = new StreamWriter("ch1.dmp")) chains.Dump(sw);
             InitializeChain();
             ChainBackTracking.Add(field);
             foreach (TekField field2 in candidates)

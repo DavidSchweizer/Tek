@@ -167,11 +167,10 @@ namespace Tek1
         {
             bStart.Enabled = false;
             TekChains chains = new TekChains(View.Board);
-            //using (StreamWriter sw = new StreamWriter("boarddump.dmp"))
-            //{
-            //    foreach (TekField field in View.Board.values)
-            //        field.Dump(sw);
-            //}
+            using (StreamWriter sw = new StreamWriter("chains.dmp"))
+            {
+                chains.Dump(sw);
+            }
             listBox1.Items.Clear();
 
             View.ShowDefaultNotes();
