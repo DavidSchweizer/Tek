@@ -207,8 +207,11 @@ namespace Tek1
             else
             {
                 MessageBox.Show("Can not further be solved using these heuristics...");
-                TekBoardParser parser = new TekBoardParser();
-                parser.Export(View.Board, "test.tx");
+                if (MessageBox.Show("Save state?", "Verify", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                {
+                    TekBoardParser parser = new TekBoardParser();
+                    parser.Export(View.Board, "test.tx");
+                }
             }
                 
         }
