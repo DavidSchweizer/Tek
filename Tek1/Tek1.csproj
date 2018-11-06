@@ -72,6 +72,7 @@
     </Compile>
     <Compile Include="TekAreaDef.cs" />
     <Compile Include="TekBoard.cs" />
+    <Compile Include="TekChains.cs" />
     <Compile Include="TekEdit.cs" />
     <Compile Include="TekHeuristics.cs" />
     <Compile Include="TekPlay.cs" />
