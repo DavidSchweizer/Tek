@@ -26,6 +26,7 @@ namespace Tek1
                 new Point(split.Panel1.ClientRectangle.Width - 10,
                           split.Panel1.ClientRectangle.Height - 10));
             View.LoadFromFile("test.tx");
+
             //View.SelectFields(View.Board.values[3, 3]);
             //View.ToggleSelectedValue(3);
         }
@@ -165,11 +166,12 @@ namespace Tek1
         private void button3_Click(object sender, EventArgs e)
         {
             bStart.Enabled = false;
-            using (StreamWriter sw = new StreamWriter("boarddump.dmp"))
-            {
-                foreach (TekField field in View.Board.values)
-                    field.Dump(sw);
-            }
+            TekChains chains = new TekChains(View.Board);
+            //using (StreamWriter sw = new StreamWriter("boarddump.dmp"))
+            //{
+            //    foreach (TekField field in View.Board.values)
+            //        field.Dump(sw);
+            //}
             listBox1.Items.Clear();
 
             View.ShowDefaultNotes();

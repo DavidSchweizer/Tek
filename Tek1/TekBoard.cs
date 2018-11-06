@@ -197,6 +197,12 @@ namespace Tek1
             return Influencers.Contains(f);
         }
 
+        public bool IsPair(TekField f)
+        {
+            return this.PossibleValues.Count == 2 && f.PossibleValues.Count == 2 &&
+                        f.ValuesPossible(this.PossibleValues[0], this.PossibleValues[1]);
+        }
+
         public void SetInfluencers()
         {
             Influencers.Clear();
@@ -227,6 +233,14 @@ namespace Tek1
         public bool ValuePossible(int value)
         {
             return PossibleValues.Contains(value);
+        }
+
+        public bool ValuesPossible(params int[] values)
+        {
+            foreach (int value in values)
+                if (!ValuePossible(value))
+                    return false;
+            return true;
         }
         public List<int> CommonPossibleValues(params TekField[] fields)
         {
