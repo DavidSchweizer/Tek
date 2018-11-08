@@ -167,7 +167,6 @@ namespace Tek1
         private void ComputeDistances()
         {
             Distances.Clear();
-            Distances.Add(null);
             for (int i = 0; i < Chains.Count; i++)
             {
                 ComputeChainDistances(Chains[i]);
