@@ -126,7 +126,7 @@ namespace Tek1
                     return value;
                 else
                 {
-                    int minDistance = 98;// Int32.MaxValue;
+                    int minDistance = Int32.MaxValue-1;
                     foreach (TekField f in field1.Influencers)
                         if (chain.Contains(f) && !ChainBackTracking.Contains(f))
                         {
