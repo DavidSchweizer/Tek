@@ -434,6 +434,14 @@ namespace Tek1
             return result;
         }
 
+        public List<TekField> GetEmptyFields()
+        {
+            List<TekField> result = new List<TekField>();
+            foreach (TekField field in fields)
+                if (field.Value == 0)
+                    result.Add(field);
+            return result;
+        }
     } // TekArea
 
     public class TekBoard

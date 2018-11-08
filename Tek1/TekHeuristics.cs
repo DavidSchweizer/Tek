@@ -593,6 +593,43 @@ namespace Tek1
         }
     } // ConflictingChainsHeuristic
 
+    public class CascadingTripletsHeuristic : TekHeuristic
+    {
+        public CascadingTripletsHeuristic() : base("Cascading Triplets", HeuristicAction.haExcludeValue)
+        {
+        }
+
+        public override bool HeuristicApplies(TekBoard board, TekField field)
+        {
+            List<TekField> emptyFields = field.area.GetEmptyFields();
+            if (emptyFields.Count != 4)
+                return false;
+            emptyFields.Remove(field);
+            List<int> TotalValues = emptyFields[0].TotalPossibleValues(emptyFields[1], emptyFields[2]);
+            List<TekField> commonInfluencers = 
+                emptyFields[0].CommonInfluencers(emptyFields[1], emptyFields[2]);
+            commonInfluencers.Remove(field);
+            int i = 0;
+            while (i < commonInfluencers.Count)
+                if (commonInfluencers[i].Value > 0)
+                    commonInfluencers.RemoveAt(i);
+                else i++;
+            if (commonInfluencers.Count != 1)
+                return false;
+            foreach(int value in field.PossibleValues)
+            {
+                if (!commonInfluencers[0].PossibleValues.Contains(value))
+                {
+                    AddHeuristicField(field);
+                    AddAffectedField(field);
+                    AddValue(value);
+                    return true;
+                }
+            }
+            return false;
+        }
+    } // CascadingTripletsHeuristic
+
     public class TekHeuristics
     {
         List<TekHeuristic> Heuristics;
@@ -610,6 +647,7 @@ namespace Tek1
             Heuristics.Add(new AlternatingChainHeuristic());
             Heuristics.Add(new TripletHeuristic2());
             Heuristics.Add(new ConflictingChainsHeuristic());
+            Heuristics.Add(new CascadingTripletsHeuristic());
         }
 
         public TekHeuristic FindHeuristic(TekBoard board)
