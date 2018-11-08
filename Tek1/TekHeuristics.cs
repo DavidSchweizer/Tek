@@ -46,12 +46,11 @@ namespace Tek1
                 result = result + String.Format("{0} ", value);
             return result + "] " + actionDescriptions[(int)Action];
         }
-        public void Reset(bool totalReset = false)
+        public void Reset()
         {
             HeuristicFields.Clear();
             AffectedFields.Clear();
             HeuristicValues.Clear();
-            //LastIndex = 0;
         }
 
         private void AddOnce(List<TekField> list, TekField field)
@@ -74,6 +73,11 @@ namespace Tek1
         {
             AddOnce(AffectedFields, field);
         }
+        protected void AddAffectedFields(params TekField[] fields)
+        {
+            foreach(TekField field in fields)
+                AddOnce(AffectedFields, field);
+        }
 
         protected void AddValue(int value)
         {
@@ -86,9 +90,15 @@ namespace Tek1
                 AddValue(value);
         }
 
-        public bool Applies(TekBoard board, int StartField = 0)
+        protected virtual void SetupApplies(TekBoard board)
+        {
+            // override to setup local variables
+        }
+
+        public bool Applies(TekBoard board)
         {
             Reset();
+            SetupApplies(board);
             foreach (TekField field in board.values)
             {
                 if (field.Value > 0 )
@@ -482,48 +492,106 @@ namespace Tek1
 
     public class AlternatingChainHeuristic : TekHeuristic
     {
+        TekChains Chains;
         public AlternatingChainHeuristic() : base("Alternating Chain", HeuristicAction.haExcludeValue)
         {
         }
 
+        protected override void SetupApplies(TekBoard board)
+        {
+            Chains = new TekChains(board);
+            using (StreamWriter sw = new StreamWriter("chains.dmp"))
+            {
+                Chains.Dump(sw);
+            }
+        }
         public override bool HeuristicApplies(TekBoard board, TekField field)
         {
-            if (field.PossibleValues.Count != 2)
+            if (field.PossibleValues.Count != 2 || !Chains.HasChains())
                 return false;
-            List<TekField> candidates = new List<TekField>();
 
-            foreach (TekField f in field.Influencers)
-                if (IsPair(field, f))
-                    candidates.Add(f);
-            if (candidates.Count < 2)
+            List<TekField> chain = Chains.FindChain(field);
+            if (chain == null)
                 return false;
-            TekChains chains = new TekChains(board);
-            using (StreamWriter sw = new StreamWriter("ch1.dmp")) chains.Dump(sw);
-            InitializeChain();
-            ChainBackTracking.Add(field);
-            foreach (TekField field2 in candidates)
+
+            foreach (TekField field2 in chain)
             {
-                ChainBackTracking.Add(field2);
-                foreach (TekField target in field2.Influencers)
-                    if (target != field && target.Value == 0 && !IsPair(field, target))
+                if (field == field2 || Chains.ComputeDistance(field, field2) % 2 != 1)
+                    continue;
+                foreach (TekField f in field.CommonInfluencers(field2))
+                {
+                    if (f.Value != 0 || chain.Contains(f))
+                        continue;
+                    bool noInfluence = true;
+                    foreach (int value in field.PossibleValues)
+                        if (f.ValuePossible(value))
+                            noInfluence = false;
+                    if (!noInfluence)
                     {
-                        bool noInfluence = true;
-                        foreach (int value in field.PossibleValues)
-                            if (target.ValuePossible(value))
-                                noInfluence = false;
-                        if (!noInfluence && ChainExists(field, target, false))                        
-                        {
-                            AddHeuristicField(field);
-                            AddAffectedField(target);
-                            AddValues(field.PossibleValues.ToArray());
-                        }
-                        return AffectedFields.Count > 0;
+                        AddHeuristicField(field);
+                        AddAffectedField(f);
+                        AddValues(field.PossibleValues.ToArray());
                     }
-                ChainBackTracking.Remove(field2);
+                    if (AffectedFields.Count > 0)
+                        return true;
+                    else
+                        Reset();
+                }
             }
             return false;
         }
     } // AlternatingChainHeuristic
+
+    public class ConflictingChainsHeuristic : TekHeuristic
+    {
+        TekChains Chains;
+
+        public ConflictingChainsHeuristic() : base("Conflicting Chains", HeuristicAction.haExcludeValue)
+        {
+        }
+
+        protected override void SetupApplies(TekBoard board)
+        {
+            Chains = new TekChains(board);
+            using (StreamWriter sw = new StreamWriter("chains.dmp"))
+            {
+                Chains.Dump(sw);
+            }
+        }
+
+        public override bool HeuristicApplies(TekBoard board, TekField field)
+        {
+            if (field.PossibleValues.Count != 2 || !Chains.HasChains())
+                return false;
+            List<TekField> chain = Chains.FindChain(field);
+            if (chain == null)
+                return false;
+            foreach (TekField f in field.Influencers)
+            {
+                List<TekField> chain2 = Chains.FindChain(f);
+                if (chain2 == null || chain2 == chain || Chains.CommonValues(chain, chain2).Count != 1)
+                    continue;
+                List<TekField> touchPoints1 = Chains.Intersection(chain2, chain);
+                List<TekField> touchPoints2 = Chains.Intersection(chain, chain2);
+                if (touchPoints1.Count == 2 && touchPoints2.Count == 2)
+                {
+                    int distance1 = Chains.ComputeDistance(touchPoints1[0], touchPoints1[1]);
+                    int distance2 = Chains.ComputeDistance(touchPoints2[0], touchPoints2[1]);
+                    if ((distance1 % 2 == 0) != (distance2 % 2 == 0))
+                    {
+                        AddHeuristicField(field);
+                        AddValue(Chains.CommonValues(chain, chain2)[0]);
+                        if (distance1 % 2 == 1)
+                            AddAffectedFields(touchPoints2.ToArray());
+                        else
+                            AddAffectedFields(touchPoints1.ToArray());
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+    } // ConflictingChainsHeuristic
 
     public class TekHeuristics
     {
@@ -541,6 +609,7 @@ namespace Tek1
             Heuristics.Add(new BlockingThreePairsHeuristic());
             Heuristics.Add(new AlternatingChainHeuristic());
             Heuristics.Add(new TripletHeuristic2());
+            Heuristics.Add(new ConflictingChainsHeuristic());
         }
 
         public TekHeuristic FindHeuristic(TekBoard board)
@@ -548,8 +617,7 @@ namespace Tek1
             board.AutoNotes = true;
             foreach(TekHeuristic heuristic in Heuristics)
             {
-                int index = 0;
-                if (heuristic.Applies(board, index))
+                if (heuristic.Applies(board))
                 {
                     return heuristic;
                 }

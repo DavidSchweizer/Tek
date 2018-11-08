@@ -166,13 +166,8 @@ namespace Tek1
         private void button3_Click(object sender, EventArgs e)
         {
             bStart.Enabled = false;
-            TekChains chains = new TekChains(View.Board);
-            using (StreamWriter sw = new StreamWriter("chains.dmp"))
-            {
-                chains.Dump(sw);
-            }
+           
             listBox1.Items.Clear();
-
             View.ShowDefaultNotes();
             TekHeuristics heuristics = new TekHeuristics();
             TekHeuristic heuristic = heuristics.FindHeuristic(View.Board);
@@ -195,12 +190,13 @@ namespace Tek1
                     }
                 }
                 heuristic.ExecuteAction(View.Moves);
+              
                 View.Refresh();
                 //if (heurFound == 19)
                 //{ // this forces an hidden pair, just for test purposes
                 //    View.Board.values[3, 4].PossibleValues.Remove(2);
                 //}
-               heuristic = heuristics.FindHeuristic(View.Board);
+                heuristic = heuristics.FindHeuristic(View.Board);
             }
             View.Selector.ClearMultiSelect();
             if (View.Board.IsSolved())

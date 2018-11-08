@@ -9,70 +9,110 @@ namespace Tek1
 {
     class TekChains
     {
-        int[,] Connections;
         List<List<TekField>> Chains;
         List<int[,]> Distances;
-        private List<TekField> ChainBackTracking = new List<TekField>();
+
+        private List<TekField> ChainBackTracking = new List<TekField>(); 
+        // prevent circular routing when computing distances
 
         public TekChains(TekBoard board)
         {
-            Connections = new int[board.Rows, board.Cols];
             Chains = new List<List<TekField>>();
-            Chains.Add(null);
             Distances = new List<int[,]>();
-            Distances.Add(null);
-            // initialize the chains and connections
             InitializeChains(board);
-            // make sure all fields in a chain are connected, else split the chain.
-            CheckChains();
+            NormalizeChains();
+            SortChains();
             ComputeDistances();
         }
+
+        public bool HasChains()
+        {
+            return Chains.Count > 0;
+        }
+
+        private void SortChains()
+        {// give a more logical order to the fields (debugging purposes)
+            TekFieldComparer2 sorter = new TekFieldComparer2();
+            for (int i = 0; i < Chains.Count; i++)
+                Chains[i].Sort(sorter);
+        }
+
         private void InitializeChains(TekBoard board)
         {
             for (int r = 0; r < board.Rows; r++)
                 for (int c = 0; c < board.Cols; c++)
                 {
-                    if (board.values[r, c].Value == 0 && Connections[r, c] == 0 && board.values[r, c].PossibleValues.Count == 2)
-                    {
-                        TekField f = board.values[r, c];
-                        foreach (TekField f2 in f.Influencers)
-                            if (f.IsPair(f2))
-                            {
-                                Connections[r, c] = AddField(f, false);
-                                Connections[f2.Row, f2.Col] = AddField(f2, false);
-                            }
-                    }
+                    if (board.values[r, c].Value == 0 && 
+                        board.values[r, c].PossibleValues.Count == 2)
+                        AddField(board, board.values[r, c]);
                 }
-
         }
 
-        private void CheckChains()
+        private void AddField(TekBoard board, TekField field)
         {
-            List<TekField> disconnects = new List<TekField>();
-            for (int i = 1; i < Chains.Count; i++)
+            List<TekField> chain = FindChain(field);
+            if (chain == null)
             {
-                List<TekField> chain = Chains[i];
-                TekField field0 = chain[0];
-                for (int j = 1; j < chain.Count; j++)
-                    if (!IsConnected(field0, chain[j]))
-                        disconnects.Add(chain[j]);
+                chain = new List<TekField>();
+                Chains.Add(chain);
             }
-            foreach(TekField f in disconnects)
+            chain.Add(field);
+        }
+
+        private bool HasSameValues(List<TekField> chain1, List<TekField> chain2)
+        {
+            if (chain1 == null || chain1.Count == 0 || chain2 == null || chain2.Count == 0)
+                return false;
+            else
             {
-                Connections[f.Row, f.Col] = AddField(f, true);
+                return chain1[0].ValuesPossible(chain2[0].PossibleValues[0], chain2[0].PossibleValues[1]);
             }
-            int ic = Chains.Count - 1;
-            while (ic >= 1)
+        }
+
+        private void NormalizeChains()
+        // combine chains if possible, also remove chains that are too small
+        {
+            int i = 0;
+            while (i < Chains.Count)
             {
-                if (Chains[ic].Count == 1)
+                int j = i+1;
+                while (j < Chains.Count)
                 {
-                    TekField field = Chains[ic][0];
-                    Connections[field.Row, field.Col] = 0;
+                    bool canCombine = false;
+                    if (HasSameValues(Chains[i], Chains[j]))
+                    { 
+                        foreach (TekField field in Chains[j])
+                        {
+                            if (IsConnected(Chains[i], field))
+                            {
+                                canCombine = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (canCombine)
+                    {
+                        foreach (TekField field in Chains[j])
+                            Chains[i].Add(field);
+                        Chains.RemoveAt(j);
+                    }
+                    else
+                        j++;
                 }
-                if (Chains[ic].Count <= 1)
-                    Chains.RemoveAt(ic);
-                ic--;
+                if (Chains[i].Count < 2) // ?? <= is perhaps better, a chain of two fields is also a pair
+                    Chains.RemoveAt(i);
+                else
+                    i++;
             }
+        }
+
+        public int ComputeDistance(TekField field1, TekField field2)
+        {
+            List<TekField> chain = FindChain(field1); 
+            if (chain == null || !chain.Contains(field2))
+                return -1;
+            int[,] table = Distances[Chains.IndexOf(chain)];
+            return table[chain.IndexOf(field1), chain.IndexOf(field2)];
         }
 
         private int ComputeDistance(TekField field1, TekField field2, List<TekField> chain)
@@ -81,17 +121,46 @@ namespace Tek1
                 return 1;
             else
             {
-                int minDistance = 99;// Int32.MaxValue;
-                foreach (TekField f in field1.Influencers)
-                    if (chain.Contains(f) && !ChainBackTracking.Contains(f))
-                    {
-                        ChainBackTracking.Add(f);
-                        int value = ComputeDistance(f, field2, chain);
-                        if (value < minDistance)
-                            minDistance = value;
-                        //ChainBackTracking.Remove(f);
-                    }
-                return minDistance;
+                int value = ComputeDistance(field1, field2);
+                if (value >= 0)
+                    return value;
+                else
+                {
+                    int minDistance = 98;// Int32.MaxValue;
+                    foreach (TekField f in field1.Influencers)
+                        if (chain.Contains(f) && !ChainBackTracking.Contains(f))
+                        {
+                            ChainBackTracking.Add(f);
+                            value = ComputeDistance(f, field2, chain);
+                            if (value < minDistance)
+                                minDistance = value;
+                            ChainBackTracking.Remove(f);
+                        }
+                    return 1 + minDistance;
+                }
+            }
+        }
+
+        private void ComputeChainDistances(List<TekField> chain)
+        {
+            int[,] table = new int[chain.Count, chain.Count];
+            Distances.Add(table);
+            for (int i = 0; i < chain.Count; i++)
+                for (int j = i + 1; j < chain.Count; j++)
+                {
+                    table[i, j] = -1;
+                    table[j, i] = -1;
+                }
+            for (int i = 0; i < chain.Count; i++)
+            {                                
+                TekField field = chain[i];
+                ChainBackTracking.Clear();
+                ChainBackTracking.Add(field);
+                for (int j = i + 1; j < chain.Count; j++)
+                {
+                    table[i, j] = ComputeDistance(field, chain[j], chain);
+                    table[j, i] = table[i, j];
+                }
             }
         }
 
@@ -99,97 +168,76 @@ namespace Tek1
         {
             Distances.Clear();
             Distances.Add(null);
-            for (int i = 1; i < Chains.Count; i++)
+            for (int i = 0; i < Chains.Count; i++)
             {
-                List<TekField> chain = Chains[i];
-                int[,] table = new int[chain.Count, chain.Count];
-                Distances.Add(table);
-                ChainBackTracking.Clear();
-                for (int j = 0; j < chain.Count; j++)
-                {
-                    TekField field = chain[j];
-                    foreach (TekField f in field.Influencers)
-                    {
-                        int k = chain.IndexOf(f);
-                        if (k != -1)
-                        {
-                            table[j, k] = 1;
-                            table[k, j] = 1;
-                        }
-                    }
-                    //    if (chain.)
-                    //ChainBackTracking.Add(chain[j]);
-                    //for (int k = j + 1; k < chain.Count; k++)
-                    //{
-                    //    table[j, k] = ComputeDistance(chain[j], chain[k], chain);
-                    //    table[k, j] = table[j, k];
-                    //}
-                }
+                ComputeChainDistances(Chains[i]);
             }
-        }
-        private int AddField(TekField field, bool CheckConnect = true)
-        {
-            List<TekField> chain = FindChain(field, CheckConnect);
-            if (chain == null)
-            {
-                chain = new List<TekField>();
-                Chains.Add(chain);
-            }
-            if (!chain.Contains(field))
-                chain.Add(field);
-            return Chains.IndexOf(chain);
         }
 
-        public List<TekField> FindChain(TekField field, bool CheckConnect = true)
+        public List<TekField> FindChain(TekField field)
         {
-            for (int i = 1; i < Chains.Count; i++)
+            for (int i = 0; i < Chains.Count; i++)
             {
                 List<TekField> chain = Chains[i];
-                if (chain.Count > 0 && chain[0].ValuesPossible(field.PossibleValues[0], field.PossibleValues[1]) && (!CheckConnect || IsConnected(chain[0], field)))
+                if (chain.Count > 0 && field.PossibleValues.Count == 2 && 
+                    chain[0].ValuesPossible(field.PossibleValues[0], field.PossibleValues[1]) 
+                    && IsConnected(chain, field))
                     return chain;
             }                
             return null;
         }
 
-        public bool IsConnected(TekField field1, TekField field2)
+        private bool IsConnected(List<TekField> chain, TekField field)
         {
-            List<TekField> chain = FindChain(field1, false);
-            foreach (TekField f in chain)
-                if (f.Influencers.Contains(field2))
-                    return true;
-            return false; 
+            if (chain.Contains(field))
+                return true;
+            else
+                foreach (TekField f in chain)
+                   if (f.Influencers.Contains(field))
+                        return true;
+            return false;
+        }
+        
+        public int[] ChainValues(List<TekField> chain)
+        {
+            return chain[0].PossibleValues.ToArray();
         }
 
-        //public int numberOfSteps(TekField field1, TekField field2)
-        //{
-        //    if (!IsConnected(field1, field2))
-        //        return -1;
-        //    else
-        //    {
-        //        int result = 0;
+        public List<int> CommonValues(List<TekField> chain1, List<TekField> chain2)
+        {
+            List<int> result = new List<int>();
+            foreach (int value in ChainValues(chain1))
+            {
+                if (chain2[0].ValuePossible(value))
+                    result.Add(value);
+            }
+            return result;
+        }
 
-        //    }
-        //}
+        public List<TekField> Intersection(List<TekField> chain1, List<TekField> chain2)
+        // returns all fields in chain2 that touch chain1
+        {
+            List<TekField> result = new List<TekField>();
+            foreach (TekField field in chain1)
+                foreach (TekField field2 in field.Influencers)
+                    if (chain2.Contains(field2))
+                        result.Add(field2);
+            return result;
+        }
 
         public void Dump(StreamWriter sw)
         {
-            for (int r = 0; r < Connections.GetLength(0); r++)
-            {
-                string s = "";
-                for (int c = 0; c < Connections.GetLength(1); c++)
-                    s = s + String.Format("{0,2}", Connections[r, c]);
-                sw.WriteLine(s);
-            }
-            for (int i = 1; i < Chains.Count; i++)
+            for (int i = 0; i < Chains.Count; i++)
             {
                 sw.Write("chain {0} [{1},{2}]: ", i, Chains[i][0].PossibleValues[0], Chains[i][0].PossibleValues[1]);
                 foreach (TekField field in Chains[i])
-                    field.Dump(sw, TekField.FLD_DMP_INFLUENCERS | TekField.FLD_DMP_POSSIBLES);
-                sw.WriteLine("end chain {0}", i);
+                    sw.Write(field.AsString());
+                    //field.Dump(sw, TekField.FLD_DMP_INFLUENCERS | TekField.FLD_DMP_POSSIBLES);
+                sw.WriteLine("...end chain {0}", i);
             }
 
             sw.WriteLine("distances:");
-            for (int i = 1; i < Distances.Count; i++)
+            for (int i = 0; i < Distances.Count; i++)
             {
                 sw.WriteLine("Chain {0}", i);
                 int[,] table = Distances[i];
@@ -202,5 +250,26 @@ namespace Tek1
                 }
             }
         }
-    }
+    } // TekChains
+
+    public class TekFieldComparer2 : IComparer<TekField>
+    // to sort the chains to get a more logical order, mainly for debugging purposes
+    {
+        public int Compare(TekField x, TekField y)
+        {
+            if (x.Row == y.Row && x.Col == y.Col)
+                return 0;
+            else if (x.Row < y.Row)
+                return -1;
+            else if (x.Row == y.Row)
+            {
+                if (x.Col < y.Col)
+                    return -1;
+                else
+                    return 1;
+            }
+            else 
+                return 1;
+        }
+    } 
 }
