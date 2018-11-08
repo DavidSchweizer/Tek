@@ -139,7 +139,7 @@ namespace Tek1
             PossibleValues.Clear();
             if (Value == 0)
             {
-                for (int i = 1; i <= ((area == null) ? Const.MAXTEK : area.fields.Count); i++)
+                for (int i = 1; i <= ((area == null) ? Const.MAXTEK : area.Fields.Count); i++)
                     if (!ExcludedValues.Contains(i))
                         PossibleValues.Add(i);
                 foreach (TekField field in Influencers)
@@ -208,7 +208,7 @@ namespace Tek1
             Influencers.Clear();
             // add area
             if (area != null)
-                foreach (TekField field in area.fields)
+                foreach (TekField field in area.Fields)
                     if (field != this)
                         AddInfluencer(field);
             // add neighbours not in area
@@ -324,55 +324,45 @@ namespace Tek1
         }
     } // TekField
 
-    public class TekArea
+    public class TekFields
     {
-        public List<TekField> fields;
-        public int AreaNum;
-        public TekArea(int anum)
+        public List<TekField> Fields;
+        public TekFields()
         {
-            fields = new List<TekField>();
-            AreaNum = anum;
+            Fields = new List<TekField>();
         }
 
-        public List<TekArea> GetAdjacentAreas()
+        public virtual void AddField(TekField f)
         {
-            List<TekArea> result = new List<TekArea>();
-            foreach (TekField field in fields)
-            {
-                foreach (TekField Neighbour in field.neighbours)
-                    if (Neighbour.area != null && this != Neighbour.area && !result.Contains(Neighbour.area))
-                    {
-                        result.Add(Neighbour.area);
-                    }
-            }
-            return result;
-        }
-
-        public void SetInfluencers()
-        {
-            foreach (TekField f in fields)
-                f.SetInfluencers();
-        }
-
-        public void AddField(TekField f)
-        {
-            if (fields.Contains(f)) // don't add more than once
+            if (Fields.Contains(f)) // don't add more than once
                 return;
-            if (f.area != null)
-                return; // or exception
-            fields.Add(f);
-            f.area = this;
-            SetInfluencers();            
+            Fields.Add(f);
+        }
+
+        public List<TekField> GetCommonInfluencers()
+        {
+            if (Fields.Count > 0)
+                return Fields[0].CommonInfluencers(Fields.GetRange(1, Fields.Count - 1).ToArray());
+            else
+                return new List<TekField>();
+        }
+
+        public List<int> GetTotalPossibleValues()
+        {
+            if (Fields.Count > 0)
+                return Fields[0].TotalPossibleValues(Fields.GetRange(1, Fields.Count - 1).ToArray());
+            else
+                return new List<int>();
         }
 
         public bool FieldsAreConnected()
         {
-            if (fields.Count() <= 1)
+            if (Fields.Count() <= 1)
                 return true;
-            foreach (TekField f in fields)
+            foreach (TekField f in Fields)
             {
                 bool hasOne = false;
-                foreach (TekField f2 in fields)
+                foreach (TekField f2 in Fields)
                     if (f2 != f && f.HasNeighbour(f2) && (f.Col == f2.Col || f.Row == f2.Row))
                     {
                         hasOne = true;
@@ -384,10 +374,10 @@ namespace Tek1
             return true;
         }
 
-        public string AsString()
+        public virtual string AsString()
         {
-            string result = String.Format("Area {0}:", AreaNum);
-            foreach (TekField f in fields)
+            string result = String.Format("Region: ");
+            foreach (TekField f in Fields)
                 result = result + f.AsString();
             return result;
         }
@@ -399,27 +389,27 @@ namespace Tek1
 
         public int MaxValue()
         {
-            return (fields.Count < Const.MAXTEK ? fields.Count : Const.MAXTEK);
+            return (Fields.Count < Const.MAXTEK ? Fields.Count : Const.MAXTEK);
         }
 
         public Dictionary<int, List<TekField>> GetFieldsForValues()
         {
-            Dictionary<int, List<TekField>> result = new Dictionary<int,List<TekField>>();
+            Dictionary<int, List<TekField>> result = new Dictionary<int, List<TekField>>();
             for (int i = 1; i <= MaxValue(); i++)
                 result.Add(i, new List<TekField>());
-            foreach (TekField f in fields)
+            foreach (TekField f in Fields)
                 if (f.Value > 0)
                     result[f.Value].Add(f);
                 else
                     foreach (int value in f.PossibleValues)
-                        result[value].Add(f);                
+                        result[value].Add(f);
             return result;
         }
 
         public List<TekField> GetFieldsWithPossibleValues(params int[] values)
         {
             List<TekField> result = new List<TekField>();
-            foreach (TekField f in fields)
+            foreach (TekField f in Fields)
             {
                 bool hasValues = true;
                 foreach (int value in values)
@@ -437,11 +427,58 @@ namespace Tek1
         public List<TekField> GetEmptyFields()
         {
             List<TekField> result = new List<TekField>();
-            foreach (TekField field in fields)
+            foreach (TekField field in Fields)
                 if (field.Value == 0)
                     result.Add(field);
             return result;
         }
+    } // TekFields
+
+    public class TekArea : TekFields 
+    {
+        public int AreaNum;
+        public TekArea(int anum) : base()
+        {
+            AreaNum = anum;
+        }
+
+        public List<TekArea> GetAdjacentAreas()
+        {
+            List<TekArea> result = new List<TekArea>();
+            foreach (TekField field in Fields)
+            {
+                foreach (TekField Neighbour in field.neighbours)
+                    if (Neighbour.area != null && this != Neighbour.area && !result.Contains(Neighbour.area))
+                    {
+                        result.Add(Neighbour.area);
+                    }
+            }
+            return result;
+        }
+
+        public void SetInfluencers()
+        {
+            foreach (TekField f in Fields)
+                f.SetInfluencers();
+        }
+
+        public override void AddField(TekField f)
+        {
+            base.AddField(f);
+            if (f.area != null)
+                return; // or exception
+            f.area = this;
+            SetInfluencers();            
+        }
+
+        public override string AsString()
+        {
+            string result = String.Format("Area {0}:", AreaNum);
+            foreach (TekField f in Fields)
+                result = result + f.AsString();
+            return result;
+        }
+
     } // TekArea
 
     public class TekBoard
@@ -593,11 +630,11 @@ namespace Tek1
 
         public void DeleteArea(TekArea area)
         {
-            foreach (TekField field in area.fields)
+            foreach (TekField field in area.Fields)
             {
                 field.area = null;
             }
-            foreach (TekField field in area.fields)
+            foreach (TekField field in area.Fields)
             {
                 field.SetInfluencers();
             }
@@ -683,11 +720,7 @@ namespace Tek1
                 field.SetDefaultNotes();
         }
     } // TekBoard
-
-    
-
-
-
+ 
     public class TekBoardParser
     {
         const string COMMENTPATTERN = @"#.*";
@@ -961,7 +994,7 @@ namespace Tek1
         private void ExportArea(TekArea area, StreamWriter wr)
         {
             wr.Write(AREAFORMAT1);
-            foreach (TekField field in area.fields)
+            foreach (TekField field in area.Fields)
             {
                 wr.Write(AREAFORMAT2, field.Row, field.Col);
             }

@@ -63,7 +63,7 @@ namespace Tek1
         private void UpdateArea(TekArea area)
         {
             _view.SetAreaColors(Board);
-            foreach (TekField field in area.fields)
+            foreach (TekField field in area.Fields)
             {
                 TekFieldView view = _view.GetField(field.Row, field.Col);
                 _view.SetPanelColors(view);
@@ -90,7 +90,7 @@ namespace Tek1
             TekArea area = view.Field.area;
             if (area == null)
                 return null;
-            foreach (TekField field in area.fields)
+            foreach (TekField field in area.Fields)
             {
                 Selector.SelectCurrentField(_view.GetField(field.Row, field.Col));
             }

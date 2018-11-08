@@ -167,43 +167,6 @@ namespace Tek1
             }
         }
 
-        protected bool IsPair(TekField field1, TekField field2)
-        // hidden pairs are ignored
-        {
-            if (!field1.Influencers.Contains(field2))
-                return false;
-            if (field1.PossibleValues.Count != 2 || field2.PossibleValues.Count != 2)
-                return false;
-            foreach (int value in field1.PossibleValues)
-                if (!field2.ValuePossible(value))
-                    return false;
-            return true;
-        }
-
-        protected bool IsTriplet(TekField field1, TekField field2, TekField field3, bool inSameArea = true)
-        // hidden triplets are ignored
-        {
-            if (inSameArea && (field1.area != field2.area || field1.area != field3.area || field2.area != field3.area))
-                return false;
-            // 2 or 3 values per field
-            if (field1.PossibleValues.Count < 2 || field1.PossibleValues.Count > 3)
-                return false;
-            if (field2.PossibleValues.Count < 2 || field2.PossibleValues.Count > 3)
-                return false;
-            if (field3.PossibleValues.Count < 2 || field3.PossibleValues.Count > 3)
-                return false;          
-            // find the total possible values: should be 3
-            List<int> totalValues = field1.TotalPossibleValues(field2, field3);
-            return totalValues.Count == 3;
-        }
-
-        protected bool IsInvalidThreePairs(TekField field1, TekField field2, TekField field3)
-        {
-            if (field1.CommonPossibleValues(field2, field3).Count != 2 || !IsPair(field1, field2) || !IsPair(field1, field3) || !IsPair(field2, field3))
-                return false;
-            return (field1.Influencers.Contains(field2) && field1.Influencers.Contains(field3) && field2.Influencers.Contains(field3));
-        }
-
         static protected List<TekField> ChainBackTracking = new List<TekField>();
         protected void InitializeChain()
         { ChainBackTracking.Clear(); }
@@ -218,7 +181,7 @@ namespace Tek1
                     if (f.Value == 0 && !ChainBackTracking.Contains(f))
                     {
                         ChainBackTracking.Add(f);
-                        if (IsPair(field, f) && ChainExists(f, target, !isOdd))
+                        if (TekRegion.IsPair(field, f) && ChainExists(f, target, !isOdd))
                             return true;
                         else
                             ChainBackTracking.Remove(f);
@@ -284,7 +247,7 @@ namespace Tek1
             {
                 if (field == field2)
                     continue;
-                if (IsPair(field, field2))
+                if (TekRegion.IsPair(field, field2))
                 {
                     AddHeuristicFields(field, field2);
                     foreach (TekField f in field.CommonInfluencers(field2))
@@ -362,10 +325,10 @@ namespace Tek1
             {
                 foreach(TekField field3 in field.Influencers)
                     if (field != field2 && field != field3 && field2 != field3)
-                        if (IsTriplet(field, field2, field3))
+                        if (TekRegion.IsTriplet(field, field2, field3))
                         {
                             AddHeuristicFields(field, field2, field3);
-                            AddValues(field.TotalPossibleValues(field2, field3).ToArray());
+                            AddValues((new TekRegion(field, field2, field3)).GetTotalPossibleValues().ToArray());
                             // determine affected fields
                             foreach(TekField f in field.CommonInfluencers(field2, field3))
                             {
@@ -387,7 +350,7 @@ namespace Tek1
     } // TripletHeuristic
 
     public class TripletHeuristic2 : TekHeuristic
-    {
+    { // rework this!!
         public TripletHeuristic2() : base("Triplets (cascade)", HeuristicAction.haExcludeValue)
         {
         }
@@ -400,7 +363,7 @@ namespace Tek1
                         if (field3.PossibleValues.Count == 2)
                         {
                             foreach(TekField field4 in field2.CommonInfluencers(field3))
-                                if (field4 != field && field4.PossibleValues.Count == 2 && IsTriplet(field2, field3, field4, false))
+                                if (field4 != field && field4.PossibleValues.Count == 2 && TekRegion.IsTriplet(field2, field3, field4, false))
                                 {
                                     foreach (int value in field.TotalPossibleValues(field2, field3))
                                         if (field.ValuePossible(value) && field2.ValuePossible(value) && field3.ValuePossible(value) && !field4.ValuePossible(value))
@@ -473,7 +436,7 @@ namespace Tek1
                             if (field1 != field2)
                                 foreach (TekField field3 in field1.CommonInfluencers(field2)) 
                                     // and if there is a third field as well we might have the invalid configuration
-                                    if (IsInvalidThreePairs(field1, field2, field3))
+                                    if (TekRegion.IsInvalidThreePairs(field1, field2, field3))
                                     {
                                         AddHeuristicField(field);
                                         AddAffectedField(field);
@@ -594,7 +557,7 @@ namespace Tek1
     } // ConflictingChainsHeuristic
 
     public class CascadingTripletsHeuristic : TekHeuristic
-    {
+    {// rework this
         public CascadingTripletsHeuristic() : base("Cascading Triplets", HeuristicAction.haExcludeValue)
         {
         }
