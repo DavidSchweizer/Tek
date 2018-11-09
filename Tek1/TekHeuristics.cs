@@ -155,7 +155,11 @@ namespace Tek1
 
                 case HeuristicAction.haExcludeValue:
                     foreach (TekField field in AffectedFields)
+                    {
                         ExcludeValues(moves, field);
+                        if (field.PossibleValues.Count == 1)
+                            SetValue(moves, field, field.PossibleValues[0]);
+                    }
                     break;
 
                 case HeuristicAction.haExcludeComplement:
@@ -165,29 +169,6 @@ namespace Tek1
                     }
                     break;
             }
-        }
-
-        static protected List<TekField> ChainBackTracking = new List<TekField>();
-        protected void InitializeChain()
-        { ChainBackTracking.Clear(); }
-
-        protected bool ChainExists(TekField field, TekField target, bool isOdd)
-        {
-            if (field.Influencers.Contains(target))
-                return !isOdd;
-            else
-            {
-                foreach (TekField f in field.Influencers)
-                    if (f.Value == 0 && !ChainBackTracking.Contains(f))
-                    {
-                        ChainBackTracking.Add(f);
-                        if (TekRegion.IsPair(field, f) && ChainExists(f, target, !isOdd))
-                            return true;
-                        else
-                            ChainBackTracking.Remove(f);
-                    }
-            }
-            return false;
         }
     } // TekHeuristic
 
@@ -470,35 +451,39 @@ namespace Tek1
         }
         public override bool HeuristicApplies(TekBoard board, TekField field)
         {
-            if (field.PossibleValues.Count != 2 || !Chains.HasChains())
+            if (!Chains.HasChains())
                 return false;
 
-            List<TekField> chain = Chains.FindChain(field);
-            if (chain == null)
-                return false;
-
-            foreach (TekField field2 in chain)
+            List<List<TekField>> localChains = new List<List<TekField>>();
+            List<TekField> localFields = new List<TekField>();
+            foreach(TekField f in field.Influencers)
             {
-                if (field == field2 || Chains.ComputeDistance(field, field2) % 2 != 1)
-                    continue;
-                foreach (TekField f in field.CommonInfluencers(field2))
+                List<TekField> chain = Chains.FindChain(f);
+                if (chain != null && Chains.FindChain(field) != chain)
                 {
-                    if (f.Value != 0 || chain.Contains(f))
-                        continue;
-                    bool noInfluence = true;
-                    foreach (int value in field.PossibleValues)
-                        if (f.ValuePossible(value))
-                            noInfluence = false;
-                    if (!noInfluence)
+                    localChains.Add(chain);
+                    localFields.Add(f);
+                }
+            }
+            for (int i = 0; i < localChains.Count; i++)
+            {
+                int j = localChains.IndexOf(localChains[i], i + 1);
+                if (j != -1)
+                {
+                    if (Chains.ComputeDistance(localFields[i], localFields[j]) % 2 == 1)
                     {
-                        AddHeuristicField(field);
-                        AddAffectedField(f);
-                        AddValues(field.PossibleValues.ToArray());
+                        bool noInfluence = true;
+                        foreach (int value in Chains.ChainValues(localChains[i]))
+                            if (field.ValuePossible(value))
+                                noInfluence = false;
+                        if (!noInfluence)
+                        {
+                            AddHeuristicFields(localFields[i], localFields[j]);
+                            AddAffectedField(field);
+                            AddValues(Chains.ChainValues(localChains[i]));
+                            return true;
+                        }
                     }
-                    if (AffectedFields.Count > 0)
-                        return true;
-                    else
-                        Reset();
                 }
             }
             return false;
@@ -610,7 +595,7 @@ namespace Tek1
             Heuristics.Add(new AlternatingChainHeuristic());
             Heuristics.Add(new TripletHeuristic2());
             Heuristics.Add(new ConflictingChainsHeuristic());
-            Heuristics.Add(new CascadingTripletsHeuristic());
+//            Heuristics.Add(new CascadingTripletsHeuristic());
         }
 
         public TekHeuristic FindHeuristic(TekBoard board)
