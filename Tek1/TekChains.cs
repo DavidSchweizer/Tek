@@ -196,10 +196,10 @@ namespace Tek1
                         return true;
             return false;
         }
-        
-        public int[] ChainValues(List<TekField> chain)
+
+        public List<int> ChainValues(List<TekField> chain)
         {
-            return chain[0].PossibleValues.ToArray();
+            return chain[0].PossibleValues;
         }
 
         public List<int> CommonValues(List<TekField> chain1, List<TekField> chain2)
@@ -222,6 +222,33 @@ namespace Tek1
                     if (chain2.Contains(field2))
                         result.Add(field2);
             return result;
+        }
+
+        public List<TekField> ShortestRoute(TekField field1, TekField field2)
+        {
+            List<TekField> chain = FindChain(field1);
+            if (!chain.Contains(field2))
+                return null;
+            List<TekField> result = new List<TekField>();
+            result.Add(field1);
+            int distance = ComputeDistance(field1, field2);
+            if (distance == 1)
+            {
+                result.Add(field2);
+                return result;
+            }
+            List<List<TekField>> tempList = new List<List<TekField>>();
+            foreach (TekField f in field1.Influencers)
+                if (chain.Contains(f) && ComputeDistance(f, field2) < distance)
+                    tempList.Add(ShortestRoute(f, field2));
+
+            foreach(List<TekField> list in tempList)
+                if (list != null) 
+                {
+                    result.InsertRange(1, list);
+                    return result;
+                }
+            return null;
         }
 
         public void Dump(StreamWriter sw)

@@ -225,7 +225,7 @@ namespace Tek1
                 listBox1.Refresh();
                 LogHeuristic("{0}: {1}", heurFound++, heuristic.AsString());
                 View.SelectFields(heuristic.HeuristicFields.ToArray());
-//                View.HighlightFields(true, heuristic.AffectedFields.ToArray());
+                View.HighlightFields(true, heuristic.AffectedFields.ToArray());
                 if (checkBox1.Checked)
                 {
                     Paused = true;
@@ -237,7 +237,7 @@ namespace Tek1
                     }
                 }
                 heuristic.ExecuteAction(View.Moves);
-//                View.HighlightFields(false, heuristic.AffectedFields.ToArray());
+                View.HighlightFields(false, heuristic.AffectedFields.ToArray());
                 View.Refresh();
                 //if (heurFound == 19)
                 //{ // this forces an hidden pair, just for test purposes
@@ -299,6 +299,15 @@ namespace Tek1
         private void HeurSolvForm_FormClosed(object sender, FormClosedEventArgs e)
         {
             CloseHeuristicLog();
+        }
+
+        static bool onoff = false;
+        private void button1_Click_2(object sender, EventArgs e)
+        {
+
+            onoff = !onoff;
+            View.HighlightFields(onoff, View.Board.values[2, 2]);
+            
         }
     }
 

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Tek1
 {
-    class TekRegion : TekFields
+    public class TekRegion : TekFields
     {
         public TekRegion() : base()
         {
@@ -23,7 +23,17 @@ namespace Tek1
                 AddField(field);
         }
 
-        static public bool IsPair(TekField field1, TekField field2)
+        public void RemoveField(TekField field)
+        {
+            Fields.Remove(field);
+        }
+
+        public void Clear()
+        {
+            Fields.Clear();
+        }
+
+        protected bool IsPair(TekField field1, TekField field2)
         // hidden pairs are ignored
         {
             if (!field1.Influencers.Contains(field2))
@@ -36,6 +46,15 @@ namespace Tek1
             return true;
         }
 
+        public bool IsPair(TekField field)
+        // hidden pairs are ignored
+        {
+            if (Fields.Count != 1)
+                return false;
+            else
+                return IsPair(Fields[0], field);
+        }
+
         public bool IsPair()
         // hidden pairs are ignored
         {
@@ -44,7 +63,8 @@ namespace Tek1
             return IsPair(Fields[0], Fields[1]);
         }
 
-        static public bool IsTriplet(TekField field1, TekField field2, TekField field3, bool inSameArea = true)
+
+        protected bool IsTriplet(TekField field1, TekField field2, TekField field3, bool inSameArea = true)
         // hidden triplets are ignored
         {
             if (inSameArea && (field1.area != field2.area || field1.area != field3.area || field2.area != field3.area))
@@ -62,6 +82,14 @@ namespace Tek1
             return true;
         }
 
+        public bool IsTriplet(TekField field3, bool inSameArea = true)
+        {
+            if (Fields.Count != 2)
+                return false;
+            else
+                return IsTriplet(Fields[0], Fields[1], field3, inSameArea);
+        }
+
         public bool IsTriplet(bool inSameArea = true)
         // hidden triplets are ignored
         {
@@ -70,11 +98,18 @@ namespace Tek1
             return IsTriplet(Fields[0], Fields[1], Fields[2]);
         }
 
-        static public bool IsInvalidThreePairs(TekField field1, TekField field2, TekField field3)
+        protected bool IsInvalidThreePairs(TekField field1, TekField field2, TekField field3)
         { 
             if (field1.CommonPossibleValues(field2, field3).Count != 2 || !IsPair(field1, field2) || !IsPair(field1, field3) || !IsPair(field2, field3))
                 return false;
             return (field1.Influencers.Contains(field2) && field1.Influencers.Contains(field3) && field2.Influencers.Contains(field3));
+        }
+
+        public bool IsInvalidThreePairs(TekField field3)
+        {
+            if (Fields.Count != 2)
+                return false;
+            return IsInvalidThreePairs(Fields[0], Fields[1], field3);
         }
 
         public bool IsInvalidThreePairs()

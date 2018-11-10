@@ -782,6 +782,7 @@ namespace Tek1
             DrawBorderType(e, TekBorderStyle.tbsInternal);
             DrawBorderType(e, TekBorderStyle.tbsExternal);
             DrawBorderType(e, TekBorderStyle.tbsBoard);
+            DrawBorderType(e, TekBorderStyle.tbsHighlight);
         }
 
         private void DrawBorderType(PaintEventArgs e, TekBorderStyle BS)
@@ -801,7 +802,7 @@ namespace Tek1
             int[] penSizes = { 0, 1, 1, 1, 1, 2 };
             int iBS = (int)BS;
             int iBorder = (int)border;
-            System.Drawing.Color[] bColors = { Color.White, Color.DarkGray, Color.Black, Color.Black, Color.AntiqueWhite, Color.LimeGreen };
+            System.Drawing.Color[] bColors = { Color.White, Color.DarkGray, Color.Black, Color.Black, Color.AntiqueWhite, Color.Lime };
 
             int pensize = penSizes[iBS];
 
@@ -823,7 +824,10 @@ namespace Tek1
                         break;
                 }
             }
-            e.Graphics.DrawLine(new Pen(new SolidBrush(bColors[iBS]), pensize), X1[iBorder], Y1[iBorder], X2[iBorder], Y2[iBorder]);
+            Pen pen = new Pen(new SolidBrush(bColors[iBS]), pensize);
+            if (BS == TekBorderStyle.tbsHighlight)
+                pen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+            e.Graphics.DrawLine(pen, X1[iBorder], Y1[iBorder], X2[iBorder], Y2[iBorder]);
         }
         private void DisplayNote(PaintEventArgs e, int value)
         {

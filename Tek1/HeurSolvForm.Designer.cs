@@ -42,6 +42,7 @@
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.listBox1 = new System.Windows.Forms.ListBox();
             this.bStart = new System.Windows.Forms.Button();
+            this.button1 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.split)).BeginInit();
             this.split.Panel2.SuspendLayout();
             this.split.SuspendLayout();
@@ -94,6 +95,7 @@
             // 
             // tpCreate
             // 
+            this.tpCreate.Controls.Add(this.button1);
             this.tpCreate.Controls.Add(this.bLoad);
             this.tpCreate.Controls.Add(this.bReset);
             this.tpCreate.Controls.Add(this.bCancel);
@@ -195,6 +197,16 @@
             this.bStart.UseVisualStyleBackColor = true;
             this.bStart.Click += new System.EventHandler(this.button3_Click);
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(293, 365);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(27, 10);
+            this.button1.TabIndex = 18;
+            this.button1.Text = "button1";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click_2);
+            // 
             // HeurSolvForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -229,5 +241,6 @@
         private System.Windows.Forms.Button bNext;
         private System.Windows.Forms.Button bReset;
         private System.Windows.Forms.Button bLoad;
+        private System.Windows.Forms.Button button1;
     }
 }

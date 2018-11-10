@@ -19,12 +19,14 @@ namespace Tek1
         public List<TekField> HeuristicFields;
         public List<TekField> AffectedFields;
         public List<int> HeuristicValues;
+        protected TekRegion Region;
 
         public TekHeuristic()
         {
-
+            Region = new TekRegion();
         }
-        public TekHeuristic(string description, HeuristicAction action)
+
+        public TekHeuristic(string description, HeuristicAction action) : this()
         {
             _description = description;
             _action = action;
@@ -32,6 +34,7 @@ namespace Tek1
             AffectedFields = new List<TekField>();
             HeuristicValues = new List<int>();
         }
+
         public string AsString()
         {
             string result = String.Format("{0} [fields: ", Description);
@@ -46,11 +49,13 @@ namespace Tek1
                 result = result + String.Format("{0} ", value);
             return result + "] " + actionDescriptions[(int)Action];
         }
+
         public void Reset()
         {
             HeuristicFields.Clear();
             AffectedFields.Clear();
             HeuristicValues.Clear();
+            Region.Clear();
         }
 
         private void AddOnce(List<TekField> list, TekField field)
@@ -69,13 +74,24 @@ namespace Tek1
             foreach (TekField field in fields)
                 AddOnce(HeuristicFields, field);
         }
+        protected void AddHeuristicFields(List <TekField> fields)
+        {
+            foreach (TekField field in fields)
+                AddOnce(HeuristicFields, field);
+        }
+
         protected void AddAffectedField(TekField field)
         {
             AddOnce(AffectedFields, field);
         }
         protected void AddAffectedFields(params TekField[] fields)
         {
-            foreach(TekField field in fields)
+            foreach (TekField field in fields)
+                AddOnce(AffectedFields, field);
+        }
+        protected void AddAffectedFields(List<TekField> fields)
+        {
+            foreach (TekField field in fields)
                 AddOnce(AffectedFields, field);
         }
 
@@ -85,6 +101,11 @@ namespace Tek1
                 HeuristicValues.Add(value);
         }
         protected void AddValues(params int[] values)
+        {
+            foreach (int value in values)
+                AddValue(value);
+        }
+        protected void AddValues(List<int> values)
         {
             foreach (int value in values)
                 AddValue(value);
@@ -215,21 +236,23 @@ namespace Tek1
         }
     } // HiddenSingleValueHeuristic
 
-    public class DoubleValueHeuristic : TekHeuristic
+    public class CoupledPairHeuristic : TekHeuristic
     {
-        public DoubleValueHeuristic() : base("Pair of Values", HeuristicAction.haExcludeValue)
+        public CoupledPairHeuristic() : base("Coupled Pair", HeuristicAction.haExcludeValue)
         {
         }
+
         public override bool HeuristicApplies(TekBoard board, TekField field)
         {
             if (field.PossibleValues.Count != 2)
                 return false;
+            Region.AddField(field);
             foreach (TekField field2 in field.Influencers)
             {
                 if (field == field2)
                     continue;
-                if (TekRegion.IsPair(field, field2))
-                {
+                if (Region.IsPair(field2))
+                { 
                     AddHeuristicFields(field, field2);
                     foreach (TekField f in field.CommonInfluencers(field2))
                     {
@@ -243,7 +266,7 @@ namespace Tek1
                         if (isAffected)
                             AddAffectedField(f);
                     }
-                    AddValues(field.PossibleValues.ToArray());
+                    AddValues(field.PossibleValues);
                     return AffectedFields.Count > 0;
                 }
             }
@@ -294,22 +317,26 @@ namespace Tek1
         }
     }
 
-    public class TripletHeuristic : TekHeuristic
+    public class CoupledTripletsHeuristic : TekHeuristic
     {
-        public TripletHeuristic() : base("Triplets", HeuristicAction.haExcludeValue)
+        public CoupledTripletsHeuristic() : base("Coupled Triplets", HeuristicAction.haExcludeValue)
         {
         }
 
         public override bool HeuristicApplies(TekBoard board, TekField field)
         {
+            Region.Clear();
+            Region.AddField(field);
             foreach (TekField field2 in field.Influencers)
             {
+                Region.AddField(field2);
                 foreach(TekField field3 in field.Influencers)
                     if (field != field2 && field != field3 && field2 != field3)
-                        if (TekRegion.IsTriplet(field, field2, field3))
+                        if (Region.IsTriplet(field3))
                         {
-                            AddHeuristicFields(field, field2, field3);
-                            AddValues((new TekRegion(field, field2, field3)).GetTotalPossibleValues().ToArray());
+                            Region.AddField(field3);
+                            AddHeuristicFields(Region.Fields);
+                            AddValues(Region.GetTotalPossibleValues());
                             // determine affected fields
                             foreach(TekField f in field.CommonInfluencers(field2, field3))
                             {
@@ -325,14 +352,15 @@ namespace Tek1
                             else
                                 Reset();
                         }
+                Region.RemoveField(field2);
             }
             return false;
         }
     } // TripletHeuristic
 
-    public class TripletHeuristic2 : TekHeuristic
-    { // rework this!!
-        public TripletHeuristic2() : base("Triplets (cascade)", HeuristicAction.haExcludeValue)
+    public class CascadingTripletsHeuristic : TekHeuristic
+    { // logic is a bit suspect
+        public CascadingTripletsHeuristic() : base("Coupled Triplets (cascade)", HeuristicAction.haExcludeValue)
         {
         }
 
@@ -340,22 +368,29 @@ namespace Tek1
         {
             foreach (TekField field2 in field.Influencers)
                 if (field2.PossibleValues.Count == 2 || field2.PossibleValues.Count == 3)
+                {
+                    Region.AddField(field2);
                     foreach (TekField field3 in field.CommonInfluencers(field2))
                         if (field3.PossibleValues.Count == 2)
                         {
-                            foreach(TekField field4 in field2.CommonInfluencers(field3))
-                                if (field4 != field && field4.PossibleValues.Count == 2 && TekRegion.IsTriplet(field2, field3, field4, false))
+                            Region.AddField(field3);
+                            foreach (TekField field4 in field2.CommonInfluencers(field3))
+                                if (field4 != field && field4.PossibleValues.Count == 2 && Region.IsTriplet(field4, false))
                                 {
                                     foreach (int value in field.TotalPossibleValues(field2, field3))
                                         if (field.ValuePossible(value) && field2.ValuePossible(value) && field3.ValuePossible(value) && !field4.ValuePossible(value))
                                         {
-                                            AddHeuristicFields(field2, field3, field4);
+                                            Region.AddField(field4);
+                                            AddHeuristicFields(Region.Fields);
                                             AddAffectedField(field);
                                             AddValue(value);
                                             return true;
                                         }
                                 }
+                            Region.RemoveField(field3);
                         }
+                    Region.RemoveField(field2);
+                }
             return false;
         }
     } // TripletHeuristic2
@@ -372,7 +407,8 @@ namespace Tek1
             foreach (TekArea area in AdjacentAreas)
             {
                 Dictionary<int, List<TekField>> FieldsPerValueInArea = area.GetFieldsForValues();
-                 foreach (int value in field.PossibleValues)
+                Region.Clear();
+                foreach (int value in field.PossibleValues)
                 {
                     if (FieldsPerValueInArea.Keys.Contains(value))
                     {
@@ -383,15 +419,15 @@ namespace Tek1
                                 blocking = false;
                                 break;
                             }
+                            else Region.AddField(field2);
                         if (blocking)
                         {                            
-                            AddHeuristicField(field);
+                            AddHeuristicFields(Region.Fields);
                             AddAffectedField(field);
                             AddValue(value);                            
                         }
                     }
                 }
-                ;
             }
             return AffectedFields.Count > 0 && HeuristicValues.Count > 0;
         }
@@ -413,23 +449,32 @@ namespace Tek1
                 {
                     field.Value = field.PossibleValues[i];// trying this value
                     foreach (TekField field1 in field.Influencers) // field must at least influence two other fields (which could now be pairs)
+                    {
+                        Region.AddField(field1);
                         foreach (TekField field2 in field.Influencers)
                             if (field1 != field2)
-                                foreach (TekField field3 in field1.CommonInfluencers(field2)) 
+                            {
+                                Region.AddField(field2);
+                                foreach (TekField field3 in field1.CommonInfluencers(field2))
                                     // and if there is a third field as well we might have the invalid configuration
-                                    if (TekRegion.IsInvalidThreePairs(field1, field2, field3))
+                                    if (Region.IsInvalidThreePairs(field3))
                                     {
-                                        AddHeuristicField(field);
+                                        Region.AddField(field3);
+                                        AddHeuristicFields(Region.Fields);
                                         AddAffectedField(field);
                                         AddValue(field.Value);
                                         return true;
                                     }
+                                Region.RemoveField(field2);
+                            }
+                    }
                 }
                 finally 
                 {
                     field.Value = 0;
                 }
             }
+            Region.RemoveField(field);
             return false;
         }
     } // BlockingThreePairsHeuristic
@@ -478,7 +523,7 @@ namespace Tek1
                                 noInfluence = false;
                         if (!noInfluence)
                         {
-                            AddHeuristicFields(localFields[i], localFields[j]);
+                            AddHeuristicFields(Chains.ShortestRoute(localFields[i], localFields[j]));
                             AddAffectedField(field);
                             AddValues(Chains.ChainValues(localChains[i]));
                             return true;
@@ -523,16 +568,21 @@ namespace Tek1
                 List<TekField> touchPoints2 = Chains.Intersection(chain, chain2);
                 if (touchPoints1.Count == 2 && touchPoints2.Count == 2)
                 {
-                    int distance1 = Chains.ComputeDistance(touchPoints1[0], touchPoints1[1]);
-                    int distance2 = Chains.ComputeDistance(touchPoints2[0], touchPoints2[1]);
-                    if ((distance1 % 2 == 0) != (distance2 % 2 == 0))
+                    List<TekField> chainFields1 = Chains.ShortestRoute(touchPoints1[0], touchPoints1[1]);
+                    List<TekField> chainFields2 = Chains.ShortestRoute(touchPoints2[0], touchPoints2[1]);
+                    if ((chainFields1.Count % 2 == 0) != (chainFields2.Count % 2 == 0))
                     {
-                        AddHeuristicField(field);
                         AddValue(Chains.CommonValues(chain, chain2)[0]);
-                        if (distance1 % 2 == 1)
-                            AddAffectedFields(touchPoints2.ToArray());
+                        if (chainFields1.Count % 2 == 0)
+                        {
+                            AddAffectedFields(touchPoints2);
+                            AddHeuristicFields(chainFields1);
+                        }
                         else
-                            AddAffectedFields(touchPoints1.ToArray());
+                        {
+                            AddAffectedFields(touchPoints1);
+                            AddHeuristicFields(chainFields2);
+                        }
                         return true;
                     }
                 }
@@ -541,9 +591,9 @@ namespace Tek1
         }
     } // ConflictingChainsHeuristic
 
-    public class CascadingTripletsHeuristic : TekHeuristic
+    public class CascadingTripletsHeuristic2 : TekHeuristic
     {// rework this
-        public CascadingTripletsHeuristic() : base("Cascading Triplets", HeuristicAction.haExcludeValue)
+        public CascadingTripletsHeuristic2() : base("Cascading Triplets variation", HeuristicAction.haExcludeValue)
         {
         }
 
@@ -587,13 +637,13 @@ namespace Tek1
             Heuristics = new List<TekHeuristic>();
             Heuristics.Add(new SingleValueHeuristic());
             Heuristics.Add(new HiddenSingleValueHeuristic());
-            Heuristics.Add(new DoubleValueHeuristic());
+            Heuristics.Add(new CoupledPairHeuristic());
             Heuristics.Add(new HiddenPairHeuristic());
-            Heuristics.Add(new TripletHeuristic());
+            Heuristics.Add(new CoupledTripletsHeuristic());
             Heuristics.Add(new BlockingHeuristic());
             Heuristics.Add(new BlockingThreePairsHeuristic());
             Heuristics.Add(new AlternatingChainHeuristic());
-            Heuristics.Add(new TripletHeuristic2());
+            Heuristics.Add(new CascadingTripletsHeuristic());
             Heuristics.Add(new ConflictingChainsHeuristic());
 //            Heuristics.Add(new CascadingTripletsHeuristic());
         }
