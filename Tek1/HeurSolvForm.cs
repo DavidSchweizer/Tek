@@ -75,8 +75,10 @@ namespace Tek1
         void DoReset()
         {
             CloseHeuristicLog();
+            listBox1.Items.Clear();
             View.ResetValues();
             bStart.Enabled = true;
+
         }
 
         private void bReset_Click(object sender, EventArgs e)

@@ -220,21 +220,21 @@ namespace Tek1
         }
         public override bool HeuristicApplies(TekBoard board, TekField field)
         {
-            if (field.PossibleValues.Count == 0)
-                return false;
-            else
+            foreach(int value in field.PossibleValues)
             {
-                Dictionary<int, List<TekField>> FieldsPerValueInArea = field.area.GetFieldsForValues();
-                foreach(int value in field.PossibleValues)
-                    if(FieldsPerValueInArea[value].Count == 1)
-                    {
-                        AddHeuristicField(field);
-                        AddAffectedField(field);
-                        AddValue(value);
-                        return true;
-                    }
-                return false;
+                bool isSingle = true;
+                foreach (TekField field2 in field.area.Fields)
+                    if (field2 != field && field2.ValuePossible(value))
+                        isSingle = false;
+                if (isSingle)
+                {
+                    AddHeuristicField(field);
+                    AddAffectedField(field);
+                    AddValue(value);
+                    return true;
+                }
             }
+            return false;
         }
     } // HiddenSingleValueHeuristic
 
