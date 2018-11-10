@@ -632,6 +632,58 @@ namespace Tek1
         }
     } // ConflictingChainsHeuristic
 
+    public class InvalidTripletsHeuristic : TekHeuristic
+    {// rework this, this is also supposed to be something clever but doesnt seem to work yet
+        public InvalidTripletsHeuristic() : base("Invalid Triplets ", HeuristicAction.haExcludeValue)
+        {
+        }
+
+        public override bool HeuristicApplies(TekBoard board, TekField field)
+        {
+            int i = 0;
+            while (i < field.PossibleValues.Count)
+            {
+                field.Value = field.PossibleValues[i];
+                try
+                {
+                    Region.Clear();
+                    foreach (TekField f in field.area.Fields)
+                        if (f.Value == 0)
+                            Region.AddFields(f);
+                    if (Region.IsTriplet())
+                    {
+                        foreach (TekField field2 in Region.GetCommonInfluencers())
+                        {
+                            if (field2.Value == 0)
+                            {
+                                bool possible = false;
+                                foreach (int value2 in field2.PossibleValues)
+                                    if (!Region.GetTotalPossibleValues().Contains(value2))
+                                    {
+                                        possible = true;
+                                        break;
+                                    }
+                                if (!possible)
+                                {
+                                    AddHeuristicFields(Region.Fields);
+                                    AddAffectedField(field);
+                                    AddValue(field.Value);
+                                }
+                            }
+                        }
+                    }
+                }
+                finally
+                { 
+                    field.Value = 0;
+                }
+                i++;
+            }
+            return false;
+        }
+    } // InvalidTripletsHeuristic
+
+
     public class CascadingTripletsHeuristic2 : TekHeuristic
     {// rework this, this is also supposed to be something clever but doesnt seem to work yet
         public CascadingTripletsHeuristic2() : base("Cascading Triplets variation", HeuristicAction.haExcludeValue)
@@ -686,6 +738,7 @@ namespace Tek1
             Heuristics.Add(new AlternatingChainHeuristic());
             Heuristics.Add(new CascadingTripletsHeuristic());
             Heuristics.Add(new ConflictingChainsHeuristic());
+            Heuristics.Add(new InvalidTripletsHeuristic());
 //            Heuristics.Add(new CascadingTripletsHeuristic());
         }
 
