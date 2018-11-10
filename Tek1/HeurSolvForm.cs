@@ -301,14 +301,6 @@ namespace Tek1
             CloseHeuristicLog();
         }
 
-        static bool onoff = false;
-        private void button1_Click_2(object sender, EventArgs e)
-        {
-
-            onoff = !onoff;
-            View.HighlightFields(onoff, View.Board.values[2, 2]);
-            
-        }
     }
 
    

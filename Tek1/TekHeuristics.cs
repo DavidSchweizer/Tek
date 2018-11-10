@@ -194,6 +194,7 @@ namespace Tek1
     } // TekHeuristic
 
     public class SingleValueHeuristic : TekHeuristic
+    // only one possible value in a field
     {
         public SingleValueHeuristic() : base("Single Value", HeuristicAction.haSetValue)
         {
@@ -212,6 +213,7 @@ namespace Tek1
     } // SingleValueHeuristic
 
     public class HiddenSingleValueHeuristic : TekHeuristic
+    // the field is the only possibility in it's area
     {
         public HiddenSingleValueHeuristic() : base("Hidden Single", HeuristicAction.haSetValue)
         {
@@ -237,6 +239,8 @@ namespace Tek1
     } // HiddenSingleValueHeuristic
 
     public class CoupledPairHeuristic : TekHeuristic
+    // two fields are adjacent and have the same two possible values
+    // all common influencers can not have the same value(s)
     {
         public CoupledPairHeuristic() : base("Coupled Pair", HeuristicAction.haExcludeValue)
         {
@@ -275,7 +279,12 @@ namespace Tek1
     }
 
     public class HiddenPairHeuristic : TekHeuristic
-    {// this could perhaps be replaced by Triplets, since they are sort-of complimentary
+    {
+    // similar to a normal Coupled Pair. two fields in the same area have two values in common.
+    // no other fields in that area can have those two values. The other values in the triggering
+    // fields can be eliminated. 
+    // probably this reverts automatically to Coupled Triplets
+    //
         public HiddenPairHeuristic() : base("Hidden Pair", HeuristicAction.haExcludeComplement)
         {
         }
@@ -318,6 +327,11 @@ namespace Tek1
     }
 
     public class CoupledTripletsHeuristic : TekHeuristic
+        // similar to two pairs, but with three fields. 
+        // If they are influencers of eachother and have two or three of the same
+        // shared possible values, all common influencers of the fields can not have
+        // the three shared values
+        //
     {
         public CoupledTripletsHeuristic() : base("Coupled Triplets", HeuristicAction.haExcludeValue)
         {
@@ -359,7 +373,12 @@ namespace Tek1
     } // TripletHeuristic
 
     public class CascadingTripletsHeuristic : TekHeuristic
-    { // logic is a bit suspect
+    {
+        // The field is next to two other fields that form a triplet with a third field. 
+        // The triplet has two fields with only two alternatives (different ones, of course)
+        // Entering one of the values in the triggering field would set the values (cascade) of two of the triplet fields, 
+        // causing the third triplet field to have no values left
+        //
         public CascadingTripletsHeuristic() : base("Coupled Triplets (cascade)", HeuristicAction.haExcludeValue)
         {
         }
@@ -397,6 +416,10 @@ namespace Tek1
 
     public class BlockingHeuristic : TekHeuristic
     {
+        // The field is next to an area influencing all instances of a value in that area. 
+        // Entering the value into the triggering field would render the next area invalid
+        // because that value would be blocked by the triggering field
+        //
         public BlockingHeuristic() : base("Blocking", HeuristicAction.haExcludeValue)
         {
         }
@@ -406,26 +429,26 @@ namespace Tek1
             List<TekArea> AdjacentAreas = field.area.GetAdjacentAreas();
             foreach (TekArea area in AdjacentAreas)
             {
-                Dictionary<int, List<TekField>> FieldsPerValueInArea = area.GetFieldsForValues();
-                Region.Clear();
                 foreach (int value in field.PossibleValues)
                 {
-                    if (FieldsPerValueInArea.Keys.Contains(value))
-                    {
-                        bool blocking = true;
-                        foreach (TekField field2 in FieldsPerValueInArea[value])
-                            if (!field.Influencers.Contains(field2))
+                    bool possible = false;
+                    Region.Clear();
+                    foreach (TekField f in area.Fields)
+                        if (f.ValuePossible(value))
+                        {
+                            if (field.Influencers.Contains(f))
+                                Region.AddField(f);
+                            else
                             {
-                                blocking = false;
+                                possible = true;
                                 break;
                             }
-                            else Region.AddField(field2);
-                        if (blocking)
-                        {                            
-                            AddHeuristicFields(Region.Fields);
-                            AddAffectedField(field);
-                            AddValue(value);                            
                         }
+                    if (!possible && Region.Fields.Count > 0)
+                    {
+                        AddAffectedField(field);
+                        AddValue(value);
+                        AddHeuristicFields(Region.Fields);
                     }
                 }
             }
@@ -434,6 +457,10 @@ namespace Tek1
     } // BlockingHeuristic
 
     public class BlockingThreePairsHeuristic : TekHeuristic
+        // the field is next to a triplet where at least one of the triplet fields has only two values. 
+        // if the triggering field blocks the third value of the triplet, the triplet reverts to 
+        // three pairs which would be in an invalid configuration
+        //
     {
         public BlockingThreePairsHeuristic() : base("Blocking (three pairs)", HeuristicAction.haExcludeValue)
         {
@@ -480,6 +507,10 @@ namespace Tek1
     } // BlockingThreePairsHeuristic
 
     public class AlternatingChainHeuristic : TekHeuristic
+        // a field influences two fields of a chain (a series of coupled pairs). 
+        // The chain has an even number of steps between the two chain fields. 
+        // The triggering field can not have any of the values in the chain
+        //
     {
         TekChains Chains;
         public AlternatingChainHeuristic() : base("Alternating Chain", HeuristicAction.haExcludeValue)
@@ -536,7 +567,17 @@ namespace Tek1
     } // AlternatingChainHeuristic
 
     public class ConflictingChainsHeuristic : TekHeuristic
+    // a variation/generalization of Alternating Chains:
+    // a field is part of a chain and influences a field of another chain. 
+    // both chains intersect at some other field as well and share one value 
+    //  (two values is not possible and zero values means the chains don't interact)
+    // if the first chain has an even number of steps between the endpoints (the other fields where the chains meet)
+    // and the other chain has an odd number of steps, the common value of the second chain can be eliminated
+    // if the first chain is odd and the second chain is even, the common value of the first chain can be eliminated
+    // if they're both odd or even there is no interaction
+    //
     {
+
         TekChains Chains;
 
         public ConflictingChainsHeuristic() : base("Conflicting Chains", HeuristicAction.haExcludeValue)
@@ -592,7 +633,7 @@ namespace Tek1
     } // ConflictingChainsHeuristic
 
     public class CascadingTripletsHeuristic2 : TekHeuristic
-    {// rework this
+    {// rework this, this is also supposed to be something clever but doesnt seem to work yet
         public CascadingTripletsHeuristic2() : base("Cascading Triplets variation", HeuristicAction.haExcludeValue)
         {
         }
