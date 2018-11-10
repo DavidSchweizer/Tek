@@ -111,7 +111,7 @@ namespace Tek1
                 AddValue(value);
         }
 
-        protected virtual void SetupApplies(TekBoard board)
+        protected virtual void BeforeApplies(TekBoard board)
         {
             // override to setup local variables
         }
@@ -119,7 +119,7 @@ namespace Tek1
         public bool Applies(TekBoard board)
         {
             Reset();
-            SetupApplies(board);
+            BeforeApplies(board);
             foreach (TekField field in board.values)
             {
                 if (field.Value > 0 )
@@ -517,7 +517,7 @@ namespace Tek1
         {
         }
 
-        protected override void SetupApplies(TekBoard board)
+        protected override void BeforeApplies(TekBoard board)
         {
             Chains = new TekChains(board);
             using (StreamWriter sw = new StreamWriter("chains.dmp"))
@@ -584,7 +584,7 @@ namespace Tek1
         {
         }
 
-        protected override void SetupApplies(TekBoard board)
+        protected override void BeforeApplies(TekBoard board)
         {
             Chains = new TekChains(board);
             using (StreamWriter sw = new StreamWriter("chains.dmp"))
