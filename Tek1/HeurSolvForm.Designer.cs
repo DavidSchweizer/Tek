@@ -35,12 +35,13 @@
             this.split = new System.Windows.Forms.SplitContainer();
             this.tc1 = new System.Windows.Forms.TabControl();
             this.tpCreate = new System.Windows.Forms.TabPage();
+            this.bLoad = new System.Windows.Forms.Button();
+            this.bReset = new System.Windows.Forms.Button();
             this.bCancel = new System.Windows.Forms.Button();
             this.bNext = new System.Windows.Forms.Button();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.listBox1 = new System.Windows.Forms.ListBox();
             this.bStart = new System.Windows.Forms.Button();
-            this.bReset = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.split)).BeginInit();
             this.split.Panel2.SuspendLayout();
             this.split.SuspendLayout();
@@ -75,8 +76,8 @@
             // split.Panel2
             // 
             this.split.Panel2.Controls.Add(this.tc1);
-            this.split.Size = new System.Drawing.Size(835, 413);
-            this.split.SplitterDistance = 430;
+            this.split.Size = new System.Drawing.Size(981, 413);
+            this.split.SplitterDistance = 505;
             this.split.SplitterWidth = 3;
             this.split.TabIndex = 10;
             // 
@@ -88,11 +89,12 @@
             this.tc1.Margin = new System.Windows.Forms.Padding(2);
             this.tc1.Name = "tc1";
             this.tc1.SelectedIndex = 0;
-            this.tc1.Size = new System.Drawing.Size(402, 413);
+            this.tc1.Size = new System.Drawing.Size(473, 413);
             this.tc1.TabIndex = 0;
             // 
             // tpCreate
             // 
+            this.tpCreate.Controls.Add(this.bLoad);
             this.tpCreate.Controls.Add(this.bReset);
             this.tpCreate.Controls.Add(this.bCancel);
             this.tpCreate.Controls.Add(this.bNext);
@@ -103,15 +105,37 @@
             this.tpCreate.Margin = new System.Windows.Forms.Padding(2);
             this.tpCreate.Name = "tpCreate";
             this.tpCreate.Padding = new System.Windows.Forms.Padding(2);
-            this.tpCreate.Size = new System.Drawing.Size(394, 387);
+            this.tpCreate.Size = new System.Drawing.Size(465, 387);
             this.tpCreate.TabIndex = 0;
             this.tpCreate.Text = "Heuristics";
             this.tpCreate.UseVisualStyleBackColor = true;
             // 
+            // bLoad
+            // 
+            this.bLoad.Location = new System.Drawing.Point(325, 352);
+            this.bLoad.Margin = new System.Windows.Forms.Padding(2);
+            this.bLoad.Name = "bLoad";
+            this.bLoad.Size = new System.Drawing.Size(50, 27);
+            this.bLoad.TabIndex = 17;
+            this.bLoad.Text = "Load";
+            this.bLoad.UseVisualStyleBackColor = true;
+            this.bLoad.Click += new System.EventHandler(this.bLoad_Click);
+            // 
+            // bReset
+            // 
+            this.bReset.Location = new System.Drawing.Point(69, 353);
+            this.bReset.Margin = new System.Windows.Forms.Padding(2);
+            this.bReset.Name = "bReset";
+            this.bReset.Size = new System.Drawing.Size(50, 27);
+            this.bReset.TabIndex = 16;
+            this.bReset.Text = "reset!";
+            this.bReset.UseVisualStyleBackColor = true;
+            this.bReset.Click += new System.EventHandler(this.bReset_Click_1);
+            // 
             // bCancel
             // 
             this.bCancel.Enabled = false;
-            this.bCancel.Location = new System.Drawing.Point(320, 353);
+            this.bCancel.Location = new System.Drawing.Point(408, 352);
             this.bCancel.Margin = new System.Windows.Forms.Padding(2);
             this.bCancel.Name = "bCancel";
             this.bCancel.Size = new System.Drawing.Size(50, 27);
@@ -155,7 +179,7 @@
             this.listBox1.Margin = new System.Windows.Forms.Padding(2);
             this.listBox1.Name = "listBox1";
             this.listBox1.ScrollAlwaysVisible = true;
-            this.listBox1.Size = new System.Drawing.Size(390, 342);
+            this.listBox1.Size = new System.Drawing.Size(461, 342);
             this.listBox1.TabIndex = 12;
             this.listBox1.DoubleClick += new System.EventHandler(this.listBox1_DoubleClick);
             // 
@@ -171,26 +195,16 @@
             this.bStart.UseVisualStyleBackColor = true;
             this.bStart.Click += new System.EventHandler(this.button3_Click);
             // 
-            // bReset
-            // 
-            this.bReset.Location = new System.Drawing.Point(69, 353);
-            this.bReset.Margin = new System.Windows.Forms.Padding(2);
-            this.bReset.Name = "bReset";
-            this.bReset.Size = new System.Drawing.Size(50, 27);
-            this.bReset.TabIndex = 16;
-            this.bReset.Text = "reset!";
-            this.bReset.UseVisualStyleBackColor = true;
-            this.bReset.Click += new System.EventHandler(this.bReset_Click_1);
-            // 
             // HeurSolvForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(835, 413);
+            this.ClientSize = new System.Drawing.Size(981, 413);
             this.Controls.Add(this.split);
             this.KeyPreview = true;
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "HeurSolvForm";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.HeurSolvForm_FormClosed);
             this.split.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.split)).EndInit();
             this.split.ResumeLayout(false);
@@ -214,5 +228,6 @@
         private System.Windows.Forms.Button bCancel;
         private System.Windows.Forms.Button bNext;
         private System.Windows.Forms.Button bReset;
+        private System.Windows.Forms.Button bLoad;
     }
 }

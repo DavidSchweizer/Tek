@@ -196,6 +196,13 @@ namespace Tek1
             _view.Refresh();
         }
 
+        public void HighlightFields(bool onoff = true, params TekField[] fields)
+        {
+            foreach (TekField field in fields)
+                _view.HighlightField(field.Row, field.Col, onoff);
+            _view.Refresh();
+        }
+
         public void HandleKeyDown(ref Message msg, Keys keyData)
         {
             if (_view.Selector.CurrentFieldView != null)
@@ -614,6 +621,16 @@ namespace Tek1
                 }            
         }
 
+        public void HighlightField(int row, int col, bool onoff)
+        {
+            TekFieldView field = GetField(row, col);
+            if (onoff)
+                for (int b = 0; b < (int) TekFieldView.TekBorder.bdLast; b++)
+                    field.Borders[b] = TekFieldView.TekBorderStyle.tbsHighlight;
+            else
+                _SetBorders(field);
+        }
+
         public TekFieldView GetField(int row, int col)
         {
 
@@ -631,7 +648,7 @@ namespace Tek1
             return result;
         }
 
-        public void SetShowErrors(bool onoff = true)
+         public void SetShowErrors(bool onoff = true)
         {
             if (Board == null)
                 return;
@@ -652,7 +669,7 @@ namespace Tek1
     public class TekFieldView : Panel
     {
         public enum TekBorder { bdTop, bdRight, bdBottom, bdLeft, bdLast };
-        public enum TekBorderStyle { tbsNone, tbsInternal, tbsExternal, tbsBoard, tbsSelected };
+        public enum TekBorderStyle { tbsNone, tbsInternal, tbsExternal, tbsBoard, tbsSelected, tbsHighlight };
 
 
         private System.Drawing.Color _NormalColor;
@@ -700,7 +717,7 @@ namespace Tek1
         }
 
         private bool _isMultiSelected;
-        public bool IsMultiSelected { get { return _isMultiSelected; } set { SetMultiSelected(value); Refresh(); } }
+        public bool IsMultiSelected { get { return _isMultiSelected; } set { SetMultiSelected(value); } }
 
         static public bool IgnoreInitial = false;
         public void SetMultiSelected(bool onoff = true)
@@ -780,11 +797,11 @@ namespace Tek1
 
         private void DrawSingleBorder(PaintEventArgs e, TekBorder border, TekBorderStyle BS)
         {
-            //tbsNone, tbsInternal, tbsExternal, tbsBoard, tbsSelected
-            int[] penSizes = { 0, 1, 1, 1, 1 };
+            //tbsNone, tbsInternal, tbsExternal, tbsBoard, tbsSelected, tbsHighlight
+            int[] penSizes = { 0, 1, 1, 1, 1, 2 };
             int iBS = (int)BS;
             int iBorder = (int)border;
-            System.Drawing.Color[] bColors = { Color.White, Color.DarkGray, Color.Black, Color.Black, Color.AntiqueWhite };
+            System.Drawing.Color[] bColors = { Color.White, Color.DarkGray, Color.Black, Color.Black, Color.AntiqueWhite, Color.LimeGreen };
 
             int pensize = penSizes[iBS];
 

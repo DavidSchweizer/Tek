@@ -25,15 +25,24 @@ namespace Tek1
             View = new TekEdit(split.Panel1, new Point(10,10),
                 new Point(split.Panel1.ClientRectangle.Width - 10,
                           split.Panel1.ClientRectangle.Height - 10));
-            View.LoadFromFile("test.tx");
+            ofd1.FileName = "test.tx";
+            DoLoad();
+        }
 
-            //View.SelectFields(View.Board.values[3, 3]);
-            //View.ToggleSelectedValue(3);
+        void DoLoad()
+        {
+            if (ofd1.ShowDialog() == DialogResult.OK)
+            {
+                View.LoadFromFile(ofd1.FileName);
+                this.Text = ofd1.FileName;
+                initializeHeuristicLog(this.Text);
+                DoReset();
+            }
         }
 
         private void bLoad_Click(object sender, EventArgs e)
         {
-
+            DoLoad();
         }
 
         private void Button_ToggleValue_Click(object sender, EventArgs e)
@@ -63,9 +72,16 @@ namespace Tek1
 
         }
 
+        void DoReset()
+        {
+            CloseHeuristicLog();
+            View.ResetValues();
+            bStart.Enabled = true;
+        }
+
         private void bReset_Click(object sender, EventArgs e)
         {
-            View.ResetValues();
+            DoReset();
         }
 
         private void ToggleNoteButton_Click(object sender, EventArgs e)
@@ -163,6 +179,35 @@ namespace Tek1
         {
         }
 
+        StreamWriter HeuristicLog = null;
+        void initializeHeuristicLog(string PuzzleFilename)
+        {
+            if (HeuristicLog != null)
+                CloseHeuristicLog();
+            HeuristicLog = new StreamWriter(Path.ChangeExtension(PuzzleFilename, "log"));
+            LogHeuristic("start Log {0} at {1}\n", PuzzleFilename, DateTime.Now.ToString("dd MMMM yyyy   H:mm:ss"));            
+        }
+
+        void LogHeuristic(string message, params object[] fields)
+        {
+            if (HeuristicLog == null)
+                initializeHeuristicLog(this.Text);
+            if (HeuristicLog == null)
+                return;
+            HeuristicLog.WriteLine(String.Format(message, fields));
+            HeuristicLog.Flush();
+        }
+
+        void CloseHeuristicLog()
+        {
+            if (HeuristicLog != null)
+            { 
+                LogHeuristic("close Log at {0}", DateTime.Now.ToString("dd MMMM YYYY   H:mm:ss"));
+                HeuristicLog.Close();
+            }
+            HeuristicLog = null;
+        }
+
         private void button3_Click(object sender, EventArgs e)
         {
             bStart.Enabled = false;
@@ -175,10 +220,12 @@ namespace Tek1
             Canceled = false;
             while (heuristic != null &&  !Canceled)
             {
-                listBox1.Items.Add(String.Format("{0}: {1}", heurFound++, heuristic.AsString()));
+                listBox1.Items.Add(String.Format("{0}: {1}", heurFound, heuristic.AsString()));
                 listBox1.SelectedIndex = listBox1.Items.Count - 1;
                 listBox1.Refresh();
+                LogHeuristic("{0}: {1}", heurFound++, heuristic.AsString());
                 View.SelectFields(heuristic.HeuristicFields.ToArray());
+//                View.HighlightFields(true, heuristic.AffectedFields.ToArray());
                 if (checkBox1.Checked)
                 {
                     Paused = true;
@@ -190,7 +237,7 @@ namespace Tek1
                     }
                 }
                 heuristic.ExecuteAction(View.Moves);
-              
+//                View.HighlightFields(false, heuristic.AffectedFields.ToArray());
                 View.Refresh();
                 //if (heurFound == 19)
                 //{ // this forces an hidden pair, just for test purposes
@@ -200,10 +247,14 @@ namespace Tek1
             }
             View.Selector.ClearMultiSelect();
             if (View.Board.IsSolved())
+            {
                 MessageBox.Show("Solved!");
+                LogHeuristic("Solved!\n");
+            }
             else
             {
                 MessageBox.Show("Can not further be solved using these heuristics...");
+                LogHeuristic("\nCan not further be solved using these heuristics...");
                 if (MessageBox.Show("Save state?", "Verify", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
                     TekBoardParser parser = new TekBoardParser();
@@ -242,9 +293,12 @@ namespace Tek1
 
         private void bReset_Click_1(object sender, EventArgs e)
         {
-            View.ResetValues();
+            DoReset();
+        }
 
-            bStart.Enabled = true;
+        private void HeurSolvForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            CloseHeuristicLog();
         }
     }
 
