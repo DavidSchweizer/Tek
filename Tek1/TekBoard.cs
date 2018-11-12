@@ -230,6 +230,21 @@ namespace Tek1
             return result;
         }
 
+        public List<TekField> CommonInfluencers(List<TekField> fields)
+        {
+            List<TekField> result = new List<TekField>();
+            foreach (TekField f in Influencers)
+            {
+                bool isCommon = true;
+                for (int i = 0; i < fields.Count && isCommon; i++)
+                    if (fields.Contains(f) || !fields[i].Influencers.Contains(f))
+                        isCommon = false;
+                if (isCommon)
+                    result.Add(f);
+            }
+            return result;
+        }
+
         public bool ValuePossible(int value)
         {
             return PossibleValues.Contains(value);
@@ -332,11 +347,22 @@ namespace Tek1
             Fields = new List<TekField>();
         }
 
+        public virtual bool IsEqual(TekFields fields2)
+        {
+            if (Fields.Count != fields2.Fields.Count)
+                return false;
+            foreach (TekField field in Fields)
+                if (!fields2.Fields.Contains(field))
+                    return false;
+            return true;
+        }
+            
         public virtual void AddField(TekField f)
         {
             if (Fields.Contains(f)) // don't add more than once
                 return;
             Fields.Add(f);
+            Sort();
         }
 
         public List<TekField> GetCommonInfluencers()
@@ -390,6 +416,11 @@ namespace Tek1
         public int MaxValue()
         {
             return (Fields.Count < Const.MAXTEK ? Fields.Count : Const.MAXTEK);
+        }
+
+        public void Sort()
+        {
+            Fields.Sort(new TekFieldComparer2());
         }
 
         public Dictionary<int, List<TekField>> GetFieldsForValues()

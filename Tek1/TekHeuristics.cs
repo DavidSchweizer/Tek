@@ -111,7 +111,7 @@ namespace Tek1
                 AddValue(value);
         }
 
-        protected virtual void BeforeApplies(TekBoard board)
+        protected virtual void BeforeProcessingBoard(TekBoard board)
         {
             // override to setup local variables
         }
@@ -119,7 +119,7 @@ namespace Tek1
         public bool Applies(TekBoard board)
         {
             Reset();
-            BeforeApplies(board);
+            BeforeProcessingBoard(board);
             foreach (TekField field in board.values)
             {
                 if (field.Value > 0 )
@@ -517,7 +517,7 @@ namespace Tek1
         {
         }
 
-        protected override void BeforeApplies(TekBoard board)
+        protected override void BeforeProcessingBoard(TekBoard board)
         {
             Chains = new TekChains(board);
             using (StreamWriter sw = new StreamWriter("chains.dmp"))
@@ -584,7 +584,7 @@ namespace Tek1
         {
         }
 
-        protected override void BeforeApplies(TekBoard board)
+        protected override void BeforeProcessingBoard(TekBoard board)
         {
             Chains = new TekChains(board);
             using (StreamWriter sw = new StreamWriter("chains.dmp"))
@@ -684,42 +684,58 @@ namespace Tek1
     } // InvalidTripletsHeuristic
 
 
-    public class CascadingTripletsHeuristic2 : TekHeuristic
-    {// rework this, this is also supposed to be something clever but doesnt seem to work yet
-        public CascadingTripletsHeuristic2() : base("Cascading Triplets variation", HeuristicAction.haExcludeValue)
+    public class CompactRegionsHeuristic : TekHeuristic
+    // based on "compact regions": if all fields in a region are mutual influencer, and you check for each of the border fields 
+    // if there are values that would leave insufficient possible values in the region, 
+    // you can eliminate that value in the affected field
+    {
+        List<TekRegion> ProcessedRegions;
+
+        public CompactRegionsHeuristic() : base("Compact Regions", HeuristicAction.haExcludeValue)
         {
+            ProcessedRegions = new List<TekRegion>();
+        }
+
+        protected override void BeforeProcessingBoard(TekBoard board)
+        {
+            ProcessedRegions.Clear();
         }
 
         public override bool HeuristicApplies(TekBoard board, TekField field)
         {
-            List<TekField> emptyFields = field.area.GetEmptyFields();
-            if (emptyFields.Count != 4)
-                return false;
-            emptyFields.Remove(field);
-            List<int> TotalValues = emptyFields[0].TotalPossibleValues(emptyFields[1], emptyFields[2]);
-            List<TekField> commonInfluencers = 
-                emptyFields[0].CommonInfluencers(emptyFields[1], emptyFields[2]);
-            commonInfluencers.Remove(field);
-            int i = 0;
-            while (i < commonInfluencers.Count)
-                if (commonInfluencers[i].Value > 0)
-                    commonInfluencers.RemoveAt(i);
-                else i++;
-            if (commonInfluencers.Count != 1)
-                return false;
-            foreach(int value in field.PossibleValues)
+            List<TekRegion> Regions = TekRegion.GetCompactRegions(field);
+            foreach (TekRegion region in Regions)
             {
-                if (!commonInfluencers[0].PossibleValues.Contains(value))
+                if (ProcessedRegions.Contains(region))
+                    continue;
+                foreach (TekField f in region.GetBorderFields())
                 {
-                    AddHeuristicField(field);
-                    AddAffectedField(field);
-                    AddValue(value);
-                    return true;
+                    try
+                    {
+                        int[] tryValues = f.PossibleValues.ToArray(); // setting value will empty possiblevalues array
+                        foreach (int value in tryValues)
+                        {
+                            f.Value = value;
+                            if (region.GetTotalPossibleValues().Count < region.Fields.Count)
+                            {
+                                HeuristicFields.AddRange(region.Fields);
+                                AffectedFields.Add(f);
+                                HeuristicValues.Add(value);
+                            }
+                        }
+                        if (AffectedFields.Count > 0)
+                            return true;
+                    }
+                    finally
+                    {
+                        f.Value = 0;
+                    }
                 }
+                ProcessedRegions.Add(region);
             }
             return false;
         }
-    } // CascadingTripletsHeuristic
+    } // CompactRegionsHeuristic
 
     public class TekHeuristics
     {
@@ -739,7 +755,7 @@ namespace Tek1
             Heuristics.Add(new CascadingTripletsHeuristic());
             Heuristics.Add(new ConflictingChainsHeuristic());
             Heuristics.Add(new InvalidTripletsHeuristic());
-//            Heuristics.Add(new CascadingTripletsHeuristic());
+            Heuristics.Add(new CompactRegionsHeuristic());
         }
 
         public TekHeuristic FindHeuristic(TekBoard board)
