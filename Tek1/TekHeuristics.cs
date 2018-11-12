@@ -688,17 +688,10 @@ namespace Tek1
     // based on "compact regions": if all fields in a region are mutual influencer, and you check for each of the border fields 
     // if there are values that would leave insufficient possible values in the region, 
     // you can eliminate that value in the affected field
+    //
     {
-        List<TekRegion> ProcessedRegions;
-
         public CompactRegionsHeuristic() : base("Compact Regions", HeuristicAction.haExcludeValue)
         {
-            ProcessedRegions = new List<TekRegion>();
-        }
-
-        protected override void BeforeProcessingBoard(TekBoard board)
-        {
-            ProcessedRegions.Clear();
         }
 
         public override bool HeuristicApplies(TekBoard board, TekField field)
@@ -706,8 +699,6 @@ namespace Tek1
             List<TekRegion> Regions = TekRegion.GetCompactRegions(field);
             foreach (TekRegion region in Regions)
             {
-                if (ProcessedRegions.Contains(region))
-                    continue;
                 foreach (TekField f in region.GetBorderFields())
                 {
                     try
@@ -731,7 +722,6 @@ namespace Tek1
                         f.Value = 0;
                     }
                 }
-                ProcessedRegions.Add(region);
             }
             return false;
         }
