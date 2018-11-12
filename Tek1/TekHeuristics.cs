@@ -685,9 +685,12 @@ namespace Tek1
 
 
     public class CompactRegionsHeuristic : TekHeuristic
-    // based on "compact regions": if all fields in a region are mutual influencer, and you check for each of the border fields 
-    // if there are values that would leave insufficient possible values in the region, 
-    // you can eliminate that value in the affected field
+    // based on "compact regions": if all fields in a region are mutual influencer 
+    // (note: a compact region is not necessarily within one area)
+    // and you check for each of the border fields if you can enter a value, in some cases
+    // there are values that would leave insufficient possible values in the region, 
+    // so you can eliminate that value(s) in the border field
+    // some of the simpler heuristics are actually special cases of this compact regions heuristic
     //
     {
         public CompactRegionsHeuristic() : base("Compact Regions", HeuristicAction.haExcludeValue)
@@ -696,8 +699,7 @@ namespace Tek1
 
         public override bool HeuristicApplies(TekBoard board, TekField field)
         {
-            List<TekRegion> Regions = TekRegion.GetCompactRegions(field);
-            foreach (TekRegion region in Regions)
+            foreach (TekRegion region in TekRegion.GetCompactRegions(field))
             {
                 foreach (TekField f in region.GetBorderFields())
                 {
