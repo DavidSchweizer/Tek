@@ -684,40 +684,30 @@ namespace Tek1
     } // InvalidTripletsHeuristic
 
 
-    public class CascadingTripletsHeuristic2 : TekHeuristic
+    public class CompactRegionsHeuristic : TekHeuristic
     {// rework this, this is also supposed to be something clever but doesnt seem to work yet
-        public CascadingTripletsHeuristic2() : base("Cascading Triplets variation", HeuristicAction.haExcludeValue)
+        List<TekRegion> Regions;
+
+        public CompactRegionsHeuristic() : base("Compact Regions", HeuristicAction.haExcludeValue)
         {
         }
 
         public override bool HeuristicApplies(TekBoard board, TekField field)
         {
-            List<TekField> emptyFields = field.area.GetEmptyFields();
-            if (emptyFields.Count != 4)
+            Regions = TekRegion.CompactRegions(field);
+            if (Regions.Count == 0)
                 return false;
-            emptyFields.Remove(field);
-            List<int> TotalValues = emptyFields[0].TotalPossibleValues(emptyFields[1], emptyFields[2]);
-            List<TekField> commonInfluencers = 
-                emptyFields[0].CommonInfluencers(emptyFields[1], emptyFields[2]);
-            commonInfluencers.Remove(field);
-            int i = 0;
-            while (i < commonInfluencers.Count)
-                if (commonInfluencers[i].Value > 0)
-                    commonInfluencers.RemoveAt(i);
-                else i++;
-            if (commonInfluencers.Count != 1)
-                return false;
-            foreach(int value in field.PossibleValues)
+            using (StreamWriter sw = new StreamWriter("regions.dmp"))
             {
-                if (!commonInfluencers[0].PossibleValues.Contains(value))
+                foreach (TekRegion region in Regions)
                 {
-                    AddHeuristicField(field);
-                    AddAffectedField(field);
-                    AddValue(value);
-                    return true;
+                    sw.WriteLine("region (field:{0}", field.AsString());
+                    region.Dump(sw);
                 }
+                sw.WriteLine("end regions");
             }
             return false;
+
         }
     } // CascadingTripletsHeuristic
 
@@ -739,7 +729,7 @@ namespace Tek1
             Heuristics.Add(new CascadingTripletsHeuristic());
             Heuristics.Add(new ConflictingChainsHeuristic());
             Heuristics.Add(new InvalidTripletsHeuristic());
-//            Heuristics.Add(new CascadingTripletsHeuristic());
+            Heuristics.Add(new CompactRegionsHeuristic());
         }
 
         public TekHeuristic FindHeuristic(TekBoard board)

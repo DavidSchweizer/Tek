@@ -27,6 +27,9 @@ namespace Tek1
                           split.Panel1.ClientRectangle.Height - 10));
             ofd1.FileName = "test.tx";
             DoLoad();
+            List<TekRegion> list = TekRegion.GetCompactRegions(View.Board.values[0, 0]);
+            using (StreamWriter sw = new StreamWriter("regions.dump"))
+                TekRegion.DumpList(list, sw);
         }
 
         void DoLoad()
