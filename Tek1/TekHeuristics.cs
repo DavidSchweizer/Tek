@@ -520,10 +520,10 @@ namespace Tek1
         protected override void BeforeProcessingBoard(TekBoard board)
         {
             Chains = new TekChains(board);
-            using (StreamWriter sw = new StreamWriter("chains.dmp"))
-            {
-                Chains.Dump(sw);
-            }
+//            using (StreamWriter sw = new StreamWriter("chains.dmp"))
+  //          {
+    //            Chains.Dump(sw);
+      //      }
         }
         public override bool HeuristicApplies(TekBoard board, TekField field)
         {
@@ -587,10 +587,10 @@ namespace Tek1
         protected override void BeforeProcessingBoard(TekBoard board)
         {
             Chains = new TekChains(board);
-            using (StreamWriter sw = new StreamWriter("chains.dmp"))
-            {
-                Chains.Dump(sw);
-            }
+//            using (StreamWriter sw = new StreamWriter("chains.dmp"))
+  //          {
+    //            Chains.Dump(sw);
+      //      }
         }
 
         public override bool HeuristicApplies(TekBoard board, TekField field)
@@ -711,9 +711,9 @@ namespace Tek1
                             f.Value = value;
                             if (region.GetTotalPossibleValues().Count < region.Fields.Count)
                             {
-                                HeuristicFields.AddRange(region.Fields);
-                                AffectedFields.Add(f);
-                                HeuristicValues.Add(value);
+                                AddHeuristicFields(region.Fields);
+                                AddAffectedFields(f);
+                                AddValue(value);
                             }
                         }
                         if (AffectedFields.Count > 0)
@@ -740,6 +740,7 @@ namespace Tek1
             Heuristics.Add(new HiddenSingleValueHeuristic());
             Heuristics.Add(new CoupledPairHeuristic());
             Heuristics.Add(new HiddenPairHeuristic());
+Heuristics.Add(new CompactRegionsHeuristic());
             Heuristics.Add(new CoupledTripletsHeuristic());
             Heuristics.Add(new BlockingHeuristic());
             Heuristics.Add(new BlockingThreePairsHeuristic());
@@ -747,7 +748,7 @@ namespace Tek1
             Heuristics.Add(new CascadingTripletsHeuristic());
             Heuristics.Add(new ConflictingChainsHeuristic());
             Heuristics.Add(new InvalidTripletsHeuristic());
-            Heuristics.Add(new CompactRegionsHeuristic());
+            //Heuristics.Add(new CompactRegionsHeuristic());
         }
 
         public TekHeuristic FindHeuristic(TekBoard board)

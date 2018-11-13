@@ -27,9 +27,9 @@ namespace Tek1
                           split.Panel1.ClientRectangle.Height - 10));
             ofd1.FileName = "test.tx";
             DoLoad();
-            List<TekRegion> list = TekRegion.GetCompactRegions(View.Board.values[0, 0]);
-            using (StreamWriter sw = new StreamWriter("regions.dump"))
-                TekRegion.DumpList(list, sw);
+//            List<TekRegion> list = TekRegion.GetCompactRegions(View.Board.values[0, 0]);
+  //          using (StreamWriter sw = new StreamWriter("regions.dump"))
+    //            TekRegion.DumpList(list, sw);
         }
 
         void DoLoad()
@@ -39,7 +39,7 @@ namespace Tek1
                 View.LoadFromFile(ofd1.FileName);
                 this.Text = ofd1.FileName;
                 initializeHeuristicLog(this.Text);
-                DoReset();
+                DoReset(true);
             }
         }
 
@@ -75,11 +75,13 @@ namespace Tek1
 
         }
 
-        void DoReset()
+        void DoReset(bool initial = false)
         {
-            CloseHeuristicLog();
+            if (!initial)
+                CloseHeuristicLog();
             listBox1.Items.Clear();
-            View.ResetValues();
+            if (!initial)
+                View.ResetValues();
             bStart.Enabled = true;
 
         }
