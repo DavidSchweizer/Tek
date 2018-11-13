@@ -20,6 +20,7 @@ namespace Tek1
         public List<TekField> AffectedFields;
         public List<int> HeuristicValues;
         protected TekRegion Region;
+        public bool Enabled;
 
         public TekHeuristic()
         {
@@ -33,6 +34,7 @@ namespace Tek1
             HeuristicFields = new List<TekField>();
             AffectedFields = new List<TekField>();
             HeuristicValues = new List<int>();
+            Enabled = true;
         }
 
         public string AsString()
@@ -740,7 +742,7 @@ namespace Tek1
             Heuristics.Add(new HiddenSingleValueHeuristic());
             Heuristics.Add(new CoupledPairHeuristic());
             Heuristics.Add(new HiddenPairHeuristic());
-Heuristics.Add(new CompactRegionsHeuristic());
+            Heuristics.Add(new CompactRegionsHeuristic());
             Heuristics.Add(new CoupledTripletsHeuristic());
             Heuristics.Add(new BlockingHeuristic());
             Heuristics.Add(new BlockingThreePairsHeuristic());
@@ -751,12 +753,44 @@ Heuristics.Add(new CompactRegionsHeuristic());
             //Heuristics.Add(new CompactRegionsHeuristic());
         }
 
+        public List<string> GetHeuristicDescriptions()
+        {
+            List<string> result = new List<string>();
+            foreach (TekHeuristic heuristic in Heuristics)
+                result.Add(heuristic.Description);
+            return result;
+        }
+
+        public TekHeuristic GetHeuristic(string description)
+        {
+            foreach (TekHeuristic heuristic in Heuristics)
+                if (heuristic.Description == description)
+                    return heuristic;
+            return null;
+        }
+
+        public bool GetHeuristicEnabled(string description)
+        {
+            TekHeuristic heuristic = GetHeuristic(description);
+            if (heuristic != null)
+                return heuristic.Enabled;
+            else
+                return false;
+        }
+
+        public void SetHeuristicEnabled(string description, bool value)
+        {
+            TekHeuristic heuristic = GetHeuristic(description);
+            if (heuristic != null)
+                heuristic.Enabled = value;
+        }
+
         public TekHeuristic FindHeuristic(TekBoard board)
         {
             board.AutoNotes = true;
             foreach(TekHeuristic heuristic in Heuristics)
             {
-                if (heuristic.Applies(board))
+                if (heuristic.Enabled && heuristic.Applies(board))
                 {
                     return heuristic;
                 }

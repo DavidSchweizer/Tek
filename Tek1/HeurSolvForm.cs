@@ -15,6 +15,8 @@ namespace Tek1
     public partial class HeurSolvForm : Form
     {
         TekEdit View;
+        TekHeuristics heuristics = new TekHeuristics();
+
         bool _lastShowErrors = false;
         bool Canceled = false;
         bool Paused;
@@ -221,7 +223,6 @@ namespace Tek1
            
             listBox1.Items.Clear();
             View.ShowDefaultNotes();
-            TekHeuristics heuristics = new TekHeuristics();
             TekHeuristic heuristic = heuristics.FindHeuristic(View.Board);
             int heurFound = 1;
             Canceled = false;
@@ -310,14 +311,9 @@ namespace Tek1
 
         private void button1_Click_2(object sender, EventArgs e)
         {
-            if (View.Selector.CurrentFieldView != null)
-            {
-
-                List<TekRegion> list = TekRegion.GetCompactRegions(View.Selector.CurrentFieldView.Field);
-                using (StreamWriter sw = new StreamWriter("regions.dump"))
-                    TekRegion.DumpList(list, sw);
-            }
-
+            ConfigurationForm form = new ConfigurationForm();
+            form.DoSetData(heuristics);
+            form.ShowDialog();
         }
     }
 
