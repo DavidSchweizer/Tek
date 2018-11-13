@@ -207,7 +207,7 @@ namespace Tek1
         {
             if (HeuristicLog != null)
             { 
-                LogHeuristic("close Log at {0}", DateTime.Now.ToString("dd MMMM YYYY   H:mm:ss"));
+                LogHeuristic("close Log at {0}", DateTime.Now.ToString("dd MMMM yyyy   H:mm:ss"));
                 HeuristicLog.Close();
             }
             HeuristicLog = null;
@@ -306,6 +306,17 @@ namespace Tek1
             CloseHeuristicLog();
         }
 
+        private void button1_Click_2(object sender, EventArgs e)
+        {
+            if (View.Selector.CurrentFieldView != null)
+            {
+
+                List<TekRegion> list = TekRegion.GetCompactRegions(View.Selector.CurrentFieldView.Field);
+                using (StreamWriter sw = new StreamWriter("regions.dump"))
+                    TekRegion.DumpList(list, sw);
+            }
+
+        }
     }
 
    

@@ -12,9 +12,9 @@ namespace Tek1
         public int Compare(TekRegion x, TekRegion y)
         {
             if (x.Fields.Count > y.Fields.Count)
-                return 1;
-            else if (x.Fields.Count < y.Fields.Count)
                 return -1;
+            else if (x.Fields.Count < y.Fields.Count)
+                return 1;
             else
                 return 0;
         }
@@ -123,7 +123,7 @@ namespace Tek1
         }
 
         protected bool IsInvalidThreePairs(TekField field1, TekField field2, TekField field3)
-        { 
+        {
             if (field1.CommonPossibleValues(field2, field3).Count != 2 || !IsPair(field1, field2) || !IsPair(field1, field3) || !IsPair(field2, field3))
                 return false;
             return (field1.Influencers.Contains(field2) && field1.Influencers.Contains(field3) && field2.Influencers.Contains(field3));
@@ -159,8 +159,7 @@ namespace Tek1
 
         public bool IsCompact(TekField addingField)
         {
-            if (!IsCompact() || addingField.Value != 0)
-			Fields.Contains(newField)
+            if (!IsCompact() || addingField.Value != 0 || Fields.Contains(addingField))
                 return false;
             int i = 0;
             while (i < Fields.Count)
@@ -193,6 +192,15 @@ namespace Tek1
             return true;
         }
 
+        public List <TekField> GetBorderFields()
+        {
+            List <TekField > result = new List<TekField>();
+            foreach (TekField field in Fields)
+                foreach (TekField f in field.Influencers)
+                    if (f.Value == 0 && !Fields.Contains(f) && !result.Contains(f))
+                        result.Add(f);
+            return result;
+        }
         static bool ListContains(List<TekRegion> list, TekRegion region)
         {
             foreach (TekRegion listRegion in list)
