@@ -731,12 +731,28 @@ namespace Tek1
         }
     } // CompactRegionsHeuristic
 
+    public class TekHeuristicResult
+    {
+        public TekHeuristic Heuristic;
+        public List<TekField> HeuristicFields;
+        public List<TekField> AffectedFields;
+        public List<int> HeuristicValues;
+        public TekHeuristicResult(TekHeuristic heuristic)
+        {
+            Heuristic = heuristic;
+            HeuristicFields = new List<TekField>(Heuristic.HeuristicFields);
+            AffectedFields = new List<TekField>(Heuristic.AffectedFields);
+            HeuristicValues = new List<int>(heuristic.HeuristicValues);
+        }
+    }
+
     public class TekHeuristics
     {
         List<TekHeuristic> Heuristics;
-        
+        List<TekHeuristicResult> StoredResults;
         public TekHeuristics()
         {
+            StoredResults = new List<TekHeuristicResult>();
             Heuristics = new List<TekHeuristic>();
             Heuristics.Add(new SingleValueHeuristic());
             Heuristics.Add(new HiddenSingleValueHeuristic());
@@ -796,6 +812,16 @@ namespace Tek1
                 }
             }
             return null;
+        }
+
+        public int StoreResult(TekHeuristic heuristic)
+        {
+            StoredResults.Add(new TekHeuristicResult(heuristic));
+            return StoredResults.Count - 1;
+        }
+        public TekHeuristicResult ReturnResult(int index)
+        {
+            return StoredResults[index];
         }
     }
 

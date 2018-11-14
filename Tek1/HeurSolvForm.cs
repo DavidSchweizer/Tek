@@ -16,7 +16,10 @@ namespace Tek1
     {
         TekEdit View;
         TekHeuristics heuristics = new TekHeuristics();
+        TekSnapShot Snapshots;
 
+        List<TekField> previousHeuristicFields;
+        List<TekField> previousAffectedFields;
         bool _lastShowErrors = false;
         bool Canceled = false;
         bool Paused;
@@ -29,9 +32,6 @@ namespace Tek1
                           split.Panel1.ClientRectangle.Height - 10));
             ofd1.FileName = "test.tx";
             DoLoad();
-//            List<TekRegion> list = TekRegion.GetCompactRegions(View.Board.values[0, 0]);
-  //          using (StreamWriter sw = new StreamWriter("regions.dump"))
-    //            TekRegion.DumpList(list, sw);
         }
 
         void DoLoad()
@@ -85,7 +85,8 @@ namespace Tek1
             if (!initial)
                 View.ResetValues();
             bStart.Enabled = true;
-
+            Snapshots = new TekSnapShot(View.Board);
+            Snapshots.AutoRemove = false;
         }
 
         private void bReset_Click(object sender, EventArgs e)
@@ -103,7 +104,6 @@ namespace Tek1
         private void bUnPlay_Click(object sender, EventArgs e)
         {
             View.UnPlay();
-
         }
 
         private void bTakeSnap_Click(object sender, EventArgs e)
@@ -217,6 +217,20 @@ namespace Tek1
             HeuristicLog = null;
         }
 
+        void ShowHeuristicFields(List<TekField> HeuristicFields, List<TekField> AffectedFields)
+        {
+            View.SelectFields(previousHeuristicFields = HeuristicFields);
+            View.HighlightFields(previousAffectedFields = AffectedFields, true);
+        }
+
+        void UnshowHeuristicFields()
+        {
+            View.SelectFields(previousHeuristicFields, false);
+            View.HighlightFields(previousAffectedFields, false);
+
+
+        }
+
         private void button3_Click(object sender, EventArgs e)
         {
             bStart.Enabled = false;
@@ -228,12 +242,13 @@ namespace Tek1
             Canceled = false;
             while (heuristic != null &&  !Canceled)
             {
-                listBox1.Items.Add(String.Format("{0}: {1}", heurFound, heuristic.AsString()));
+                string HeuristicDescription = String.Format("{0}: {1}", heurFound, heuristic.AsString());
+                listBox1.Items.Add(HeuristicDescription);
                 listBox1.SelectedIndex = listBox1.Items.Count - 1;
                 listBox1.Refresh();
-                LogHeuristic("{0}: {1}", heurFound++, heuristic.AsString());
-                View.SelectFields(heuristic.HeuristicFields.ToArray());
-                View.HighlightFields(true, heuristic.AffectedFields.ToArray());
+                LogHeuristic(HeuristicDescription);
+                heurFound++;
+                ShowHeuristicFields(heuristic.HeuristicFields, heuristic.AffectedFields);
                 if (checkBox1.Checked)
                 {
                     Paused = true;
@@ -244,13 +259,11 @@ namespace Tek1
                             break;
                     }
                 }
+                Snapshots.TakeSnapshot(HeuristicDescription);
+                heuristics.StoreResult(heuristic);
                 heuristic.ExecuteAction(View.Moves);
-                View.HighlightFields(false, heuristic.AffectedFields.ToArray());
+                View.HighlightFields(heuristic.AffectedFields, false);
                 View.Refresh();
-                //if (heurFound == 19)
-                //{ // this forces an hidden pair, just for test purposes
-                //    View.Board.values[3, 4].PossibleValues.Remove(2);
-                //}
                 heuristic = heuristics.FindHeuristic(View.Board);
             }
             View.Selector.ClearMultiSelect();
@@ -314,6 +327,18 @@ namespace Tek1
             ConfigurationForm form = new ConfigurationForm();
             form.DoSetData(heuristics);
             form.ShowDialog();
+        }
+
+        private void listBox1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            int selected = listBox1.SelectedIndex;
+            if (selected < 0)
+                return;
+            TekHeuristicResult result = heuristics.ReturnResult(selected);
+            UnshowHeuristicFields();
+            Snapshots.RestoreSnapshot(listBox1.Items[selected].ToString());
+            ShowHeuristicFields(result.HeuristicFields, result.AffectedFields);
+            View.Refresh();
         }
     }
 

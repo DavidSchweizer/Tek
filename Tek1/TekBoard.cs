@@ -279,6 +279,20 @@ namespace Tek1
                 if (this.ValuePossible(value))
                     result.Add(value);
                 else
+                    foreach (TekField field in fields)
+                        if (field.ValuePossible(value) && !result.Contains(value))
+                            result.Add(value);
+            }
+            return result;
+        }
+        public List<int> TotalPossibleValues(List <TekField> fields)
+        {
+            List<int> result = new List<int>();
+            for (int value = 1; value <= Const.MAXTEK; value++)
+            {
+                if (this.ValuePossible(value))
+                    result.Add(value);
+                else
                     foreach(TekField field in fields)
                        if(field.ValuePossible(value) && !result.Contains(value))
                           result.Add(value);
@@ -368,7 +382,7 @@ namespace Tek1
         public List<TekField> GetCommonInfluencers()
         {
             if (Fields.Count > 0)
-                return Fields[0].CommonInfluencers(Fields.GetRange(1, Fields.Count - 1).ToArray());
+                return Fields[0].CommonInfluencers(Fields.GetRange(1, Fields.Count - 1));
             else
                 return new List<TekField>();
         }
@@ -376,7 +390,7 @@ namespace Tek1
         public List<int> GetTotalPossibleValues()
         {
             if (Fields.Count > 0)
-                return Fields[0].TotalPossibleValues(Fields.GetRange(1, Fields.Count - 1).ToArray());
+                return Fields[0].TotalPossibleValues(Fields.GetRange(1, Fields.Count - 1));
             else
                 return new List<int>();
         }
@@ -630,7 +644,7 @@ namespace Tek1
         {
             foreach (TekField field in values)
             {
-                field.LoadNotes(excludedvalues[field.Row, field.Col]);
+                field.LoadExcludedValues(excludedvalues[field.Row, field.Col]);
             }
         }
 

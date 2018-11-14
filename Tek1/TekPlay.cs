@@ -56,6 +56,7 @@ namespace Tek1
             _moves = new Stack<TekPlay>();
             _board = board;
             _snapshots = new TekSnapShot(Board);
+            _snapshots.AutoRemove = true;
         }
 
         public void TakeSnapshot(string name)
@@ -193,6 +194,7 @@ namespace Tek1
 
     public class TekSnapShot
     {
+        public bool AutoRemove;
         private TekBoard _board;
         public TekBoard Board { get { return _board; } }
 
@@ -216,6 +218,7 @@ namespace Tek1
             _ssExcludedValues = new List<List<int>[,]>();
             _snapshots = new List<string>();
             _board = board;
+            AutoRemove = false;
         }
 
         public void TakeSnapshot(string name)
@@ -234,10 +237,13 @@ namespace Tek1
             Board.LoadValues(Values.ElementAt(index));
             Board.LoadNotes(Notes.ElementAt(index));
             Board.LoadExcludedValues(ExcludedValues.ElementAt(index));
-            Values.RemoveAt(index);
-            Notes.RemoveAt(index);
-            ExcludedValues.RemoveAt(index);
-            Snapshots.RemoveAt(index);
+            if (AutoRemove)
+            {
+                Values.RemoveAt(index);
+                Notes.RemoveAt(index);
+                ExcludedValues.RemoveAt(index);
+                Snapshots.RemoveAt(index);
+            }
         }
 
         public int Count()

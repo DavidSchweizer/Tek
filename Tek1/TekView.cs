@@ -195,14 +195,24 @@ namespace Tek1
                 _view.SelectField(field.Row, field.Col);
             _view.Refresh();
         }
+        public void SelectFields(List <TekField> fields, bool onoff = true)
+        {
+            _view.Selector.ClearMultiSelect();
+            if (onoff)
+            {
+                _view.Selector.SetCurrentMode(TekSelect.SelectMode.smMultiple);
+                foreach (TekField field in fields)
+                    _view.SelectField(field.Row, field.Col);
+            }
+            _view.Refresh();
+        }
 
-        public void HighlightFields(bool onoff = true, params TekField[] fields)
+        public void HighlightFields(List<TekField> fields, bool onoff = true)
         {
             foreach (TekField field in fields)
                 _view.HighlightField(field.Row, field.Col, onoff);
             _view.Refresh();
         }
-
         public void HandleKeyDown(ref Message msg, Keys keyData)
         {
             if (_view.Selector.CurrentFieldView != null)
