@@ -21,15 +21,33 @@ namespace Tek1
         List<TekField> previousHeuristicFields;
         List<TekField> previousAffectedFields;
         bool _lastShowErrors = false;
-        bool Canceled = false;
         bool Paused;
+        const int MARGIN = 20;
+
+        void LogPlayedMove(int row, int col, TekMove move, int value)
+        {
+            string s = String.Format("Field [{0},{1}]: ", row, col);
+            switch(move)
+            {
+                case TekMove.tmValue:
+                    s = s + String.Format("value changed {0}", value);
+                    break;
+
+                case TekMove.tmNote:
+                    s = s + String.Format("note changed {0}", value);
+                    break;
+            }
+            listBox1.Items.Add(s);
+        }
 
         public HeurSolvForm()
         {
             InitializeComponent();
-            View = new TekEdit(split.Panel1, new Point(10,10),
-                new Point(split.Panel1.ClientRectangle.Width - 10,
-                          split.Panel1.ClientRectangle.Height - 10));
+            View = new TekEdit(split.Panel1, new Point(MARGIN / 2, MARGIN / 2),
+                new Point(split.Panel1.ClientRectangle.Width - MARGIN / 2,
+                          split.Panel1.ClientRectangle.Height - MARGIN / 2));
+            playPanel1.View = View;
+            View.PlayActionHandler = LogPlayedMove;
             ofd1.FileName = "test.tx";
             DoLoad();
         }
@@ -39,6 +57,7 @@ namespace Tek1
             if (ofd1.ShowDialog() == DialogResult.OK)
             {
                 View.LoadFromFile(ofd1.FileName);
+                split.SplitterDistance = View.Width + MARGIN;
                 this.Text = ofd1.FileName;
                 initializeHeuristicLog(this.Text);
                 DoReset(true);
@@ -231,57 +250,81 @@ namespace Tek1
 
         }
 
-        private void button3_Click(object sender, EventArgs e)
+        private void RunHeuristics(bool initial)
         {
-            bStart.Enabled = false;
-           
-            listBox1.Items.Clear();
-            View.ShowDefaultNotes();
-            TekHeuristic heuristic = heuristics.FindHeuristic(View.Board);
-            int heurFound = 1;
-            Canceled = false;
-            while (heuristic != null &&  !Canceled)
+            if (isFinished)
+                return;
+            if (initial)
             {
+                listBox1.Items.Clear();
+                View.ShowDefaultNotes();
+            }
+            Paused = false;
+            TekHeuristic heuristic = heuristics.FindHeuristic(View.Board);
+            while (heuristic != null && !Paused)
+            {
+                int heurFound = listBox1.Items.Count + 1;
                 string HeuristicDescription = String.Format("{0}: {1}", heurFound, heuristic.AsString());
                 listBox1.Items.Add(HeuristicDescription);
                 listBox1.SelectedIndex = listBox1.Items.Count - 1;
+
                 listBox1.Refresh();
                 LogHeuristic(HeuristicDescription);
-                heurFound++;
                 ShowHeuristicFields(heuristic.HeuristicFields, heuristic.AffectedFields);
-                if (checkBox1.Checked)
+                Application.DoEvents();
+                if (checkBox1.Checked || Paused)
                 {
                     Paused = true;
                     while (Paused)
                     {
                         Application.DoEvents(); // Delphi style, is supposed to be unsafe
-                        if (Canceled)
-                            break;
+                        if (isFinished)
+                            return;
                     }
                 }
-                Snapshots.TakeSnapshot(HeuristicDescription);
-                heuristics.StoreResult(heuristic);
-                heuristic.ExecuteAction(View.Moves);
-                View.HighlightFields(heuristic.AffectedFields, false);
-                View.Refresh();
-                heuristic = heuristics.FindHeuristic(View.Board);
-            }
-            View.Selector.ClearMultiSelect();
-            if (View.Board.IsSolved())
-            {
-                MessageBox.Show("Solved!");
-                LogHeuristic("Solved!\n");
-            }
-            else
-            {
-                MessageBox.Show("Can not further be solved using these heuristics...");
-                LogHeuristic("\nCan not further be solved using these heuristics...");
-                if (MessageBox.Show("Save state?", "Verify", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                if (!isFinished)
                 {
-                    TekBoardParser parser = new TekBoardParser();
-                    parser.Export(View.Board, "test.tx");
+                    Snapshots.TakeSnapshot(HeuristicDescription);
+                    heuristics.StoreResult(heuristic);
+                    heuristic.ExecuteAction(View.Moves);
+                    View.HighlightFields(heuristic.AffectedFields, false);
+                    View.Refresh();
+
+                    heuristic = heuristics.FindHeuristic(View.Board);
                 }
             }
+            View.Selector.ClearMultiSelect();
+        }
+
+        static bool isFinished = false;
+        private void bStartClick(object sender, EventArgs e)
+        {
+            bStart.Enabled = false;
+            bPause.Enabled = true;
+            bPause.Visible = true;
+            isFinished = false; 
+            RunHeuristics(listBox1.Items.Count == 0);
+            if (!isFinished)
+            {
+                if (View.Board.IsSolved())
+                {
+                    MessageBox.Show("Solved!");
+                    LogHeuristic("Solved!\n");
+                    isFinished = true;
+                }
+                else
+                {
+                    MessageBox.Show("Can not further be solved using these heuristics...");
+                    LogHeuristic("\nCan not further be solved using these heuristics...");
+                    if (MessageBox.Show("Save state?", "Verify", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    {
+                        TekBoardParser parser = new TekBoardParser();
+                        parser.Export(View.Board, "test.tx");
+                    }
+                    isFinished = true;
+                }
+            }
+            bStart.Enabled = true;
                 
         }
 
@@ -294,9 +337,10 @@ namespace Tek1
             }
         }
 
-        private void button1_Click_1(object sender, EventArgs e)
+        private void bPauseClick(object sender, EventArgs e)
         {
-            Canceled = true;
+            Paused = true;
+            bStart.Enabled = true;
         }
 
         private void bNext_Click(object sender, EventArgs e)
@@ -308,8 +352,8 @@ namespace Tek1
         {
             bNext.Enabled = checkBox1.Checked;
             bNext.Visible = checkBox1.Checked;
-            bCancel.Enabled = checkBox1.Checked;
-            bCancel.Visible = checkBox1.Checked;
+//            bPause.Enabled = checkBox1.Checked;
+  //          bPause.Visible = checkBox1.Checked;
         }
 
         private void bReset_Click_1(object sender, EventArgs e)

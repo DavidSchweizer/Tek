@@ -119,9 +119,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="images\backspace.png" />
+    <None Include="images\start.jpg" />
     <None Include="images\check.png" />
     <None Include="images\CreateBoard.jpg" />
+    <None Include="images\next.jpg" />
     <Content Include="images\open-new.png" />
+    <Content Include="images\pause.jpg" />
     <Content Include="images\reset.png" />
     <Content Include="images\rstore23.png" />
     <Content Include="images\save-new.png" />

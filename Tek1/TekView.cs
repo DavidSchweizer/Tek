@@ -9,8 +9,11 @@ using System.Threading.Tasks;
 
 namespace Tek1
 {
+    public delegate void PlayAction(int row, int col, TekMove move, int value);
+
     public class TekView
     {
+        public PlayAction PlayActionHandler;
         protected TekBoardView _view;
         public TekBoard Board { get { return _view.Board; } set { SetBoard(value); } }
         public TekMoves Moves = null;
@@ -91,6 +94,7 @@ namespace Tek1
             {
                 Moves.PlayValue(_view.Selector.CurrentFieldView.Row, _view.Selector.CurrentFieldView.Col, value);
                 _view.Refresh();
+                PlayActionHandler?.Invoke(_view.Selector.CurrentFieldView.Row, _view.Selector.CurrentFieldView.Col, TekMove.tmValue, value);
                 return true;
             }
             else
@@ -129,7 +133,8 @@ namespace Tek1
         {
             if (Board != null && _view.Selector.CurrentFieldView != null)
             {
-                _view.Selector.ToggleSelectedNoteValue(value, Moves);                
+                _view.Selector.ToggleSelectedNoteValue(value, Moves);
+                PlayActionHandler?.Invoke(_view.Selector.CurrentFieldView.Row, _view.Selector.CurrentFieldView.Col, TekMove.tmNote, value);
                 return true;
             }
             else return false;

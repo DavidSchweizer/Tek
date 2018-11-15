@@ -13,6 +13,7 @@ namespace Tek1
     public partial class PlayPanel : UserControl
     {
         TekView _view;
+
         public TekView View { get { return _view; } set { _view = value; } }
 
         public PlayPanel()
@@ -20,6 +21,10 @@ namespace Tek1
             InitializeComponent();
         }
 
+        private void CallPlayActionHandler(int row, int col, TekMove move, int value)
+        {
+            
+        }
         private void NumberButtons_Click(object sender, EventArgs e)
         {
             if (View.Board == null)
