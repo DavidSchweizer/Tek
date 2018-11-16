@@ -118,6 +118,12 @@ namespace Tek1
             // override to setup local variables
         }
 
+        protected virtual void AfterProcessingBoard(bool applies)
+        {
+            // override to cleanup 
+        }
+
+
         public bool Applies(TekBoard board)
         {
             Reset();
@@ -126,11 +132,16 @@ namespace Tek1
             {
                 if (field.Value > 0 )
                     continue;
-               if (HeuristicApplies(board, field))
+                if (HeuristicApplies(board, field))
                 {
+                    AfterProcessingBoard(true);
                     return true;
                 }
-                else Reset();
+                else
+                {
+                    AfterProcessingBoard(false);
+                    Reset();
+                }
             }
             return false;
         }
@@ -731,6 +742,67 @@ namespace Tek1
         }
     } // CompactRegionsHeuristic
 
+    public class TrialAndErrorHeuristic : TekHeuristic
+    //
+    {
+        public TekHeuristics heuristics;
+        public TekMoves temMoves;
+        const string STARTSTRING = @"startTrialAndError";
+        public TrialAndErrorHeuristic(TekHeuristics Heuristics) : base("Trial-and-Error", HeuristicAction.haExcludeValue)
+        {
+            heuristics = Heuristics;
+        }
+
+        protected override void BeforeProcessingBoard(TekBoard board)
+        {
+            temMoves = new TekMoves(board);
+            temMoves.TakeSnapshot(STARTSTRING);
+        }
+
+        protected override void AfterProcessingBoard(bool applies)
+        {
+            temMoves.RestoreSnapshot(STARTSTRING);
+        }
+
+        public override bool HeuristicApplies(TekBoard board, TekField field)
+        {
+            List<int> PossibleValues = new List<int> (field.PossibleValues);
+            foreach(int value in PossibleValues)
+            {
+                try
+                {
+                    field.Value = value;
+                    bool possible = true;
+                    while (possible)
+                    {
+                        TekHeuristic heuristic = heuristics.FindHeuristic(board);
+                        if (heuristic == null)
+                            return board.IsSolved();
+                        else if (heuristic is TrialAndErrorHeuristic)
+                            return false;
+                        else
+                        {
+                            try
+                            {
+                                heuristic.ExecuteAction(temMoves);
+                            }
+                            catch(Exception E)
+                            {
+                                possible = false;
+                            }
+                            
+                        }
+                    }
+                }
+                finally
+                {
+                    field.Value = 0;
+                }
+            }
+            return false;
+        }
+    } // TrialAndErrorHeuristic
+
     public class TekHeuristicResult
     {
         public TekHeuristic Heuristic;
@@ -766,7 +838,7 @@ namespace Tek1
             Heuristics.Add(new CascadingTripletsHeuristic());
             Heuristics.Add(new ConflictingChainsHeuristic());
             Heuristics.Add(new InvalidTripletsHeuristic());
-            //Heuristics.Add(new CompactRegionsHeuristic());
+            Heuristics.Add(new TrialAndErrorHeuristic(this));
         }
 
         public List<string> GetHeuristicDescriptions()

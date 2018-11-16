@@ -145,6 +145,8 @@ namespace Tek1
                 foreach (TekField field in Influencers)
                     if (field.Value > 0)
                         PossibleValues.Remove(field.Value);
+                if (PossibleValues.Count == 0)
+                    throw new Exception(String.Format("field {0} has no alternatives", AsString()));
             }
             if (AutoNotes)
                 SetDefaultNotes();
