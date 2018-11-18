@@ -14,6 +14,19 @@ namespace Tek1
         public const int MAXTEK = 5;
     }
 
+    public class ETekFieldInvalid : Exception
+    {
+        public TekField Field;
+        public int Value;
+        public string Msg;
+        public ETekFieldInvalid(string msg, TekField field, int value) : base("Invalid field value")
+        {
+            Field = field;
+            Value = value;
+            Msg = msg;
+        }
+    }
+
     public class TekField
     {
         static int __FieldIndex = 0;
@@ -32,6 +45,7 @@ namespace Tek1
         public int Row { get { return _row; } }
         public int Col { get { return _col; } }
         public bool AutoNotes { get; set; }
+        public bool EatExceptions = true;
 
         public TekField(int arow, int acol) 
         {
@@ -55,8 +69,8 @@ namespace Tek1
 
         public void SetValue(int avalue)
         {
-            if (avalue < 0 || avalue > Const.MAXTEK)
-                throw new Exception(String.Format("invalid value in field: {0}", avalue));
+            if (!EatExceptions && (avalue < 0 || avalue > Const.MAXTEK))
+                throw new ETekFieldInvalid("value", this, avalue);
             _value = avalue;
             UpdatePossibleValues(true);
         }
@@ -71,8 +85,8 @@ namespace Tek1
 
         public void ToggleNote(int anote)
         {
-            if (anote < 0 || anote > Const.MAXTEK)
-                throw new Exception(String.Format("invalid note in field: {0}", anote));
+            if (!EatExceptions && (anote < 0 || anote > Const.MAXTEK))
+                throw new ETekFieldInvalid("note", this, anote);
             if (Notes.Contains(anote))
                 Notes.Remove(anote);
             else
@@ -145,8 +159,8 @@ namespace Tek1
                 foreach (TekField field in Influencers)
                     if (field.Value > 0)
                         PossibleValues.Remove(field.Value);
-                if (PossibleValues.Count == 0)
-                    throw new Exception(String.Format("field {0} has no alternatives", AsString()));
+                if (PossibleValues.Count == 0 && !EatExceptions)
+                    throw new ETekFieldInvalid("no possible values", this, 0);
             }
             if (AutoNotes)
                 SetDefaultNotes();
@@ -538,6 +552,8 @@ namespace Tek1
 
         private bool _AutoNotes;
         public bool AutoNotes { get { return _AutoNotes; } set { _AutoNotes = value; foreach (TekField field in values) field.AutoNotes = value;  } }
+        private bool _EatExceptions;
+        public bool EatExceptions { get { return _EatExceptions; } set { _EatExceptions = value; foreach (TekField field in values) field.EatExceptions = value; } }
 
         public TekBoard(int rows, int cols)
         {
@@ -546,6 +562,7 @@ namespace Tek1
             _cols = cols;
             initValues(rows, cols);
             setNeighbours();
+            EatExceptions = true;
         }
 
         public int MaxFieldIndex()
