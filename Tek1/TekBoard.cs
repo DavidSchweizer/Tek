@@ -108,17 +108,13 @@ namespace Tek1
 
 		public List<int> CopyNotes()
 		{
-			List<int> result = new List<int>();
-			foreach(int value in Notes)
-			   result.Add(value);
-			return result;
-		}
+			return new List<int>(Notes);
+        }
 
         public void LoadNotes(List<int> values)
         {
             Notes.Clear();
-            foreach (int value in values)
-                Notes.Add(value);
+            Notes.AddRange(values);
         }
 
         public void ExcludeValue(int value, bool onoff = true)
@@ -134,16 +130,13 @@ namespace Tek1
 
         public List<int> CopyExcludedValues()
         {
-            List<int> result = new List<int>();
-            foreach (int value in ExcludedValues)
-                result.Add(value);
-            return result;
+            return new List<int>(ExcludedValues);
         }
+
         public void LoadExcludedValues(List<int> values)
         {
             ExcludedValues.Clear();
-            foreach (int value in values)
-                ExcludedValues.Add(value);
+            ExcludedValues.AddRange(values);
         }
 
         public void UpdatePossibleValues(bool cascade = false)
@@ -333,6 +326,7 @@ namespace Tek1
         public const uint FLD_DMP_INFLUENCERS   = 2;
         public const uint FLD_DMP_POSSIBLES     = 4;
         public const uint FLD_DMP_NOTES         = 8;
+        public const uint FLD_DMP_EXCLUDES      = 16;
         public const uint FLD_DMP_ALL           = 65535;
 
         public void Dump(StreamWriter sw, uint flags = FLD_DMP_ALL)
@@ -364,6 +358,13 @@ namespace Tek1
                 sw.Write("Notes     :");
                 for (int i = 0; i < Notes.Count; i++)
                     sw.Write("{0} ", Notes[i]);
+                sw.WriteLine();
+            }
+            if ((flags & FLD_DMP_EXCLUDES) != 0)
+            {
+                sw.Write("Excludes  :");
+                for (int i = 0; i < ExcludedValues.Count; i++)
+                    sw.Write("{0} ", ExcludedValues[i]);
                 sw.WriteLine();
             }
         }

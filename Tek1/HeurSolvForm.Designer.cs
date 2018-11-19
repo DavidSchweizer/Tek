@@ -43,7 +43,9 @@
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.listBox1 = new System.Windows.Forms.ListBox();
             this.tbPlay = new System.Windows.Forms.TabPage();
+            this.button1 = new System.Windows.Forms.Button();
             this.playPanel1 = new Tek1.PlayPanel();
+            this.button2 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.split)).BeginInit();
             this.split.Panel2.SuspendLayout();
             this.split.SuspendLayout();
@@ -70,9 +72,10 @@
             this.bPause.BackgroundImage = global::Tek1.Properties.Resources.pause;
             this.bPause.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.bPause.Enabled = false;
-            this.bPause.Location = new System.Drawing.Point(189, 537);
+            this.bPause.Location = new System.Drawing.Point(126, 349);
+            this.bPause.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.bPause.Name = "bPause";
-            this.bPause.Size = new System.Drawing.Size(54, 54);
+            this.bPause.Size = new System.Drawing.Size(36, 35);
             this.bPause.TabIndex = 15;
             this.ttSolve.SetToolTip(this.bPause, "Pause Processing");
             this.bPause.UseVisualStyleBackColor = true;
@@ -83,9 +86,10 @@
             this.bStart.AccessibleRole = System.Windows.Forms.AccessibleRole.None;
             this.bStart.BackgroundImage = global::Tek1.Properties.Resources.start;
             this.bStart.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.bStart.Location = new System.Drawing.Point(15, 537);
+            this.bStart.Location = new System.Drawing.Point(10, 349);
+            this.bStart.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.bStart.Name = "bStart";
-            this.bStart.Size = new System.Drawing.Size(54, 54);
+            this.bStart.Size = new System.Drawing.Size(36, 35);
             this.bStart.TabIndex = 11;
             this.ttSolve.SetToolTip(this.bStart, "Start or restart heuristic solve");
             this.bStart.UseVisualStyleBackColor = true;
@@ -95,6 +99,7 @@
             // 
             this.split.Dock = System.Windows.Forms.DockStyle.Fill;
             this.split.Location = new System.Drawing.Point(0, 0);
+            this.split.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.split.Name = "split";
             // 
             // split.Panel1
@@ -104,8 +109,9 @@
             // split.Panel2
             // 
             this.split.Panel2.Controls.Add(this.tc1);
-            this.split.Size = new System.Drawing.Size(1472, 635);
-            this.split.SplitterDistance = 467;
+            this.split.Size = new System.Drawing.Size(981, 413);
+            this.split.SplitterDistance = 311;
+            this.split.SplitterWidth = 3;
             this.split.TabIndex = 10;
             // 
             // tc1
@@ -114,13 +120,15 @@
             this.tc1.Controls.Add(this.tbPlay);
             this.tc1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tc1.Location = new System.Drawing.Point(0, 0);
+            this.tc1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.tc1.Name = "tc1";
             this.tc1.SelectedIndex = 0;
-            this.tc1.Size = new System.Drawing.Size(1001, 635);
+            this.tc1.Size = new System.Drawing.Size(667, 413);
             this.tc1.TabIndex = 0;
             // 
             // tpLog
             // 
+            this.tpLog.Controls.Add(this.button2);
             this.tpLog.Controls.Add(this.bLoad);
             this.tpLog.Controls.Add(this.bReset);
             this.tpLog.Controls.Add(this.bPause);
@@ -128,19 +136,21 @@
             this.tpLog.Controls.Add(this.checkBox1);
             this.tpLog.Controls.Add(this.listBox1);
             this.tpLog.Controls.Add(this.bStart);
-            this.tpLog.Location = new System.Drawing.Point(4, 29);
+            this.tpLog.Location = new System.Drawing.Point(4, 22);
+            this.tpLog.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.tpLog.Name = "tpLog";
-            this.tpLog.Padding = new System.Windows.Forms.Padding(3);
-            this.tpLog.Size = new System.Drawing.Size(993, 602);
+            this.tpLog.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tpLog.Size = new System.Drawing.Size(659, 387);
             this.tpLog.TabIndex = 0;
             this.tpLog.Text = "Log";
             this.tpLog.UseVisualStyleBackColor = true;
             // 
             // bLoad
             // 
-            this.bLoad.Location = new System.Drawing.Point(488, 542);
+            this.bLoad.Location = new System.Drawing.Point(325, 352);
+            this.bLoad.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.bLoad.Name = "bLoad";
-            this.bLoad.Size = new System.Drawing.Size(75, 42);
+            this.bLoad.Size = new System.Drawing.Size(50, 27);
             this.bLoad.TabIndex = 17;
             this.bLoad.Text = "Load";
             this.bLoad.UseVisualStyleBackColor = true;
@@ -150,9 +160,10 @@
             // 
             this.bReset.BackgroundImage = global::Tek1.Properties.Resources.reset;
             this.bReset.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
-            this.bReset.Location = new System.Drawing.Point(99, 537);
+            this.bReset.Location = new System.Drawing.Point(66, 349);
+            this.bReset.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.bReset.Name = "bReset";
-            this.bReset.Size = new System.Drawing.Size(54, 54);
+            this.bReset.Size = new System.Drawing.Size(36, 35);
             this.bReset.TabIndex = 16;
             this.bReset.TabStop = false;
             this.bReset.UseVisualStyleBackColor = true;
@@ -163,9 +174,10 @@
             this.bNext.BackgroundImage = global::Tek1.Properties.Resources.next;
             this.bNext.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.bNext.Enabled = false;
-            this.bNext.Location = new System.Drawing.Point(332, 537);
+            this.bNext.Location = new System.Drawing.Point(221, 349);
+            this.bNext.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.bNext.Name = "bNext";
-            this.bNext.Size = new System.Drawing.Size(54, 54);
+            this.bNext.Size = new System.Drawing.Size(36, 35);
             this.bNext.TabIndex = 14;
             this.bNext.UseVisualStyleBackColor = true;
             this.bNext.Visible = false;
@@ -174,10 +186,9 @@
             // checkBox1
             // 
             this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(393, 515);
-            this.checkBox1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.checkBox1.Location = new System.Drawing.Point(262, 335);
             this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(113, 24);
+            this.checkBox1.Size = new System.Drawing.Size(77, 17);
             this.checkBox1.TabIndex = 13;
             this.checkBox1.Text = "Step mode";
             this.checkBox1.UseVisualStyleBackColor = true;
@@ -189,40 +200,66 @@
             this.listBox1.ForeColor = System.Drawing.Color.Black;
             this.listBox1.FormattingEnabled = true;
             this.listBox1.HorizontalScrollbar = true;
-            this.listBox1.ItemHeight = 20;
-            this.listBox1.Location = new System.Drawing.Point(3, 3);
+            this.listBox1.Location = new System.Drawing.Point(2, 2);
+            this.listBox1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.listBox1.Name = "listBox1";
             this.listBox1.ScrollAlwaysVisible = true;
-            this.listBox1.Size = new System.Drawing.Size(987, 504);
+            this.listBox1.Size = new System.Drawing.Size(655, 329);
             this.listBox1.TabIndex = 12;
             this.listBox1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.listBox1_MouseDoubleClick);
             // 
             // tbPlay
             // 
+            this.tbPlay.Controls.Add(this.button1);
             this.tbPlay.Controls.Add(this.playPanel1);
-            this.tbPlay.Location = new System.Drawing.Point(4, 29);
+            this.tbPlay.Location = new System.Drawing.Point(4, 22);
+            this.tbPlay.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.tbPlay.Name = "tbPlay";
-            this.tbPlay.Padding = new System.Windows.Forms.Padding(3);
-            this.tbPlay.Size = new System.Drawing.Size(993, 602);
+            this.tbPlay.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tbPlay.Size = new System.Drawing.Size(659, 387);
             this.tbPlay.TabIndex = 1;
             this.tbPlay.Text = "Play";
             this.tbPlay.UseVisualStyleBackColor = true;
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(72, 258);
+            this.button1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(80, 88);
+            this.button1.TabIndex = 1;
+            this.button1.Text = "button1";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click_1);
+            // 
             // playPanel1
             // 
-            this.playPanel1.Location = new System.Drawing.Point(3, 0);
+            this.playPanel1.Location = new System.Drawing.Point(2, 0);
+            this.playPanel1.Margin = new System.Windows.Forms.Padding(1);
             this.playPanel1.Name = "playPanel1";
-            this.playPanel1.Size = new System.Drawing.Size(313, 321);
+            this.playPanel1.Size = new System.Drawing.Size(209, 209);
             this.playPanel1.TabIndex = 0;
             this.playPanel1.View = null;
             // 
+            // button2
+            // 
+            this.button2.Location = new System.Drawing.Point(570, 349);
+            this.button2.Margin = new System.Windows.Forms.Padding(2);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(60, 27);
+            this.button2.TabIndex = 18;
+            this.button2.Text = "Options";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button1_Click_2);
+            // 
             // HeurSolvForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1472, 635);
+            this.ClientSize = new System.Drawing.Size(981, 413);
             this.Controls.Add(this.split);
             this.KeyPreview = true;
+            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.Name = "HeurSolvForm";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.HeurSolvForm_FormClosed);
             this.split.Panel2.ResumeLayout(false);
@@ -252,5 +289,7 @@
         private System.Windows.Forms.Button bLoad;
         private System.Windows.Forms.TabPage tbPlay;
         private PlayPanel playPanel1;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button button2;
     }
 }

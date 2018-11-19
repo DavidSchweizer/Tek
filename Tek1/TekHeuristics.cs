@@ -770,7 +770,18 @@ namespace Tek1
 
         protected override bool BeforeProcessingField(TekBoard board, TekField field)
         {
+            if (field.Row == 1 && field.Col == 0)
+            {
+                sw.WriteLine("before processing (1)");
+                board.values[5, 5].Dump(sw, TekField.FLD_DMP_POSSIBLES | TekField.FLD_DMP_EXCLUDES);
+            }
             temMoves.TakeSnapshot(STARTSTRING + " "+ field.AsString());
+            sw.WriteLine("--- snap --- " + STARTSTRING + " " + field.AsString());
+            if (field.Row == 1 && field.Col == 0)
+            {
+                sw.WriteLine("before processing (2)");
+                board.values[5, 5].Dump(sw, TekField.FLD_DMP_POSSIBLES | TekField.FLD_DMP_EXCLUDES);
+            }
             sw.WriteLine("before field [{0}] ", field.AsString());
             sw.Flush();
             return true;
@@ -779,8 +790,19 @@ namespace Tek1
 
         protected override void AfterProcessingField(bool applies, TekField field)
         {
+            if (field.Row == 1 && field.Col == 0)
+            {
+                sw.WriteLine("after processing (1)");
+                temMoves.Board.values[5, 5].Dump(sw, TekField.FLD_DMP_POSSIBLES | TekField.FLD_DMP_EXCLUDES);
+            }
             sw.WriteLine("after (field {0}. applies:  {1}): Ending trial-and-error heuristic at {2}", field.AsString(), applies.ToString(), DateTime.Now.ToString("dd MMMM yyyy   H:mm:ss"));
             temMoves.RestoreSnapshot(STARTSTRING + " " + field.AsString());
+            sw.WriteLine("--- rest --- " + STARTSTRING + " " + field.AsString());
+            if (field.Row == 1 && field.Col == 0)
+            {
+                sw.WriteLine("after processing (2)");
+                temMoves.Board.values[5, 5].Dump(sw, TekField.FLD_DMP_POSSIBLES | TekField.FLD_DMP_EXCLUDES);
+            }
         }
 
         public override bool HeuristicApplies(TekBoard board, TekField field)

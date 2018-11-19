@@ -143,10 +143,6 @@ namespace Tek1
             }
         }
 
-        private void button14_Click(object sender, EventArgs e)
-        {
-        }
-
         private void cbShowError_CheckedChanged(object sender, EventArgs e)
         {
            
@@ -270,6 +266,9 @@ namespace Tek1
 
                 listBox1.Refresh();
                 LogHeuristic(HeuristicDescription);
+
+                View.Board.values[5, 5].Dump(HeuristicLog, TekField.FLD_DMP_POSSIBLES | TekField.FLD_DMP_EXCLUDES);
+               
                 ShowHeuristicFields(heuristic.HeuristicFields, heuristic.AffectedFields);
                 Application.DoEvents();
                 if (checkBox1.Checked || Paused)
@@ -379,6 +378,12 @@ namespace Tek1
             Snapshots.RestoreSnapshot(listBox1.Items[selected].ToString());
             ShowHeuristicFields(result.HeuristicFields, result.AffectedFields);
             View.Refresh();
+        }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            if (View.Board != null && !View.Solve())
+                MessageBox.Show("can not be solved");
         }
     }
 
