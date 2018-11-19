@@ -872,7 +872,7 @@ namespace Tek1
                 if (FieldError)
                     textBrush = Data.TextBrush[TekPanelData.PANEL_ERROR];
                 else
-                    textBrush = Data.TextBrush[IsSelected ? TekPanelData.PANEL_SELECTED : TekPanelData.PANEL_NORMAL];
+                    textBrush = Data.TextBrush[(IsSelected || IsMultiSelected) ? TekPanelData.PANEL_SELECTED : TekPanelData.PANEL_NORMAL];
                 e.Graphics.DrawString(Field.Value.ToString(),
                     Data.ValueFont[field.initial ? TekPanelData.FONT_INITIAL : TekPanelData.FONT_NORMAL],
                         textBrush, Data.ValuePoint, Data.Format);

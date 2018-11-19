@@ -15,6 +15,7 @@ namespace Tek1
         string _description;
         private HeuristicAction _action;
         public HeuristicAction Action { get { return _action; } }
+        protected void SetHeuristicAction(HeuristicAction value) { _action = value; }
         public string Description { get { return _description; } }
         public List<TekField> HeuristicFields;
         public List<TekField> AffectedFields;
@@ -793,6 +794,7 @@ namespace Tek1
                 prev = board.EatExceptions;
                 foreach (int value in PossibleValues)
                 {
+                    bool errorDetected = false;
                     try
                     {
                         sw.WriteLine("   value: {0}", value);
@@ -815,6 +817,7 @@ namespace Tek1
                                 catch(ETekFieldInvalid E)
                                 {
                                     possible = false;
+                                    errorDetected = true;
                                     sw.WriteLine("--- exception (1) {0}: {1} ({2})", E.Msg, E.Field.AsString(), E.Value);
                                 }
                             }
@@ -824,12 +827,22 @@ namespace Tek1
                                 sw.WriteLine("not found");
                                 sw.Flush();
                             }                                
-                            if (board.IsSolved())
+                            if (board.IsSolved() || errorDetected)
                             {
+                                if (errorDetected)
+                                {
+                                    SetHeuristicAction(HeuristicAction.haExcludeValue);
+                                    sw.WriteLine("error detected (1)");
+                                }
+                                else
+                                {
+                                    SetHeuristicAction(HeuristicAction.haSetValue);
+                                    sw.WriteLine("solved!");
+                                }
                                 AddHeuristicField(field);
                                 AddAffectedField(field);
                                 AddValue(value);
-                                sw.WriteLine("solved!");
+                                
                                 sw.Flush();
                                 return true;
                             }
@@ -846,8 +859,14 @@ namespace Tek1
             }
             catch (ETekFieldInvalid E)
             {
+                SetHeuristicAction(HeuristicAction.haExcludeValue);
+                AddHeuristicField(E.Field);
+                AddAffectedField(E.Field);
+                AddValue(E.Value);
+                sw.WriteLine("error detected (2)");
                 sw.WriteLine("--- exception (2) {0}: {1} ({2})", E.Msg, E.Field.AsString(), E.Value);
-                return false;
+                sw.Flush();
+                return true;
             }            
         }
     } // TrialAndErrorHeuristic

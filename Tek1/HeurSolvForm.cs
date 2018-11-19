@@ -330,11 +330,7 @@ namespace Tek1
 
         private void listBox1_DoubleClick(object sender, EventArgs e)
         {
-            using(StreamWriter sw = new StreamWriter("heurs.dmp"))
-            {
-                foreach (string s in listBox1.Items)
-                        sw.WriteLine(s);
-            }
+
         }
 
         private void bPauseClick(object sender, EventArgs e)
