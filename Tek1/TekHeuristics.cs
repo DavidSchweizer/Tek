@@ -768,9 +768,15 @@ namespace Tek1
 
         }
 
+        int SSindex;
+        private string _SnapShotDescription(TekField field)
+        {
+            return String.Format("{0} ({1}) {2}", STARTSTRING, SSindex, field.AsString());
+        }
+
         protected override bool BeforeProcessingField(TekBoard board, TekField field)
         {
-            temMoves.TakeSnapshot(STARTSTRING + " "+ field.AsString());
+            temMoves.TakeSnapshot(_SnapShotDescription(field));
             sw.WriteLine("before field [{0}] ", field.AsString());
             sw.Flush();
             return true;
@@ -780,7 +786,8 @@ namespace Tek1
         protected override void AfterProcessingField(bool applies, TekField field)
         {
             sw.WriteLine("after (field {0}. applies:  {1}): Ending trial-and-error heuristic at {2}", field.AsString(), applies.ToString(), DateTime.Now.ToString("dd MMMM yyyy   H:mm:ss"));
-            temMoves.RestoreSnapshot(STARTSTRING + " " + field.AsString());
+            temMoves.RestoreSnapshot(_SnapShotDescription(field));
+            SSindex++;
         }
 
         public override bool HeuristicApplies(TekBoard board, TekField field)

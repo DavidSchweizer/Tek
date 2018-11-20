@@ -44,6 +44,7 @@
             this.listBox1 = new System.Windows.Forms.ListBox();
             this.tbPlay = new System.Windows.Forms.TabPage();
             this.playPanel1 = new Tek1.PlayPanel();
+            this.button1 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.split)).BeginInit();
             this.split.Panel2.SuspendLayout();
             this.split.SuspendLayout();
@@ -199,6 +200,7 @@
             // 
             // tbPlay
             // 
+            this.tbPlay.Controls.Add(this.button1);
             this.tbPlay.Controls.Add(this.playPanel1);
             this.tbPlay.Location = new System.Drawing.Point(4, 29);
             this.tbPlay.Name = "tbPlay";
@@ -215,6 +217,16 @@
             this.playPanel1.Size = new System.Drawing.Size(313, 321);
             this.playPanel1.TabIndex = 0;
             this.playPanel1.View = null;
+            // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(108, 397);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(120, 136);
+            this.button1.TabIndex = 1;
+            this.button1.Text = "button1";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click_1);
             // 
             // HeurSolvForm
             // 
@@ -252,5 +264,6 @@
         private System.Windows.Forms.Button bLoad;
         private System.Windows.Forms.TabPage tbPlay;
         private PlayPanel playPanel1;
+        private System.Windows.Forms.Button button1;
     }
 }

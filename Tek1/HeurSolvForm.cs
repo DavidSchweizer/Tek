@@ -380,6 +380,12 @@ namespace Tek1
             ShowHeuristicFields(result.HeuristicFields, result.AffectedFields);
             View.Refresh();
         }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            if (View.Board != null && !View.Solve())
+                MessageBox.Show("can not be solved");
+        }
     }
 
    
