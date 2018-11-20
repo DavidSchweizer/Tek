@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System;
 using System.Linq;
 using System.Text;
 using System.IO;
@@ -119,18 +119,6 @@ namespace Tek1
             // override to setup local variables
         }
 
-        protected virtual bool BeforeProcessingField(TekBoard board, TekField field)
-        {
-            // override to setup local variables
-            return true;
-        }
-
-        protected virtual void AfterProcessingField(bool applies, TekField field)
-        {
-            // override for cleanup 
-        }
-
-
         public bool Applies(TekBoard board)
         {
             Reset();
@@ -139,14 +127,12 @@ namespace Tek1
             {
                 if (field.Value > 0 )
                     continue;
-                if (BeforeProcessingField(board, field) && HeuristicApplies(board, field))
+                if (HeuristicApplies(board, field))
                 {
-                    AfterProcessingField(true, field);
                     return true;
                 }
                 else
                 {
-                    AfterProcessingField(false, field);
                     Reset();
                 }
             }
@@ -758,36 +744,13 @@ namespace Tek1
 
         protected override void BeforeProcessingBoard(TekBoard board)
         {
-            //if (sw == null)
-            //{
-            //    sw = new StreamWriter("trial.log");
-            //    sw.AutoFlush = true;
-            //}
-            //sw.WriteLine("before: Starting trial-and-error at " + DateTime.Now.ToString("dd MMMM yyyy   H:mm:ss"));
             temMoves = new TekMoves(board);
-
-
         }
 
         private int _ssIndex = 1;
         private string _ssDescription(TekField field)
         {
             return String.Format("{0} ({1}): {2}", STARTSTRING, _ssIndex, field.AsString());
-        }
-        protected override bool BeforeProcessingField(TekBoard board, TekField field)
-        {
-//            temMoves.TakeSnapshot(_ssDescription(field));
-//            sw.WriteLine("before field [{0}] ", field.AsString());
-  //          sw.Flush();
-            return true;
-
-        }
-
-        protected override void AfterProcessingField(bool applies, TekField field)
-        {
-//            sw.WriteLine("after (field {0}. applies:  {1}): Ending trial-and-error heuristic at {2}", field.AsString(), applies.ToString(), DateTime.Now.ToString("dd MMMM yyyy   H:mm:ss"));
-  //          temMoves.RestoreSnapshot(_ssDescription(field));
-  //          _ssIndex++;
         }
 
         private HeuristicAction _tryValue(TekField field, int value)
@@ -798,7 +761,6 @@ namespace Tek1
             }
             catch (ETekFieldInvalid)
             {
-                //sw.WriteLine("_tryValue {0} {1} error", field.AsString(), value);
                 return HeuristicAction.haExcludeValue;
             }
             return HeuristicAction.haNone;
@@ -811,23 +773,19 @@ namespace Tek1
                 try
                 {
                     heuristic.ExecuteAction(temMoves);
-                    //sw.WriteLine("_tryHeuristic {0} OK", heuristic.AsString());
                     return HeuristicAction.haNone;
                 }
                 catch (ETekFieldInvalid)
                 {
-                    //sw.WriteLine("_tryHeuristic {0} error", heuristic.AsString());
                     return HeuristicAction.haExcludeValue;
                 }
             }
             else if (board.IsSolved())
             {
-//                sw.WriteLine("_tryHeuristic SOLVED!");
                 return HeuristicAction.haSetValue;
             }
             else
             {
-//                sw.WriteLine("_tryHeuristic impossible");
                 return HeuristicAction.haImpossible;
             }
         }
@@ -835,8 +793,6 @@ namespace Tek1
         private HeuristicAction TryValue(TekBoard board, TekField field, int value)
         {
             bool prev = board.EatExceptions;
-//            sw.WriteLine("tryValue {0} {1} start", field.AsString(), value);
-
             HeuristicAction result = HeuristicAction.haNone;
             try
             {
@@ -864,17 +820,14 @@ namespace Tek1
                 this.Enabled = true;
                 field.Value = 0; // backtracking
             }
-//            sw.WriteLine("tryValue {0} {1} end: {2}", field.AsString(), value, actionDescriptions[(int)result]);
             return result;
         }
 
         public override bool HeuristicApplies(TekBoard board, TekField field)
         {
             HeuristicAction action = HeuristicAction.haNone;
-//            sw.WriteLine("start HA: field: {0}  ", field.AsString());
             foreach (int value in new List<int>(field.PossibleValues)) // can't use the list directly in foreach
             {
-//                sw.WriteLine("try value {0}", value);
                 switch (action = TryValue(board, field, value))
                 {
                     case HeuristicAction.haSetValue:
@@ -888,15 +841,12 @@ namespace Tek1
                 if (action == HeuristicAction.haSetValue) // solution found
                     break;
             }
-//            sw.WriteLine("ready action: {0}", actionDescriptions[(int)action]);
-
             if (action == HeuristicAction.haSetValue || action == HeuristicAction.haExcludeValue)
             {
                 SetHeuristicAction(action);
                 AddHeuristicField(field);
                 AddAffectedField(field);
             }
-//            sw.WriteLine("end HA: field: {0}  #affected fields: {1}", field.AsString(), AffectedFields.Count);
             return AffectedFields.Count > 0;
         }
     } // TrialAndErrorHeuristic
