@@ -143,10 +143,6 @@ namespace Tek1
             }
         }
 
-        private void button14_Click(object sender, EventArgs e)
-        {
-        }
-
         private void cbShowError_CheckedChanged(object sender, EventArgs e)
         {
            
@@ -270,6 +266,9 @@ namespace Tek1
 
                 listBox1.Refresh();
                 LogHeuristic(HeuristicDescription);
+
+                View.Board.values[5, 5].Dump(HeuristicLog, TekField.FLD_DMP_POSSIBLES | TekField.FLD_DMP_EXCLUDES);
+               
                 ShowHeuristicFields(heuristic.HeuristicFields, heuristic.AffectedFields);
                 Application.DoEvents();
                 if (checkBox1.Checked || Paused)
