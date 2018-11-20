@@ -735,7 +735,8 @@ namespace Tek1
         //static StreamWriter sw = null;
         public TekMoves temMoves;
         const string STARTSTRING = @"startTrialAndError";
-       
+        List<TekHeuristicResult> temStoredResults;
+
 
         public TrialAndErrorHeuristic(TekHeuristics Heuristics) : base("Trial-and-Error", HeuristicAction.haSetValue)
         {
@@ -745,6 +746,7 @@ namespace Tek1
         protected override void BeforeProcessingBoard(TekBoard board)
         {
             temMoves = new TekMoves(board);
+            temStoredResults = new List<TekHeuristicResult>();
         }
 
         private int _ssIndex = 1;
@@ -772,6 +774,7 @@ namespace Tek1
             {
                 try
                 {
+                    temStoredResults.Add(new TekHeuristicResult(heuristic));
                     heuristic.ExecuteAction(temMoves);
                     return HeuristicAction.haNone;
                 }
@@ -782,6 +785,8 @@ namespace Tek1
             }
             else if (board.IsSolved())
             {
+                foreach (TekHeuristicResult result in temStoredResults)
+                    heuristics.PrecomputedResults.Add(new TekHeuristicResult(result));
                 return HeuristicAction.haSetValue;
             }
             else
@@ -800,6 +805,7 @@ namespace Tek1
                 this.Enabled = false; // make sure FindHeuristic doesnt call this recursively!
                 if ((result = _tryValue(field, value)) == HeuristicAction.haNone)
                 {
+                    temStoredResults.Clear();
                     temMoves.TakeSnapshot(_ssDescription(field));
                     try { 
                         do
@@ -864,15 +870,32 @@ namespace Tek1
             AffectedFields = new List<TekField>(Heuristic.AffectedFields);
             HeuristicValues = new List<int>(heuristic.HeuristicValues);
         }
+        public TekHeuristicResult(TekHeuristicResult result)
+        {
+            Heuristic = result.Heuristic;
+            HeuristicFields = new List<TekField>(result.HeuristicFields);
+            AffectedFields = new List<TekField>(result.AffectedFields);
+            HeuristicValues = new List<int>(result.HeuristicValues);
+        }
+        public TekHeuristic AsHeuristic()
+        {
+            Heuristic.Reset();
+            Heuristic.HeuristicFields.AddRange(HeuristicFields);
+            Heuristic.AffectedFields.AddRange(AffectedFields);
+            Heuristic.HeuristicValues.AddRange(HeuristicValues);
+            return Heuristic;
+        }
     }
 
     public class TekHeuristics
     {
         List<TekHeuristic> Heuristics;
         List<TekHeuristicResult> StoredResults;
+        public List<TekHeuristicResult> PrecomputedResults;
         public TekHeuristics()
         {
             StoredResults = new List<TekHeuristicResult>();
+            PrecomputedResults = new List<TekHeuristicResult>();
             Heuristics = new List<TekHeuristic>();
             Heuristics.Add(new SingleValueHeuristic());
             Heuristics.Add(new HiddenSingleValueHeuristic());
@@ -924,6 +947,12 @@ namespace Tek1
         public TekHeuristic FindHeuristic(TekBoard board)
         {
             board.AutoNotes = true;
+            if (PrecomputedResults.Count > 0)
+            {
+                TekHeuristic result = PrecomputedResults[0].AsHeuristic();
+                PrecomputedResults.RemoveAt(0);
+                return result;
+            }
             foreach(TekHeuristic heuristic in Heuristics)
             {
                 if (heuristic.Enabled && heuristic.Applies(board))
