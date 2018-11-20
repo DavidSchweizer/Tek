@@ -234,9 +234,18 @@ namespace Tek1
             int index = Snapshots.IndexOf(name);
             if (index == -1)
                 return;
-            Board.LoadValues(Values.ElementAt(index));
-            Board.LoadNotes(Notes.ElementAt(index));
-            Board.LoadExcludedValues(ExcludedValues.ElementAt(index));
+            bool prev = Board.EatExceptions;
+            Board.EatExceptions = true;
+            try
+            {
+                Board.LoadExcludedValues(ExcludedValues.ElementAt(index));
+                Board.LoadValues(Values.ElementAt(index));
+                Board.LoadNotes(Notes.ElementAt(index));
+            }
+            finally
+            {
+                Board.EatExceptions = prev;
+            }
             if (AutoRemove)
             {
                 Values.RemoveAt(index);

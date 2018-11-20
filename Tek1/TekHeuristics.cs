@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace Tek1
 {
-    public enum HeuristicAction { haNone, haSetValue, haExcludeValue, haExcludeComplement };
+    public enum HeuristicAction { haNone, haSetValue, haExcludeValue, haExcludeComplement, haImpossible };
     public abstract class TekHeuristic
     {
-        static string[] actionDescriptions = { "none", "set value", "exclude value(s)", "exclude complement value(s)" };
+        protected static string[] actionDescriptions = { "none", "set value", "exclude value(s)", "exclude complement value(s)", "impossible" };
 
         string _description;
         private HeuristicAction _action;
@@ -746,7 +746,7 @@ namespace Tek1
     //
     {
         public TekHeuristics heuristics;
-        static StreamWriter sw = null;
+        //static StreamWriter sw = null;
         public TekMoves temMoves;
         const string STARTSTRING = @"startTrialAndError";
        
@@ -758,138 +758,146 @@ namespace Tek1
 
         protected override void BeforeProcessingBoard(TekBoard board)
         {
-            if (sw == null)
-            {
-                sw = new StreamWriter("trial.log");
-            }
+            //if (sw == null)
+            //{
+            //    sw = new StreamWriter("trial.log");
+            //    sw.AutoFlush = true;
+            //}
+            //sw.WriteLine("before: Starting trial-and-error at " + DateTime.Now.ToString("dd MMMM yyyy   H:mm:ss"));
             temMoves = new TekMoves(board);
-            sw.WriteLine("before: Starting trial-and-error at " + DateTime.Now.ToString("dd MMMM yyyy   H:mm:ss"));
-            sw.Flush();
+
 
         }
 
+        private int _ssIndex = 1;
+        private string _ssDescription(TekField field)
+        {
+            return String.Format("{0} ({1}): {2}", STARTSTRING, _ssIndex, field.AsString());
+        }
         protected override bool BeforeProcessingField(TekBoard board, TekField field)
         {
-            if (field.Row == 1 && field.Col == 0)
-            {
-                sw.WriteLine("before processing (1)");
-                board.values[5, 5].Dump(sw, TekField.FLD_DMP_POSSIBLES | TekField.FLD_DMP_EXCLUDES);
-            }
-            temMoves.TakeSnapshot(STARTSTRING + " "+ field.AsString());
-            sw.WriteLine("--- snap --- " + STARTSTRING + " " + field.AsString());
-            if (field.Row == 1 && field.Col == 0)
-            {
-                sw.WriteLine("before processing (2)");
-                board.values[5, 5].Dump(sw, TekField.FLD_DMP_POSSIBLES | TekField.FLD_DMP_EXCLUDES);
-            }
-            sw.WriteLine("before field [{0}] ", field.AsString());
-            sw.Flush();
+//            temMoves.TakeSnapshot(_ssDescription(field));
+//            sw.WriteLine("before field [{0}] ", field.AsString());
+  //          sw.Flush();
             return true;
 
         }
 
         protected override void AfterProcessingField(bool applies, TekField field)
         {
-            if (field.Row == 1 && field.Col == 0)
+//            sw.WriteLine("after (field {0}. applies:  {1}): Ending trial-and-error heuristic at {2}", field.AsString(), applies.ToString(), DateTime.Now.ToString("dd MMMM yyyy   H:mm:ss"));
+  //          temMoves.RestoreSnapshot(_ssDescription(field));
+  //          _ssIndex++;
+        }
+
+        private HeuristicAction _tryValue(TekField field, int value)
+        {
+            try
             {
-                sw.WriteLine("after processing (1)");
-                temMoves.Board.values[5, 5].Dump(sw, TekField.FLD_DMP_POSSIBLES | TekField.FLD_DMP_EXCLUDES);
+                field.Value = value;
             }
-            sw.WriteLine("after (field {0}. applies:  {1}): Ending trial-and-error heuristic at {2}", field.AsString(), applies.ToString(), DateTime.Now.ToString("dd MMMM yyyy   H:mm:ss"));
-            temMoves.RestoreSnapshot(STARTSTRING + " " + field.AsString());
-            sw.WriteLine("--- rest --- " + STARTSTRING + " " + field.AsString());
-            if (field.Row == 1 && field.Col == 0)
+            catch (ETekFieldInvalid)
             {
-                sw.WriteLine("after processing (2)");
-                temMoves.Board.values[5, 5].Dump(sw, TekField.FLD_DMP_POSSIBLES | TekField.FLD_DMP_EXCLUDES);
+                //sw.WriteLine("_tryValue {0} {1} error", field.AsString(), value);
+                return HeuristicAction.haExcludeValue;
             }
+            return HeuristicAction.haNone;
+        }
+
+        private HeuristicAction _tryHeuristic(TekHeuristic heuristic, TekBoard board)
+        {
+            if (heuristic != null)
+            {
+                try
+                {
+                    heuristic.ExecuteAction(temMoves);
+                    //sw.WriteLine("_tryHeuristic {0} OK", heuristic.AsString());
+                    return HeuristicAction.haNone;
+                }
+                catch (ETekFieldInvalid)
+                {
+                    //sw.WriteLine("_tryHeuristic {0} error", heuristic.AsString());
+                    return HeuristicAction.haExcludeValue;
+                }
+            }
+            else if (board.IsSolved())
+            {
+//                sw.WriteLine("_tryHeuristic SOLVED!");
+                return HeuristicAction.haSetValue;
+            }
+            else
+            {
+//                sw.WriteLine("_tryHeuristic impossible");
+                return HeuristicAction.haImpossible;
+            }
+        }
+
+        private HeuristicAction TryValue(TekBoard board, TekField field, int value)
+        {
+            bool prev = board.EatExceptions;
+//            sw.WriteLine("tryValue {0} {1} start", field.AsString(), value);
+
+            HeuristicAction result = HeuristicAction.haNone;
+            try
+            {
+                board.EatExceptions = false;
+                this.Enabled = false; // make sure FindHeuristic doesnt call this recursively!
+                if ((result = _tryValue(field, value)) == HeuristicAction.haNone)
+                {
+                    temMoves.TakeSnapshot(_ssDescription(field));
+                    try { 
+                        do
+                        {
+                            result = _tryHeuristic(heuristics.FindHeuristic(board), board);
+                        } while (result == HeuristicAction.haNone);
+                    }
+                    finally
+                    {
+                        temMoves.RestoreSnapshot(_ssDescription(field));
+                        _ssIndex++;
+                    }
+                }
+            }
+            finally
+            {
+                board.EatExceptions = prev;
+                this.Enabled = true;
+                field.Value = 0; // backtracking
+            }
+//            sw.WriteLine("tryValue {0} {1} end: {2}", field.AsString(), value, actionDescriptions[(int)result]);
+            return result;
         }
 
         public override bool HeuristicApplies(TekBoard board, TekField field)
         {
-            try
+            HeuristicAction action = HeuristicAction.haNone;
+//            sw.WriteLine("start HA: field: {0}  ", field.AsString());
+            foreach (int value in new List<int>(field.PossibleValues)) // can't use the list directly in foreach
             {
-                sw.WriteLine("trying field: " + field.AsString());
-                sw.Flush();
-                bool prev;
-                List<int> PossibleValues = new List<int>(field.PossibleValues); // can't use the list directly in foreach
-                prev = board.EatExceptions;
-                foreach (int value in PossibleValues)
+//                sw.WriteLine("try value {0}", value);
+                switch (action = TryValue(board, field, value))
                 {
-                    bool errorDetected = false;
-                    try
-                    {
-                        sw.WriteLine("   value: {0}", value);
-                        sw.Flush();
-                        board.EatExceptions = false; 
-                        field.Value = value;
-                        this.Enabled = false; // make sure FindHeuristic doesnt call this recursively!
-                        bool possible = true;
-                        while (possible)
-                        {
-                            TekHeuristic heuristic = heuristics.FindHeuristic(board);
-                            if (heuristic != null)
-                            {
-                                sw.WriteLine("found: " + heuristic.AsString());
-                                sw.Flush();
-                                try
-                                {
-                                    heuristic.ExecuteAction(temMoves);
-                                }
-                                catch(ETekFieldInvalid E)
-                                {
-                                    possible = false;
-                                    errorDetected = true;
-                                    sw.WriteLine("--- exception (1) {0}: {1} ({2})", E.Msg, E.Field.AsString(), E.Value);
-                                }
-                            }
-                            else
-                            {
-                                possible = false;
-                                sw.WriteLine("not found");
-                                sw.Flush();
-                            }                                
-                            if (board.IsSolved() || errorDetected)
-                            {
-                                if (errorDetected)
-                                {
-                                    SetHeuristicAction(HeuristicAction.haExcludeValue);
-                                    sw.WriteLine("error detected (1)");
-                                }
-                                else
-                                {
-                                    SetHeuristicAction(HeuristicAction.haSetValue);
-                                    sw.WriteLine("solved!");
-                                }
-                                AddHeuristicField(field);
-                                AddAffectedField(field);
-                                AddValue(value);
-                                
-                                sw.Flush();
-                                return true;
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        board.EatExceptions = prev;
-                        this.Enabled = true;
-                        field.Value = 0;
-                    }
+                    case HeuristicAction.haSetValue:
+                        HeuristicValues.Clear(); // clear any values already set
+                        AddValue(value);
+                        break;
+                    case HeuristicAction.haExcludeValue:
+                        AddValue(value);
+                        break;
                 }
-                return false;
+                if (action == HeuristicAction.haSetValue) // solution found
+                    break;
             }
-            catch (ETekFieldInvalid E)
+//            sw.WriteLine("ready action: {0}", actionDescriptions[(int)action]);
+
+            if (action == HeuristicAction.haSetValue || action == HeuristicAction.haExcludeValue)
             {
-                SetHeuristicAction(HeuristicAction.haExcludeValue);
-                AddHeuristicField(E.Field);
-                AddAffectedField(E.Field);
-                AddValue(E.Value);
-                sw.WriteLine("error detected (2)");
-                sw.WriteLine("--- exception (2) {0}: {1} ({2})", E.Msg, E.Field.AsString(), E.Value);
-                sw.Flush();
-                return true;
-            }            
+                SetHeuristicAction(action);
+                AddHeuristicField(field);
+                AddAffectedField(field);
+            }
+//            sw.WriteLine("end HA: field: {0}  #affected fields: {1}", field.AsString(), AffectedFields.Count);
+            return AffectedFields.Count > 0;
         }
     } // TrialAndErrorHeuristic
 
