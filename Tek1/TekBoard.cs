@@ -555,7 +555,6 @@ namespace Tek1
         public bool AutoNotes { get { return _AutoNotes; } set { _AutoNotes = value; foreach (TekField field in values) field.AutoNotes = value;  } }
         private bool _EatExceptions;
         public bool EatExceptions { get { return _EatExceptions; } set { _EatExceptions = value; foreach (TekField field in values) field.EatExceptions = value; } }
-        public TekFields EmptyFields; // this is a future optimization, not sure how to keep this updated efficiently
 
         public TekBoard(int rows, int cols)
         {
@@ -565,8 +564,6 @@ namespace Tek1
             initValues(rows, cols);
             setNeighbours();
             EatExceptions = true;
-            EmptyFields = new TekFields();
-            initEmptyFields();
         }
 
         public int MaxFieldIndex()
@@ -663,13 +660,6 @@ namespace Tek1
             return result;
         }
 
-        private void initEmptyFields()
-        {
-            for (int r = 0; r < Rows; r++)
-                for (int c = 0; c < Cols; c++)
-                    if (values[r, c].Value == 0)
-                        EmptyFields.AddField(values[r, c]);
-        }
         public void LoadExcludedValues(List<int>[,] excludedvalues)
         {
             foreach (TekField field in values)
