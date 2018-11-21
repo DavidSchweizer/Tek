@@ -201,17 +201,6 @@ namespace Tek1
                 Influencers.Add(f);
         }
 
-        public bool HasInfluencer(TekField f)
-        {
-            return Influencers.Contains(f);
-        }
-
-        public bool IsPair(TekField f)
-        {
-            return this.PossibleValues.Count == 2 && f.PossibleValues.Count == 2 &&
-                        f.ValuesPossible(this.PossibleValues[0], this.PossibleValues[1]);
-        }
-
         public void SetInfluencers()
         {
             Influencers.Clear();
@@ -466,34 +455,7 @@ namespace Tek1
                     foreach (int value in f.PossibleValues)
                         result[value].Add(f);
             return result;
-        }
-
-        public List<TekField> GetFieldsWithPossibleValues(params int[] values)
-        {
-            List<TekField> result = new List<TekField>();
-            foreach (TekField f in Fields)
-            {
-                bool hasValues = true;
-                foreach (int value in values)
-                    if (f.ValuePossible(value))
-                    {
-                        hasValues = false;
-                        break;
-                    }
-                if (hasValues)
-                    result.Add(f);
-            }
-            return result;
-        }
-
-        public List<TekField> GetEmptyFields()
-        {
-            List<TekField> result = new List<TekField>();
-            foreach (TekField field in Fields)
-                if (field.Value == 0)
-                    result.Add(field);
-            return result;
-        }
+        }       
     } // TekFields
 
     public class TekArea : TekFields 
@@ -564,16 +526,7 @@ namespace Tek1
             initValues(rows, cols);
             setNeighbours();
             EatExceptions = true;
-        }
-
-        public int MaxFieldIndex()
-        {
-            int result = 0;
-            foreach (TekField field in values)
-                if (field.FieldIndex > result)
-                    result = field.FieldIndex;
-            return result;
-        }
+        }      
 
         private void initValues(int rows, int cols)
         {
@@ -585,7 +538,7 @@ namespace Tek1
                 }
         }
 
-        private  void setNeighbours()
+        private void setNeighbours()
         {
             // set neighbours
             for (int r = 0; r < Rows; r++)
@@ -612,20 +565,7 @@ namespace Tek1
             return result;
         }
 
-        private TekField[,] CopyFields()
-        {
-            TekField[,] result = new TekField[Rows, Cols];
-            for (int row = 0; row < Rows; row++)
-                for (int col = 0; col < Cols; col++)
-                {
-                    result[row, col] = new TekField(row, col);
-                    result[row, col].Value = values[row, col].Value;
-                    result[row, col].initial = values[row, col].initial;
-                }
-            return result;
-                    
-        }
-
+        
         public void LoadValues(int[,] newValues)
         {
             for (int r = 0; r < Rows; r++)
@@ -715,6 +655,20 @@ namespace Tek1
                         if (field2.Value == field.Value)
                             return false;
             return true;
+        }
+
+        private TekField[,] CopyFields()
+        {
+            TekField[,] result = new TekField[Rows, Cols];
+            for (int row = 0; row < Rows; row++)
+                for (int col = 0; col < Cols; col++)
+                {
+                    result[row, col] = new TekField(row, col);
+                    result[row, col].Value = values[row, col].Value;
+                    result[row, col].initial = values[row, col].initial;
+                }
+            return result;
+
         }
 
         public void Resize(int rows, int cols)
@@ -1105,4 +1059,4 @@ namespace Tek1
             }
         }
     } // TekBoardParser
-} // namespace Tek0
+} // namespace Tek1
