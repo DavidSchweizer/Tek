@@ -289,7 +289,7 @@ namespace Tek1
     // similar to a normal Coupled Pair. two fields in the same area have two values in common.
     // no other fields in that area can have those two values. The other values in the triggering
     // fields can be eliminated. 
-    // probably this reverts automatically to Coupled Triplets
+    // probably this reverts automatically to Coupled Triplets or Compact Regions
     //
         public HiddenPairHeuristic() : base("Hidden Pair", HeuristicAction.haExcludeComplement)
         {
@@ -971,6 +971,13 @@ namespace Tek1
         public TekHeuristicResult ReturnResult(int index)
         {
             return StoredResults[index];
+        }
+        public void Reset()
+        {
+            StoredResults.Clear();
+            PrecomputedResults.Clear();
+            foreach (TekHeuristic h in Heuristics)
+                h.Reset();
         }
     }
 

@@ -101,6 +101,7 @@ namespace Tek1
             if (!initial)
                 CloseHeuristicLog();
             listBox1.Items.Clear();
+            heuristics.Reset();
             if (!initial)
                 View.ResetValues();
             bStart.Enabled = true;

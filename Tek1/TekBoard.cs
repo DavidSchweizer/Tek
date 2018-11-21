@@ -896,11 +896,13 @@ namespace Tek1
 
         private enum MultiValues { mvNotes, mvExcludes };
         static string[] MultiValueString = { @"notes", @"excludes" };
+
         private bool ParseMultiValues(string input, TekBoard board, MultiValues mvType)
         {
             int row, col, value;
             TekField field = null;
             Regex pattern1 = null, pattern2 = null;
+
 
             switch (mvType)
             {
