@@ -119,10 +119,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="images\backspace.png" />
+    <None Include="images\up.png" />
     <None Include="images\start.jpg" />
     <None Include="images\check.png" />
     <None Include="images\CreateBoard.jpg" />
     <None Include="images\next.jpg" />
+    <None Include="images\down.png" />
     <Content Include="images\open-new.png" />
     <Content Include="images\pause.jpg" />
     <Content Include="images\reset.png" />
