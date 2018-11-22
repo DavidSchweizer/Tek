@@ -892,6 +892,7 @@ namespace Tek1
         List<TekHeuristic> Heuristics;
         List<TekHeuristicResult> StoredResults;
         public List<TekHeuristicResult> PrecomputedResults;
+        private List<int> HeuristicIndex;
         public TekHeuristics()
         {
             StoredResults = new List<TekHeuristicResult>();
@@ -910,14 +911,30 @@ namespace Tek1
             Heuristics.Add(new ConflictingChainsHeuristic());
             Heuristics.Add(new InvalidTripletsHeuristic());
             Heuristics.Add(new TrialAndErrorHeuristic(this));
+            HeuristicIndex = new List<int>();
+            for (int i = 0; i < Heuristics.Count; i++)
+            {
+                HeuristicIndex.Add(i);
+            }
         }
 
         public List<string> GetHeuristicDescriptions()
         {
             List<string> result = new List<string>();
-            foreach (TekHeuristic heuristic in Heuristics)
-                result.Add(heuristic.Description);
+            foreach (int i in HeuristicIndex)
+                result.Add(Heuristics[HeuristicIndex[i]].Description);
             return result;
+        }
+
+        public void SetHeuristicDescriptions(List<string> descriptions)
+        {
+            int index = 0;
+            foreach(string description in descriptions)
+            {
+                TekHeuristic heuristic = GetHeuristic(description);
+                if (heuristic != null)
+                    HeuristicIndex[index++] = Heuristics.IndexOf(heuristic);
+            }
         }
 
         public TekHeuristic GetHeuristic(string description)
@@ -943,7 +960,6 @@ namespace Tek1
             if (heuristic != null)
                 heuristic.Enabled = value;
         }
-
         public TekHeuristic FindHeuristic(TekBoard board)
         {
             board.AutoNotes = true;
@@ -953,8 +969,9 @@ namespace Tek1
                 PrecomputedResults.RemoveAt(0);
                 return result;
             }
-            foreach(TekHeuristic heuristic in Heuristics)
+            foreach(int i in HeuristicIndex)
             {
+                TekHeuristic heuristic = Heuristics[HeuristicIndex[i]];
                 if (heuristic.Enabled && heuristic.Applies(board))
                 {
                     return heuristic;
@@ -962,7 +979,6 @@ namespace Tek1
             }
             return null;
         }
-
         public int StoreResult(TekHeuristic heuristic)
         {
             StoredResults.Add(new TekHeuristicResult(heuristic));
@@ -979,7 +995,5 @@ namespace Tek1
             foreach (TekHeuristic h in Heuristics)
                 h.Reset();
         }
-    }
-
-    
+    }    
 }
