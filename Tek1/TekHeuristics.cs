@@ -933,7 +933,7 @@ namespace Tek1
             {
                 TekHeuristic heuristic = GetHeuristic(description);
                 if (heuristic != null)
-                    HeuristicIndex[index++] = Heuristics.IndexOf(heuristic);
+                    HeuristicIndex[Heuristics.IndexOf(heuristic)] = index++;
             }
         }
 
@@ -969,7 +969,7 @@ namespace Tek1
                 PrecomputedResults.RemoveAt(0);
                 return result;
             }
-            foreach(int i in HeuristicIndex)
+            for(int i = 0; i < HeuristicIndex.Count; i++)
             {
                 TekHeuristic heuristic = Heuristics[HeuristicIndex[i]];
                 if (heuristic.Enabled && heuristic.Applies(board))
@@ -994,6 +994,18 @@ namespace Tek1
             PrecomputedResults.Clear();
             foreach (TekHeuristic h in Heuristics)
                 h.Reset();
+        }
+        public void Dump(StreamWriter sw)
+        {
+            sw.WriteLine("heuristics (in order of application):");
+            for(int i = 0; i < HeuristicIndex.Count; i++)
+            {
+                TekHeuristic heuristic = Heuristics[HeuristicIndex[i]];
+                string s = String.Format("{0}: {1}", i + 1, heuristic.AsString());
+                if (!heuristic.Enabled)
+                    s = s + "[disabled]";
+                sw.WriteLine(s);
+            }
         }
     }    
 }
