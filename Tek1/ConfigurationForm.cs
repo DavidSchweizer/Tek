@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 using System.Windows.Forms;
 
 namespace Tek1
@@ -14,17 +15,33 @@ namespace Tek1
     {
         public TekHeuristics Heuristics;
 
+        static StreamWriter sw = null;
 
         public ConfigurationForm()
         {
             InitializeComponent();
+            if (sw == null)
+                sw = new StreamWriter("options.dmp");
+            sw.AutoFlush = true;
+            sw.WriteLine("starting configuration form");
         }
 
         public void DoSaveData()
         {
+            sw.WriteLine("---before set heuristic descriptions");
+            Heuristics.Dump(sw);
             Heuristics.SetHeuristicDescriptions(clbHeuristics.Items.OfType<string>().ToList()); // set the index 
+            sw.WriteLine("---after set heuristic descriptions");
+            Heuristics.Dump(sw);
+
             for (int i = 0; i < clbHeuristics.Items.Count; i++)
                 Heuristics.SetHeuristicEnabled(clbHeuristics.Items[i].ToString(), clbHeuristics.GetItemChecked(i));
+            Heuristics.Dump(sw);
+
+            using (StreamWriter cfg = new StreamWriter("heuristics.cfg"))
+            {
+                Heuristics.SaveConfiguration(cfg);
+            }
         }
 
         public void DoSetData(TekHeuristics heuristics)
@@ -33,6 +50,7 @@ namespace Tek1
             Heuristics = heuristics;
             if (Heuristics == null)
                 return;
+            Heuristics.Dump(sw);
             List<string> descriptions = Heuristics.GetHeuristicDescriptions();
             foreach (string description in descriptions)
                 clbHeuristics.Items.Add(description, Heuristics.GetHeuristicEnabled(description));

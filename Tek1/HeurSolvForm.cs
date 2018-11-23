@@ -49,7 +49,7 @@ namespace Tek1
             playPanel1.View = View;
             View.PlayActionHandler = LogPlayedMove;
             ofd1.FileName = "test.tx";
-            DoLoad();
+            //DoLoad();
         }
 
         void DoLoad()

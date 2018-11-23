@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace Tek1
 {
@@ -889,6 +890,17 @@ namespace Tek1
 
     public class TekHeuristics
     {
+        static StreamWriter dmp = null;
+        static public void LogDump(string msg, params object[] fields)
+        {
+            if (dmp == null)
+            {
+                dmp = new StreamWriter("h!.dmp");
+                dmp.AutoFlush = true;
+            }
+            dmp.WriteLine(msg, fields);
+        }
+
         List<TekHeuristic> Heuristics;
         List<TekHeuristicResult> StoredResults;
         public List<TekHeuristicResult> PrecomputedResults;
@@ -912,29 +924,57 @@ namespace Tek1
             Heuristics.Add(new InvalidTripletsHeuristic());
             Heuristics.Add(new TrialAndErrorHeuristic(this));
             HeuristicIndex = new List<int>();
-            for (int i = 0; i < Heuristics.Count; i++)
+            try
             {
-                HeuristicIndex.Add(i);
+                using (StreamReader cfg = new StreamReader("heuristics.cfg"))
+                {
+                    LoadConfiguration(cfg);
+                }
+            }
+            catch (Exception E)
+            {
+                for (int i = 0; i < Heuristics.Count; i++)
+                {
+                    HeuristicIndex.Add(i);
+                }
+            }
+            using (StreamWriter tem = new StreamWriter("tem.txt"))
+            {
+                Dump(tem);
             }
         }
 
         public List<string> GetHeuristicDescriptions()
         {
             List<string> result = new List<string>();
-            foreach (int i in HeuristicIndex)
+            LogDump("---GetHeuristicDescriptions start");
+            for (int i = 0; i < HeuristicIndex.Count; i++)
+            {
                 result.Add(Heuristics[HeuristicIndex[i]].Description);
+                LogDump("{0,2}: {1}", i, result[result.Count-1]);
+            }
+            LogDump("---GetHeuristicDescriptions end");
             return result;
         }
 
         public void SetHeuristicDescriptions(List<string> descriptions)
         {
-            int index = 0;
-            foreach(string description in descriptions)
+            HeuristicIndex.Clear();
+            LogDump("---SetHeuristicDescriptions start");
+            for (int i = 0; i < descriptions.Count; i++)                
             {
+                string description = descriptions[i];
+                LogDump("{0,2}: {1}", i, description);
                 TekHeuristic heuristic = GetHeuristic(description);
-                if (heuristic != null)
-                    HeuristicIndex[Heuristics.IndexOf(heuristic)] = index++;
+                if (heuristic != null) 
+                    HeuristicIndex.Add(Heuristics.IndexOf(heuristic));
             }
+            LogDump("index:");
+            for (int i = 0; i < HeuristicIndex.Count; i++)
+            {
+                LogDump("{0,2}: {1,2} {2}", i, HeuristicIndex[i], Heuristics[HeuristicIndex[i]].Description);
+            }
+            LogDump("---SetHeuristicDescriptions end");
         }
 
         public TekHeuristic GetHeuristic(string description)
@@ -1001,11 +1041,51 @@ namespace Tek1
             for(int i = 0; i < HeuristicIndex.Count; i++)
             {
                 TekHeuristic heuristic = Heuristics[HeuristicIndex[i]];
-                string s = String.Format("{0}: {1}", i + 1, heuristic.AsString());
+                string s = String.Format("{0}: {1}", i + 1, heuristic.Description);
                 if (!heuristic.Enabled)
                     s = s + "[disabled]";
                 sw.WriteLine(s);
             }
+        }
+        const string HEURISTICS = @"HEURISTICS:";
+        const string HEURFORMAT = @"HEUR{0}={1}{2}";
+        const string HEURPATTERN = @"HEUR(?<index>\d+)=(((?<description>.*)(?<disabled>\(disabled\)))|(?<description>.*))";
+        public void SaveConfiguration(StreamWriter sw)
+        {
+            sw.WriteLine(HEURISTICS);
+            for (int i = 0; i < HeuristicIndex.Count; i++)
+            {
+                TekHeuristic heuristic = Heuristics[HeuristicIndex[i]];
+                sw.WriteLine(HEURFORMAT, i, heuristic.Description, heuristic.Enabled?"":"(disabled)");
+            }
+        }
+
+
+        public bool LoadConfiguration(StreamReader sr)
+        {
+            string s = sr.ReadLine();
+            if (s == null)
+                return false;
+            if (s != HEURISTICS)
+                return false;
+            HeuristicIndex.Clear();
+            Regex pattern = new Regex(HEURPATTERN);
+            string description;
+            TekHeuristic heuristic;
+            int index;
+            while ((s = sr.ReadLine()) != null)
+            {
+                Match match = pattern.Match(s);
+                if (match.Success &&
+                   Int32.TryParse(match.Groups["index"].Value, out index) &&
+                    (description = match.Groups["description"].Value) != null &&
+                    (heuristic = GetHeuristic(description)) != null)
+                {
+                    HeuristicIndex.Add(Heuristics.IndexOf(heuristic));
+                    heuristic.Enabled = (match.Groups["disabled"].Value == "");
+                }
+            }
+            return true;
         }
     }    
 }
