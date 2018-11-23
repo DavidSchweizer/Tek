@@ -364,9 +364,14 @@ namespace Tek1
 
         private void button1_Click_2(object sender, EventArgs e)
         {
-            ConfigurationForm form = new ConfigurationForm();
-            form.DoSetData(heuristics);
-            form.ShowDialog();
+            using (ConfigurationForm form = new ConfigurationForm())
+            {
+                form.DoSetData(heuristics);
+                if (form.ShowDialog() == DialogResult.OK)
+                {
+                    form.DoSaveData();
+                }
+            }
         }
 
         private void listBox1_MouseDoubleClick(object sender, MouseEventArgs e)
