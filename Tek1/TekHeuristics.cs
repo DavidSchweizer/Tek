@@ -42,7 +42,8 @@ namespace Tek1
         public string AsString()
         {
             string result = String.Format("{0} [fields: ", Description);
-
+            if (Action == HeuristicAction.haNone)
+                return result;
             foreach (TekField field in HeuristicFields)
                 result = result + String.Format("{0} ", field.AsString());
             result = result + "; affects: ";
@@ -632,58 +633,6 @@ namespace Tek1
         }
     } // ConflictingChainsHeuristic
 
-    public class InvalidTripletsHeuristic : TekHeuristic
-    {// rework this, this is also supposed to be something clever but doesnt seem to work yet
-        public InvalidTripletsHeuristic() : base("Invalid Triplets ", HeuristicAction.haExcludeValue)
-        {
-        }
-
-        public override bool HeuristicApplies(TekBoard board, TekField field)
-        {
-            int i = 0;
-            while (i < field.PossibleValues.Count)
-            {
-                field.Value = field.PossibleValues[i];
-                try
-                {
-                    Region.Clear();
-                    foreach (TekField f in field.area.Fields)
-                        if (f.Value == 0)
-                            Region.AddFields(f);
-                    if (Region.IsTriplet())
-                    {
-                        foreach (TekField field2 in Region.GetCommonInfluencers())
-                        {
-                            if (field2.Value == 0)
-                            {
-                                bool possible = false;
-                                foreach (int value2 in field2.PossibleValues)
-                                    if (!Region.GetTotalPossibleValues().Contains(value2))
-                                    {
-                                        possible = true;
-                                        break;
-                                    }
-                                if (!possible)
-                                {
-                                    AddHeuristicFields(Region.Fields);
-                                    AddAffectedField(field);
-                                    AddValue(field.Value);
-                                }
-                            }
-                        }
-                    }
-                }
-                finally
-                { 
-                    field.Value = 0;
-                }
-                i++;
-            }
-            return false;
-        }
-    } // InvalidTripletsHeuristic
-
-
     public class CompactRegionsHeuristic : TekHeuristic
     // based on "compact regions": if all fields in a region are mutual influencer 
     // (note: a compact region is not necessarily within one area)
@@ -858,6 +807,93 @@ namespace Tek1
         }
     } // TrialAndErrorHeuristic
 
+    public class TekFieldComparer : IComparer<TekField>
+    {
+        public int Compare(TekField x, TekField y)
+        {
+            if (x.PossibleValues.Count == y.PossibleValues.Count)
+                return 0;
+            else if (x.PossibleValues.Count == 0)
+                return 1;
+            else if (y.PossibleValues.Count == 0 || x.PossibleValues.Count < y.PossibleValues.Count)
+                return -1;
+            else
+                return 1;
+        }
+    }
+    public class BruteForceHeuristic : TekHeuristic
+    {   // simple brute force solving with backtracking making sure that there is always a solution (in theory trial-and-error might not find anything)
+        //
+
+        private List<TekField> _sortedFields;
+        protected List<TekField> SortedFields { get { return _sortedFields; } }
+        private TekFieldComparer sorter;
+        //private Stack<int[,]> _stack;
+        private TekBoard Board;
+
+        public BruteForceHeuristic() : base("Brute Force", HeuristicAction.haNone)
+        {
+            _sortedFields = new List<TekField>();
+            sorter = new TekFieldComparer();
+            //_stack = new Stack<int[,]>();
+        }
+        public void SortFields()
+        {
+            SortedFields.Sort(sorter);
+        }
+        //private void PushState()
+        //{
+        //    _stack.Push(Board.CopyValues());
+        //}
+
+        //private void PopState()
+        //{
+        //    Board.LoadValues(_stack.Pop());
+        //}
+
+        private void SetFieldValue(TekField field, int value)
+        {
+            field.Value = value;
+            SortFields();
+        }
+
+        private bool BruteForceSolve()
+        {
+            TekField Field0 = SortedFields[0];
+            if (Field0.PossibleValues.Count == 0)
+                return Board.IsSolved();
+            for (int i = 0; i < Field0.PossibleValues.Count; i++)
+            {
+                SetFieldValue(Field0, Field0.PossibleValues[i]);
+                if (BruteForceSolve())
+                    return true;
+                else // backtrack 
+                {
+                    SetFieldValue(Field0, 0);
+                }
+            } // if we get here, this branch has no solution
+            return false;
+        }
+        protected override void BeforeProcessingBoard(TekBoard board)
+        {
+            // override to setup local variables
+            Board = new TekBoard(board);
+            SortedFields.Clear();
+            foreach (TekField field in Board.values)
+                SortedFields.Add(field);
+            SortFields();
+        }
+        public override bool HeuristicApplies(TekBoard board, TekField field)
+        {
+            if (BruteForceSolve())
+            {
+                board.LoadValues(Board.CopyValues());
+                return true;
+            }
+            return false; // can't be solved
+        }
+    } // BruteForceHeuristic
+
     public class TekHeuristicResult
     {
         public TekHeuristic Heuristic;
@@ -921,8 +957,8 @@ namespace Tek1
             Heuristics.Add(new AlternatingChainHeuristic());
             Heuristics.Add(new CascadingTripletsHeuristic());
             Heuristics.Add(new ConflictingChainsHeuristic());
-            Heuristics.Add(new InvalidTripletsHeuristic());
             Heuristics.Add(new TrialAndErrorHeuristic(this));
+            Heuristics.Add(new BruteForceHeuristic());
             HeuristicIndex = new List<int>();
             try
             {

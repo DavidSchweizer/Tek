@@ -311,6 +311,7 @@ namespace Tek1
                     MessageBox.Show("Solved!");
                     LogHeuristic("Solved!\n");
                     isFinished = true;
+                    View.Refresh();                        
                 }
                 else
                 {

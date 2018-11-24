@@ -7,20 +7,7 @@ using System.Threading.Tasks;
 
 namespace Tek1
 {
-    public class TekFieldComparer : IComparer<TekField>
-    {
-        public int Compare(TekField x, TekField y)
-        {
-            if (x.PossibleValues.Count == y.PossibleValues.Count)
-                return 0;
-            else if (x.PossibleValues.Count == 0)
-                return 1;
-           	else if (y.PossibleValues.Count == 0 || x.PossibleValues.Count < y.PossibleValues.Count ) 
-                return -1;
-            else
-                return 1;
-        }
-    }
+    
 
     class TekSolver
     {
