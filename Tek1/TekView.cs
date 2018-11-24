@@ -106,10 +106,12 @@ namespace Tek1
             if (Board == null)
                 return false;
 
-           TekSolver solver = new TekSolver(Board);
-            bool result = solver.Solve();
+            // rewrite this with heuristic solver
+            //TekSolver solver = new TekSolver(Board);
+            bool result = false; // solver.Solve();
 
             _view.Refresh();
+
             return result;
         }
 

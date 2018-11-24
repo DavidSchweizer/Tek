@@ -537,45 +537,10 @@ namespace Tek1
 
         public TekBoard(TekBoard board) : this(board.Rows, board.Cols)
         {
-            using (StreamWriter sw = new StreamWriter("constructor.log"))
-            {
-                sw.AutoFlush = true;
-                sw.WriteLine("---start constructor");
-                sw.WriteLine("!!!original board");
-                board.Dump(sw);
-                //foreach (TekArea area in board.areas)
-                //    area.Dump(sw);
-                sw.WriteLine("!!!end original board");
-                CopyFields(board.values);// values = board.CopyFields();
-
-                //sw.WriteLine("!!!copied values");
-                //values[1, 1].Dump(sw, 65535);
-                //sw.WriteLine("!!!end copied values");
-
-                areas = CopyAreas(board.areas);
-
-                //sw.WriteLine("!!!copied areas");
-                //foreach (TekArea area in areas)
-                //    area.Dump(sw);
-                //values[1, 1].Dump(sw, 65535);
-                //sw.WriteLine("!!!end copied areas");
-
-
-                //LoadNotes(board.CopyNotes());
-                //LoadExcludedValues(board.CopyExcludedValues());
-                EatExceptions = board.EatExceptions;
-                AutoNotes = board.AutoNotes;
-                //sw.WriteLine("!!!before update");
-                //values[1, 1].Dump(sw, 65535);
-                //sw.WriteLine("!!!after update values");
-
-                //foreach (TekField field in values)
-                //    field.UpdatePossibleValues(true);
-                //values[1, 1].Dump(sw, 65535);
-                sw.WriteLine("copy of board");
-                Dump(sw);
-                sw.WriteLine("---end constructor");
-            }
+            CopyFields(board.values);
+            areas = CopyAreas(board.areas);
+            EatExceptions = board.EatExceptions;
+            AutoNotes = board.AutoNotes;
         }
 
         private void initValues(int rows, int cols)

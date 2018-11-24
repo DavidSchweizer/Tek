@@ -247,6 +247,47 @@ namespace Tek1
 
         }
 
+        static int heurFound;
+        string HeuristicDescription;
+        private void AfterHeuristicFoundHandler(TekHeuristic heuristic)
+        {
+            heurFound++;
+            HeuristicDescription = String.Format("{0}: {1}", heurFound, heuristic.AsString());
+            listBox1.Items.Add(HeuristicDescription);
+            listBox1.SelectedIndex = listBox1.Items.Count - 1;
+            listBox1.Refresh();
+            LogHeuristic(HeuristicDescription);
+            ShowHeuristicFields(heuristic.HeuristicFields, heuristic.AffectedFields);
+        }
+
+        private bool BeforeHeuristicExecution(TekHeuristic heuristic)
+        {
+            Application.DoEvents();
+            if (checkBox1.Checked || Paused)
+            {
+                Paused = true;
+                while (Paused)
+                {
+                    Application.DoEvents(); // Delphi style, is supposed to be unsafe
+                    if (isFinished)
+                        return false;
+                }
+            }
+            if (!isFinished)
+            {
+                Snapshots.TakeSnapshot(HeuristicDescription);
+            }
+            return true;
+        }
+
+        private bool AfterHeuristicExecution(TekHeuristic heuristic)
+        {
+            View.HighlightFields(heuristic.AffectedFields, false);
+            View.Selector.ClearMultiSelect();
+            View.Refresh();
+            return true;
+        }
+
         private void RunHeuristics(bool initial)
         {
             if (isFinished)
@@ -255,45 +296,15 @@ namespace Tek1
             {
                 listBox1.Items.Clear();
                 View.ShowDefaultNotes();
+                heurFound = 0;
             }
             Paused = false;
-            TekHeuristic heuristic = heuristics.FindHeuristic(View.Board);
-            while (heuristic != null && !Paused)
-            {
-                int heurFound = listBox1.Items.Count + 1;
-                string HeuristicDescription = String.Format("{0}: {1}", heurFound, heuristic.AsString());
-                listBox1.Items.Add(HeuristicDescription);
-                listBox1.SelectedIndex = listBox1.Items.Count - 1;
 
-                listBox1.Refresh();
-                LogHeuristic(HeuristicDescription);
+            heuristics.AfterHeuristicFoundHandler = AfterHeuristicFoundHandler;
+            heuristics.BeforeExecutionHandler = BeforeHeuristicExecution;
+            heuristics.AfterExecutionHandler = AfterHeuristicExecution;
 
-                View.Board.values[5, 5].Dump(HeuristicLog, TekField.FLD_DMP_POSSIBLES | TekField.FLD_DMP_EXCLUDES);
-               
-                ShowHeuristicFields(heuristic.HeuristicFields, heuristic.AffectedFields);
-                Application.DoEvents();
-                if (checkBox1.Checked || Paused)
-                {
-                    Paused = true;
-                    while (Paused)
-                    {
-                        Application.DoEvents(); // Delphi style, is supposed to be unsafe
-                        if (isFinished)
-                            return;
-                    }
-                }
-                if (!isFinished)
-                {
-                    Snapshots.TakeSnapshot(HeuristicDescription);
-                    heuristics.StoreResult(heuristic);
-                    heuristic.ExecuteAction(View.Moves);
-                    View.HighlightFields(heuristic.AffectedFields, false);
-                    View.Refresh();
-
-                    heuristic = heuristics.FindHeuristic(View.Board);
-                }
-            }
-            View.Selector.ClearMultiSelect();
+            heuristics.HeuristicSolve(View.Board, View.Moves);
         }
 
         static bool isFinished = false;

@@ -84,7 +84,6 @@
     <Compile Include="TekHeuristics.cs" />
     <Compile Include="TekPlay.cs" />
     <Compile Include="TekRegion.cs" />
-    <Compile Include="TekSolver.cs" />
     <Compile Include="TekView.cs" />
     <EmbeddedResource Include="ConfigurationForm.resx">
       <DependentUpon>ConfigurationForm.cs</DependentUpon>

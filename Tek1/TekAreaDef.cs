@@ -180,12 +180,6 @@ namespace Tek1
             return true;
         }
 
-        static public StreamWriter DebugLog = new StreamWriter("c:/temp/debug.log");
-        public void Debug(string format, params object[] items)
-        {
-            DebugLog.WriteLine(format, items);
-            DebugLog.Flush();
-        }
 
         private void AddPoint(Point P)
         {

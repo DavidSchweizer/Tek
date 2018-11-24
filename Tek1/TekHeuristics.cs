@@ -41,9 +41,9 @@ namespace Tek1
 
         public string AsString()
         {
-            string result = String.Format("{0} [fields: ", Description);
             if (Action == HeuristicAction.haNone)
-                return result;
+                return Description;                    
+            string result = String.Format("{0} [fields: ", Description);
             foreach (TekField field in HeuristicFields)
                 result = result + String.Format("{0} ", field.AsString());
             result = result + "; affects: ";
@@ -682,7 +682,6 @@ namespace Tek1
     //
     {
         public TekHeuristics heuristics;
-        //static StreamWriter sw = null;
         public TekMoves temMoves;
         const string STARTSTRING = @"startTrialAndError";
         List<TekHeuristicResult> temStoredResults;
@@ -760,7 +759,15 @@ namespace Tek1
                     try { 
                         do
                         {
-                            result = _tryHeuristic(heuristics.FindHeuristic(board), board);
+                            try
+                            {
+                                result = _tryHeuristic(heuristics.FindHeuristic(board), board);
+                            }
+                            catch (ETekFieldInvalid)
+                            {
+                                result = HeuristicAction.haImpossible;
+                            }
+
                         } while (result == HeuristicAction.haNone);
                     }
                     finally
@@ -821,42 +828,31 @@ namespace Tek1
                 return 1;
         }
     }
+
     public class BruteForceHeuristic : TekHeuristic
-    {   // simple brute force solving with backtracking making sure that there is always a solution (in theory trial-and-error might not find anything)
+    {   // simple brute force solving with backtracking making sure that IF there is a solution it will be found even in no other heuristics do
+        // in theory trial-and-error might not find always find either a solution or an impossible situation
         //
 
         private List<TekField> _sortedFields;
         protected List<TekField> SortedFields { get { return _sortedFields; } }
         private TekFieldComparer sorter;
-        //private Stack<int[,]> _stack;
         private TekBoard Board;
 
         public BruteForceHeuristic() : base("Brute Force", HeuristicAction.haNone)
         {
             _sortedFields = new List<TekField>();
             sorter = new TekFieldComparer();
-            //_stack = new Stack<int[,]>();
         }
         public void SortFields()
         {
             SortedFields.Sort(sorter);
         }
-        //private void PushState()
-        //{
-        //    _stack.Push(Board.CopyValues());
-        //}
-
-        //private void PopState()
-        //{
-        //    Board.LoadValues(_stack.Pop());
-        //}
-
         private void SetFieldValue(TekField field, int value)
         {
             field.Value = value;
             SortFields();
         }
-
         private bool BruteForceSolve()
         {
             TekField Field0 = SortedFields[0];
@@ -876,7 +872,6 @@ namespace Tek1
         }
         protected override void BeforeProcessingBoard(TekBoard board)
         {
-            // override to setup local variables
             Board = new TekBoard(board);
             SortedFields.Clear();
             foreach (TekField field in Board.values)
@@ -924,23 +919,20 @@ namespace Tek1
         }
     }
 
+    public delegate void AfterHeuristicFound(TekHeuristic heuristic);
+    public delegate bool HeuristicExecution(TekHeuristic heuristic);
+
     public class TekHeuristics
     {
-        static StreamWriter dmp = null;
-        static public void LogDump(string msg, params object[] fields)
-        {
-            if (dmp == null)
-            {
-                dmp = new StreamWriter("h!.dmp");
-                dmp.AutoFlush = true;
-            }
-            dmp.WriteLine(msg, fields);
-        }
-
         List<TekHeuristic> Heuristics;
         List<TekHeuristicResult> StoredResults;
         public List<TekHeuristicResult> PrecomputedResults;
         private List<int> HeuristicIndex;
+        public AfterHeuristicFound AfterHeuristicFoundHandler;
+
+        public HeuristicExecution BeforeExecutionHandler;
+        public HeuristicExecution AfterExecutionHandler;
+
         public TekHeuristics()
         {
             StoredResults = new List<TekHeuristicResult>();
@@ -967,50 +959,35 @@ namespace Tek1
                     LoadConfiguration(cfg);
                 }
             }
-            catch (Exception E)
+            catch (Exception)
             {
                 for (int i = 0; i < Heuristics.Count; i++)
                 {
                     HeuristicIndex.Add(i);
                 }
             }
-            using (StreamWriter tem = new StreamWriter("tem.txt"))
-            {
-                Dump(tem);
-            }
         }
 
         public List<string> GetHeuristicDescriptions()
         {
             List<string> result = new List<string>();
-            LogDump("---GetHeuristicDescriptions start");
             for (int i = 0; i < HeuristicIndex.Count; i++)
             {
                 result.Add(Heuristics[HeuristicIndex[i]].Description);
-                LogDump("{0,2}: {1}", i, result[result.Count-1]);
             }
-            LogDump("---GetHeuristicDescriptions end");
             return result;
         }
 
         public void SetHeuristicDescriptions(List<string> descriptions)
         {
             HeuristicIndex.Clear();
-            LogDump("---SetHeuristicDescriptions start");
             for (int i = 0; i < descriptions.Count; i++)                
             {
                 string description = descriptions[i];
-                LogDump("{0,2}: {1}", i, description);
                 TekHeuristic heuristic = GetHeuristic(description);
                 if (heuristic != null) 
                     HeuristicIndex.Add(Heuristics.IndexOf(heuristic));
             }
-            LogDump("index:");
-            for (int i = 0; i < HeuristicIndex.Count; i++)
-            {
-                LogDump("{0,2}: {1,2} {2}", i, HeuristicIndex[i], Heuristics[HeuristicIndex[i]].Description);
-            }
-            LogDump("---SetHeuristicDescriptions end");
         }
 
         public TekHeuristic GetHeuristic(string description)
@@ -1083,6 +1060,24 @@ namespace Tek1
                 sw.WriteLine(s);
             }
         }
+
+        public bool HeuristicSolve(TekBoard board, TekMoves moves)
+        {
+            TekHeuristic heuristic = FindHeuristic(board);
+            bool Paused = false;
+            while (heuristic != null && !Paused)
+            {
+                AfterHeuristicFoundHandler?.Invoke(heuristic);
+                StoreResult(heuristic);
+                if (BeforeExecutionHandler != null && !BeforeExecutionHandler(heuristic))
+                    return false;
+                heuristic.ExecuteAction(moves);
+                AfterExecutionHandler?.Invoke(heuristic);
+                heuristic = FindHeuristic(board);
+            }
+            return board.IsSolved();     
+        }
+
         const string HEURISTICS = @"HEURISTICS:";
         const string HEURFORMAT = @"HEUR{0}={1}{2}";
         const string HEURPATTERN = @"HEUR(?<index>\d+)=(((?<description>.*)(?<disabled>\(disabled\)))|(?<description>.*))";
