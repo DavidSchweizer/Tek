@@ -106,7 +106,7 @@ namespace Tek1
             {
                 if (board.IsInRange(row, col))
                 {
-                    fields.Add(board.values[row, col]);
+                    fields.Add(board.Fields[row, col]);
                     return true;
                 }
             }
@@ -151,9 +151,9 @@ namespace Tek1
                 {
                     ParseError("Invalid value line {0}: ({1},{2}", input, row, col);
                 }
-                TekField field = board.values[row, col];
+                TekField field = board.Fields[row, col];
                 field.Value = value;
-                field.initial = match.Groups["initial"].Value == "i";
+                field.Initial = match.Groups["initial"].Value == "i";
                 return true;
             }
             else
@@ -190,7 +190,7 @@ namespace Tek1
                 {
                     if (!board.IsInRange(row, col))
                         ParseError("Invalid field in {0} line {1}: ({2},{3})", MultiValueString[(int)mvType], input, row, col);
-                    field = board.values[row, col];
+                    field = board.Fields[row, col];
                 }
                 if (field != null && Int32.TryParse(match.Groups["value"].Value, out value))
                 {
@@ -239,7 +239,7 @@ namespace Tek1
 
         private void UpdatePossibleValues(TekBoard board)
         {
-            foreach (TekField field in board.values)
+            foreach (TekField field in board.Fields)
                 field.UpdatePossibleValues(false);
         }
 
@@ -277,7 +277,7 @@ namespace Tek1
         }
         private void ExportValue(TekField field, StreamWriter wr)
         {
-            wr.WriteLine(VALUEFORMAT, field.Row, field.Col, field.Value, field.initial ? "i" : "");
+            wr.WriteLine(VALUEFORMAT, field.Row, field.Col, field.Value, field.Initial ? "i" : "");
         }
 
         private void ExportArea(TekArea area, StreamWriter wr)
@@ -312,11 +312,11 @@ namespace Tek1
         private void _Export(TekBoard board, StreamWriter wr)
         {
             wr.WriteLine(SIZEFORMAT, board.Rows, board.Cols);
-            foreach (TekArea area in board.areas)
+            foreach (TekArea area in board.Areas)
             {
                 ExportArea(area, wr);
             }
-            foreach (TekField value in board.values)
+            foreach (TekField value in board.Fields)
             {
                 if (value.Value > 0)
                     ExportValue(value, wr);

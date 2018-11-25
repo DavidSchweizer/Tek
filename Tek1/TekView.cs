@@ -499,7 +499,7 @@ namespace Tek1
 
         public void SetPanelColors(TekFieldView panel)
         {
-            TekArea area = panel.Field.area;
+            TekArea area = panel.Field.Area;
             if (area == null)
             {
                 panel.NormalColor = NoAreaColor;
@@ -533,7 +533,7 @@ namespace Tek1
                     ReSizeFieldView(newP, data.TileSize, r, c);
                     
                     newP.Data = data;
-                    newP.Field = Board.values[r, c];
+                    newP.Field = Board.Fields[r, c];
                     SetPanelColors(newP);
 
                     //newP.Click += new EventHandler(Panel_Click);
@@ -550,14 +550,14 @@ namespace Tek1
 
         public void SetAreaColors(TekBoard board)
         {
-            if (board.areas.Count == 0)
+            if (board.Areas.Count == 0)
                 return;
             int index0 = 0;
-            AreaColorIndex = new int[board.areas.Count];
+            AreaColorIndex = new int[board.Areas.Count];
             for (int i = 0; i < AreaColorIndex.Length; i++)
                 AreaColorIndex[i] = -1;
                        
-            foreach (TekArea area in board.areas)
+            foreach (TekArea area in board.Areas)
             {
                 List<TekArea> neighbours = area.GetAdjacentAreas();
                 List<int> inUseByNeighbours = new List<int>();
@@ -578,18 +578,18 @@ namespace Tek1
 
         private void __SetBorder(TekFieldView p, TekField neighbour, TekFieldView.TekBorder border)
         {
-            if (neighbour.area == null)
+            if (neighbour.Area == null)
             {
-                if (p.Field.area == null)
+                if (p.Field.Area == null)
                     p.Borders[(int)border] = TekFieldView.TekBorderStyle.tbsNone;
                 else
                     p.Borders[(int)border] = TekFieldView.TekBorderStyle.tbsNone; // tbsExternal;
             }
-            else if (p.Field.area == null)
+            else if (p.Field.Area == null)
                 p.Borders[(int)border] = TekFieldView.TekBorderStyle.tbsNone; // tbsExternal;
             else
             {
-                if (neighbour.area.AreaNum == p.Field.area.AreaNum)
+                if (neighbour.Area.AreaNum == p.Field.Area.AreaNum)
                     p.Borders[(int)border] = TekFieldView.TekBorderStyle.tbsInternal;
                 else
                     p.Borders[(int)border] = TekFieldView.TekBorderStyle.tbsExternal;
@@ -604,25 +604,25 @@ namespace Tek1
                 p.Borders[(int)TekFieldView.TekBorder.bdTop] = TekFieldView.TekBorderStyle.tbsBoard;
             else
             {
-                __SetBorder(p, Board.values[row - 1, col], TekFieldView.TekBorder.bdTop);
+                __SetBorder(p, Board.Fields[row - 1, col], TekFieldView.TekBorder.bdTop);
             }
             if (col == 0)
                 p.Borders[(int)TekFieldView.TekBorder.bdLeft] = TekFieldView.TekBorderStyle.tbsBoard;
             else
             {
-                __SetBorder(p, Board.values[row, col - 1], TekFieldView.TekBorder.bdLeft);
+                __SetBorder(p, Board.Fields[row, col - 1], TekFieldView.TekBorder.bdLeft);
             }
             if (row == Board.Rows - 1)
                 p.Borders[(int)TekFieldView.TekBorder.bdBottom] = TekFieldView.TekBorderStyle.tbsBoard;
             else
             {
-                __SetBorder(p, Board.values[row + 1, col], TekFieldView.TekBorder.bdBottom);
+                __SetBorder(p, Board.Fields[row + 1, col], TekFieldView.TekBorder.bdBottom);
             }
             if (col == Board.Cols - 1)
                 p.Borders[(int)TekFieldView.TekBorder.bdRight] = TekFieldView.TekBorderStyle.tbsBoard;
             else
             {
-                __SetBorder(p, Board.values[row, col + 1], TekFieldView.TekBorder.bdRight);
+                __SetBorder(p, Board.Fields[row, col + 1], TekFieldView.TekBorder.bdRight);
             }
             p.Invalidate();
         }
@@ -719,7 +719,7 @@ namespace Tek1
 
         public void SetSelected(bool onoff = true)
         {
-            if (Field != null && !IgnoreInitial && Field.initial)
+            if (Field != null && !IgnoreInitial && Field.Initial)
                 return;
             _isSelected = onoff;
             if (IsSelected)
@@ -739,7 +739,7 @@ namespace Tek1
         static public bool IgnoreInitial = false;
         public void SetMultiSelected(bool onoff = true)
         {
-            if (Field != null && !IgnoreInitial && Field.initial)
+            if (Field != null && !IgnoreInitial && Field.Initial)
                 return;
             _isMultiSelected = onoff;
             if (IsMultiSelected)
@@ -762,7 +762,7 @@ namespace Tek1
 
         public int Row { get { return field == null ? -1 : field.Row; } }
         public int Col { get { return field == null ? -1 : field.Col; } }
-        public int Value { get { return field == null ? 0 : field.Value; } set { if (field != null && !field.initial) { field.Value = value; Refresh(); } } }
+        public int Value { get { return field == null ? 0 : field.Value; } set { if (field != null && !field.Initial) { field.Value = value; Refresh(); } } }
 
         public TekBorderStyle[] Borders { get; set; }
 
@@ -876,7 +876,7 @@ namespace Tek1
                 else
                     textBrush = Data.TextBrush[(IsSelected || IsMultiSelected) ? TekPanelData.PANEL_SELECTED : TekPanelData.PANEL_NORMAL];
                 e.Graphics.DrawString(Field.Value.ToString(),
-                    Data.ValueFont[field.initial ? TekPanelData.FONT_INITIAL : TekPanelData.FONT_NORMAL],
+                    Data.ValueFont[field.Initial ? TekPanelData.FONT_INITIAL : TekPanelData.FONT_NORMAL],
                         textBrush, Data.ValuePoint, Data.Format);
             }
         } 

@@ -83,7 +83,7 @@ namespace Tek1
             switch(move)
             {
                 case TekMove.tmClear:
-                    Moves.Push(new TekPlay(row, col, TekMove.tmClear, value, Board.values[row, col].Notes));
+                    Moves.Push(new TekPlay(row, col, TekMove.tmClear, value, Board.Fields[row, col].Notes));
                     break;
                 case TekMove.tmSnapshot:
                     Moves.Push(new TekPlay(row, col, TekMove.tmClear, value, null, name));
@@ -102,7 +102,7 @@ namespace Tek1
 
         public void PlayValue(int row, int col, int value)
         {
-            PlayValue(Board.values[row, col], value);
+            PlayValue(Board.Fields[row, col], value);
         }
 
         public void ExcludeValue(TekField field, int value)
@@ -121,11 +121,11 @@ namespace Tek1
         }
         public void ExcludeValue(int row, int col, int value)
         {
-            ExcludeValue(Board.values[row, col], value);
+            ExcludeValue(Board.Fields[row, col], value);
         }
         public void ExcludeValues(int row, int col, int value)
         {
-            ExcludeValues(Board.values[row, col], value);
+            ExcludeValues(Board.Fields[row, col], value);
         }
 
         public void PlayNote(TekField field, int value)
@@ -142,24 +142,24 @@ namespace Tek1
 
         public void PlayNote(int row, int col, int value)
         {
-            PlayNote(Board.values[row, col], value);
+            PlayNote(Board.Fields[row, col], value);
         }
         public void PlayNotes(int row, int col, params int[] values)
         {
-            PlayNotes(Board.values[row, col], values);
+            PlayNotes(Board.Fields[row, col], values);
         }
 
         public void PlayClear(TekField field)
         {
             PushMove(field.Row, field.Col, TekMove.tmClear, field.Value);
             field.ClearNotes();
-            if (!field.initial)
+            if (!field.Initial)
                 field.Value = 0;
         }
 
         public void PlayClear(int row, int col)
         {
-            PlayClear(Board.values[row, col]);
+            PlayClear(Board.Fields[row, col]);
         }
 
         public void UnPlay()
@@ -170,18 +170,18 @@ namespace Tek1
                 switch (move.Move)
                 {
                     case TekMove.tmValue:
-                        Board.values[move.Row, move.Col].ToggleValue(move.Value);
+                        Board.Fields[move.Row, move.Col].ToggleValue(move.Value);
                         break;
                     case TekMove.tmNote:
-                        Board.values[move.Row, move.Col].ToggleNote(move.Value);
+                        Board.Fields[move.Row, move.Col].ToggleNote(move.Value);
                         break;
                     case TekMove.tmExclude:
-                        Board.values[move.Row, move.Col].ExcludeValue(move.Value, false);
+                        Board.Fields[move.Row, move.Col].ExcludeValue(move.Value, false);
                         break;
                     case TekMove.tmClear:
-                        Board.values[move.Row, move.Col].ToggleValue(move.Value);
+                        Board.Fields[move.Row, move.Col].ToggleValue(move.Value);
                         foreach (int i in move.Notes)
-                            Board.values[move.Row, move.Col].ToggleNote(i);
+                            Board.Fields[move.Row, move.Col].ToggleNote(i);
                         break;
                 }
             }

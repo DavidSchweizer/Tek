@@ -29,43 +29,46 @@ namespace Tek1
 
     public class TekField
     {
-        static int __FieldIndex = 0;
-        private int _FieldIndex;
-        private bool _cascading = false;
-        public int _value;
-        public bool initial;
-        public TekArea area;
-        public List<TekField> neighbours;
-        public List<TekField> Influencers;
-        public List<int> PossibleValues;
-        public List<int> ExcludedValues; // values excluded by heuristic solution process
-        public List<int> Notes;
+        private bool _cascading = false; // used for signalling in UpdatePossibleValues
+
+        private  int _value;
+        public int Value { get { return _value; } set { SetValue(value); } }
+
+        public bool Initial; // the value has been set initially and can not be cleared
+        public TekArea Area;
+        public List<TekField> Neighbours;  // the direct neighbours of the field
+        public List<TekField> Influencers; // the fields that influence the field (Area+Neighbours)
+        public List<int> PossibleValues;   // the values that the field may still have (is dynamically updated)
+        public List<int> ExcludedValues;   // values excluded by heuristic solution process
+        public List<int> Notes;            // notes the user has made
+
         private int _row, _col;
-        public int FieldIndex { get { return _FieldIndex; } }
         public int Row { get { return _row; } }
         public int Col { get { return _col; } }
-        public bool AutoNotes { get; set; }
-        public bool EatExceptions = true;
+
+        public bool EatExceptions = true;   // entering an invalid value is ignored by default
+                                            // set this to false to cause an ETekFieldException
+                                            // the exceptions are used when solving the puzzle
+        private bool _AutoNotes;
+        public bool AutoNotes { get { return _AutoNotes; } set { _AutoNotes = value; if (value) UpdatePossibleValues(false); } } 
+                                    // notes are set automatically to the values in PossibleValues - ExcludedValues
 
         public TekField(int arow, int acol) 
         {
             _row = arow;
             _col = acol;
             _value = 0;
-            _FieldIndex = __FieldIndex++;
-            initial = false;
-            neighbours = new List<TekField>();
+            Initial = false;
+            Neighbours = new List<TekField>();
             Influencers = new List<TekField>();
             PossibleValues = new List<int>();
             for (int i = 1; i <= Const.MAXTEK; i++)
                 PossibleValues.Add(i);
             ExcludedValues = new List<int>();
             Notes = new List<int>();
-            area = null;
+            Area = null;
             AutoNotes = false;
         }
-
-        public int Value { get { return _value;  } set { SetValue(value); } }
 
         public void SetValue(int avalue)
         {
@@ -146,7 +149,7 @@ namespace Tek1
             PossibleValues.Clear();
             if (Value == 0)
             {
-                for (int i = 1; i <= ((area == null) ? Const.MAXTEK : area.Fields.Count); i++)
+                for (int i = 1; i <= ((Area == null) ? Const.MAXTEK : Area.Fields.Count); i++)
                     if (!ExcludedValues.Contains(i))
                         PossibleValues.Add(i);
                 foreach (TekField field in Influencers)
@@ -186,13 +189,13 @@ namespace Tek1
 
         public void AddNeighbour(TekField f)
         {
-            if (!neighbours.Contains(f)) // don't add more than once
-                neighbours.Add(f);
+            if (!Neighbours.Contains(f)) // don't add more than once
+                Neighbours.Add(f);
         }
 
         public bool HasNeighbour(TekField f)
         {
-            return neighbours.Contains(f);
+            return Neighbours.Contains(f);
         }
 
         public void AddInfluencer(TekField f)
@@ -205,12 +208,12 @@ namespace Tek1
         {
             Influencers.Clear();
             // add area
-            if (area != null)
-                foreach (TekField field in area.Fields)
+            if (Area != null)
+                foreach (TekField field in Area.Fields)
                     if (field != this)
                         AddInfluencer(field);
             // add neighbours not in area
-            foreach (TekField field in neighbours)
+            foreach (TekField field in Neighbours)
                 AddInfluencer(field);
         }
         public List<TekField> CommonInfluencers(params TekField[] fields)
@@ -297,17 +300,15 @@ namespace Tek1
             }
             return result;
         }
-        public string AsString(bool includeValue = false, bool includeArea = false, bool includeFieldIndex = false)
+        public string AsString(bool includeValue = false, bool includeArea = false)
         {
             string result = String.Format("[{0},{1}", Row, Col);
-            if (includeFieldIndex)
-                result = result + String.Format("({0})", FieldIndex);
             result = result + "]";
 
             if (includeValue)
-                result += String.Format(" value:{0}{1}", Value == 0 ? "-" : Value.ToString(), initial ? "i" : " ");
+                result += String.Format(" value:{0}{1}", Value == 0 ? "-" : Value.ToString(), Initial ? "i" : " ");
             if (includeArea)
-                result += String.Format(" area: {0}", area == null ? "-" : area.AreaNum.ToString());
+                result += String.Format(" area: {0}", Area == null ? "-" : Area.AreaNum.ToString());
             return result;
         }
         
@@ -324,7 +325,7 @@ namespace Tek1
             if ((flags & FLD_DMP_NEIGHBOURS) != 0)
             {
                 sw.Write("Neighbours:");
-                foreach (TekField t in neighbours)
+                foreach (TekField t in Neighbours)
                     sw.Write("{0} ", t.AsString());
                 sw.WriteLine();
             }
@@ -359,8 +360,29 @@ namespace Tek1
         }
     } // TekField
 
+    public class TekFieldComparer : IComparer<TekField>
+    // to sort fields to get a more logical order, mainly for debugging purposes
+    {
+        public int Compare(TekField x, TekField y)
+        {
+            if (x.Row == y.Row && x.Col == y.Col)
+                return 0;
+            else if (x.Row < y.Row)
+                return -1;
+            else if (x.Row == y.Row)
+            {
+                if (x.Col < y.Col)
+                    return -1;
+                else
+                    return 1;
+            }
+            else
+                return 1;
+        }
+    }
     public class TekFields
     {
+        // base type for TekArea and TekRegion
         public List<TekField> Fields;
         public TekFields()
         {
@@ -422,7 +444,7 @@ namespace Tek1
 
         public virtual string AsString()
         {
-            string result = String.Format("Region: ");
+            string result = String.Format("Fields: ");
             foreach (TekField f in Fields)
                 result = result + f.AsString();
             return result;
@@ -440,7 +462,7 @@ namespace Tek1
 
         public void Sort()
         {
-            Fields.Sort(new TekFieldComparer2());
+            Fields.Sort(new TekFieldComparer());
         }
 
         public Dictionary<int, List<TekField>> GetFieldsForValues()
@@ -471,10 +493,10 @@ namespace Tek1
             List<TekArea> result = new List<TekArea>();
             foreach (TekField field in Fields)
             {
-                foreach (TekField Neighbour in field.neighbours)
-                    if (Neighbour.area != null && this != Neighbour.area && !result.Contains(Neighbour.area))
+                foreach (TekField neighbour in field.Neighbours)
+                    if (neighbour.Area != null && this != neighbour.Area && !result.Contains(neighbour.Area))
                     {
-                        result.Add(Neighbour.area);
+                        result.Add(neighbour.Area);
                     }
             }
             return result;
@@ -489,9 +511,9 @@ namespace Tek1
         public override void AddField(TekField f)
         {
             base.AddField(f);
-            if (f.area != null)
+            if (f.Area != null)
                 return; // or exception
-            f.area = this;
+            f.Area = this;
             SetInfluencers();            
         }
 
@@ -507,23 +529,23 @@ namespace Tek1
 
     public class TekBoard
     {
-        public TekField[,] values;
-        public List<TekArea> areas;
+        public TekField[,] Fields;
+        public List<TekArea> Areas;
         private int _rows, _cols;
         public int Rows { get { return _rows; } }
         public int Cols { get { return _cols; } }
 
         private bool _AutoNotes;
-        public bool AutoNotes { get { return _AutoNotes; } set { _AutoNotes = value; foreach (TekField field in values) field.AutoNotes = value; } }
+        public bool AutoNotes { get { return _AutoNotes; } set { _AutoNotes = value; foreach (TekField field in Fields) field.AutoNotes = value; } }
         private bool _EatExceptions;
-        public bool EatExceptions { get { return _EatExceptions; } set { _EatExceptions = value; foreach (TekField field in values) field.EatExceptions = value; } }
+        public bool EatExceptions { get { return _EatExceptions; } set { _EatExceptions = value; foreach (TekField field in Fields) field.EatExceptions = value; } }
 
         public TekBoard()
         {
-            areas = new List<TekArea>();
+            Areas = new List<TekArea>();
             _rows = 0;
             _cols = 0;
-            values = null;
+            Fields = null;
             _EatExceptions = true;
         }
 
@@ -531,25 +553,25 @@ namespace Tek1
         {
             _rows = rows;
             _cols = cols;
-            initValues(rows, cols);
+            initFields(rows, cols);
             setNeighbours();
         }
 
         public TekBoard(TekBoard board) : this(board.Rows, board.Cols)
         {
-            CopyFields(board.values);
-            areas = CopyAreas(board.areas);
+            CopyFields(board.Fields);
+            Areas = CopyAreas(board.Areas);
             EatExceptions = board.EatExceptions;
             AutoNotes = board.AutoNotes;
         }
 
-        private void initValues(int rows, int cols)
+        private void initFields(int rows, int cols)
         {
-            values = new TekField[rows, cols];
+            Fields = new TekField[rows, cols];
             for (int r = 0; r < Rows; r++)
                 for (int c = 0; c < Cols; c++)
                 {
-                    values[r, c] = new TekField(r, c);
+                    Fields[r, c] = new TekField(r, c);
                 }
             EatExceptions = _EatExceptions;
         }
@@ -566,7 +588,7 @@ namespace Tek1
                             for (int c1 = c - 1; c1 <= c + 1; c1++)
                             {
                                 if ((r1 != r || c1 != c) && c1 >= 0 && c1 < Cols)
-                                    values[r, c].AddNeighbour(values[r1, c1]);
+                                    Fields[r, c].AddNeighbour(Fields[r1, c1]);
                             }
                     }
                 }
@@ -577,7 +599,7 @@ namespace Tek1
             int[,] result = new int[Rows, Cols];
             for (int r = 0; r < Rows; r++)
                 for (int c = 0; c < Cols; c++)
-                    result[r, c] = values[r, c].Value;
+                    result[r, c] = Fields[r, c].Value;
             return result;
         }
 
@@ -586,13 +608,13 @@ namespace Tek1
         {
             for (int r = 0; r < Rows; r++)
                 for (int c = 0; c < Cols; c++)
-                    values[r, c].Value = newValues[r, c];
+                    Fields[r, c].Value = newValues[r, c];
         }
 
         public List<int>[,] CopyNotes()
         {
             List<int>[,] result = new List<int>[Rows, Cols];
-            foreach (TekField field in values)
+            foreach (TekField field in Fields)
             {
                 result[field.Row, field.Col] = field.CopyNotes();
             }
@@ -601,7 +623,7 @@ namespace Tek1
 
         public void LoadNotes(List<int>[,] notes)
         {
-            foreach (TekField field in values)
+            foreach (TekField field in Fields)
             {
                 field.LoadNotes(notes[field.Row, field.Col]);
             }
@@ -609,7 +631,7 @@ namespace Tek1
         public List<int>[,] CopyExcludedValues()
         {
             List<int>[,] result = new List<int>[Rows, Cols];
-            foreach (TekField field in values)
+            foreach (TekField field in Fields)
             {
                 result[field.Row, field.Col] = field.CopyExcludedValues();
             }
@@ -618,7 +640,7 @@ namespace Tek1
 
         public void LoadExcludedValues(List<int>[,] excludedvalues)
         {
-            foreach (TekField field in values)
+            foreach (TekField field in Fields)
             {
                 field.LoadExcludedValues(excludedvalues[field.Row, field.Col]);
             }
@@ -631,8 +653,8 @@ namespace Tek1
 
         public void ResetValues()
         {
-            foreach (TekField field in values)
-                if (!field.initial)
+            foreach (TekField field in Fields)
+                if (!field.Initial)
                 {
                     field.Value = 0;
                     field.Notes.Clear();
@@ -642,10 +664,10 @@ namespace Tek1
 
         public TekArea DefineArea(List<TekField> list)
         {
-            TekArea result = new TekArea(areas.Count());
+            TekArea result = new TekArea(Areas.Count());
             foreach (TekField f in list)
                 result.AddField(f);
-            areas.Add(result);
+            Areas.Add(result);
             return result;
         }
 
@@ -653,18 +675,18 @@ namespace Tek1
         {
             foreach (TekField field in area.Fields)
             {
-                field.area = null;
+                field.Area = null;
             }
             foreach (TekField field in area.Fields)
             {
                 field.SetInfluencers();
             }
-            areas.Remove(area);
+            Areas.Remove(area);
         }
 
         public bool IsSolved()
         {
-            foreach (TekField field in values)
+            foreach (TekField field in Fields)
                 if (field.Value == 0)
                     return false;
                 else foreach (TekField field2 in field.Influencers)
@@ -677,7 +699,7 @@ namespace Tek1
         {
             TekArea result = new TekArea(area.AreaNum);
             foreach (TekField field in area.Fields)
-                result.AddField(values[field.Row, field.Col]);
+                result.AddField(Fields[field.Row, field.Col]);
             return result;
         }
         private List<TekArea> CopyAreas(List <TekArea> areas)
@@ -692,9 +714,9 @@ namespace Tek1
         {
             foreach (TekField field in fields)
             {
-                TekField ThisField = values[field.Row, field.Col];
+                TekField ThisField = Fields[field.Row, field.Col];
                 ThisField.Value = field.Value;
-                ThisField.initial = field.initial;
+                ThisField.Initial = field.Initial;
                 ThisField.PossibleValues.Clear();
                 ThisField.PossibleValues.AddRange(field.PossibleValues);
                 ThisField.ExcludedValues.Clear();
@@ -710,8 +732,8 @@ namespace Tek1
                 for (int col = 0; col < Cols; col++)
                 {
                     result[row, col] = new TekField(row, col);
-                    result[row, col].Value = values[row, col].Value;
-                    result[row, col].initial = values[row, col].initial;
+                    result[row, col].Value = Fields[row, col].Value;
+                    result[row, col].Initial = Fields[row, col].Initial;
                 }
             return result;
         }
@@ -720,19 +742,19 @@ namespace Tek1
         {
             TekField [,] oldValues = CopyFields();
 
-            foreach (TekArea area in areas)
+            foreach (TekArea area in Areas)
                 DeleteArea(area);
-            areas.Clear();
+            Areas.Clear();
 
             _rows = rows;
             _cols = cols;
-            initValues(rows, cols);
+            initFields(rows, cols);
             setNeighbours();
             for (int row = 0; row < Math.Min(Rows-1,oldValues.GetLength(0)); row++)
                 for (int col = 0; col < Math.Min(Cols - 1, oldValues.GetLength(1)); col++)
                 {
-                    values[row, col].Value = oldValues[row, col].Value;
-                    values[row, col].initial = oldValues[row, col].initial;
+                    Fields[row, col].Value = oldValues[row, col].Value;
+                    Fields[row, col].Initial = oldValues[row, col].Initial;
                 }
         }
 
@@ -741,9 +763,9 @@ namespace Tek1
             for (int r = 0; r < _rows; r++)
                 for (int c = 0; c < _cols; c++)
                 {
-                    values[r, c].Dump(sw);
+                    Fields[r, c].Dump(sw);
                 }
-            foreach (TekArea a in areas)
+            foreach (TekArea a in Areas)
             {
                 a.Dump(sw);
             }
@@ -759,13 +781,13 @@ namespace Tek1
         {
             List<string> result = new List<string>();
             // every field is part of an area
-            foreach(TekField field in values)
+            foreach(TekField field in Fields)
             {
-                if (field.area == null)
+                if (field.Area == null)
                     result.Add(String.Format("Field ({0},{1}) is not part of an area", field.Row, field.Col));
             }
             // every area contains only adjacent fields
-            foreach(TekArea area in areas)
+            foreach(TekArea area in Areas)
             {
                 if (!area.FieldsAreConnected())
                     result.Add(String.Format("Area {0} is not valid", area.AsString()));
@@ -780,11 +802,9 @@ namespace Tek1
 
         public void SetDefaultNotes()
         {
-            foreach (TekField field in values)
+            foreach (TekField field in Fields)
                 field.SetDefaultNotes();
-        }
-
-        
+        }        
     } // TekBoard
  
 } // namespace Tek1

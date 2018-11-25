@@ -44,10 +44,10 @@ namespace Tek1
         {
             if (Board == null)
                 return;
-            int i = Board.areas.Count - 1;
+            int i = Board.Areas.Count - 1;
             while (i >= 0)
             { 
-                Board.DeleteArea(Board.areas.ElementAt(i--));
+                Board.DeleteArea(Board.Areas.ElementAt(i--));
             }
             SetBoard(Board);
         }
@@ -87,7 +87,7 @@ namespace Tek1
             Selector.MultiselectFieldView.Clear();
             if (view == null)
                 return null;
-            TekArea area = view.Field.area;
+            TekArea area = view.Field.Area;
             if (area == null)
                 return null;
             foreach (TekField field in area.Fields)
@@ -104,7 +104,7 @@ namespace Tek1
             for (int i = 0; i < sArea.PointCount; i++)
             {
                 Point P = sArea.GetPoint(i);
-                fields.Add(Board.values[TopLeft.Y + P.Y, TopLeft.X + P.X]);
+                fields.Add(Board.Fields[TopLeft.Y + P.Y, TopLeft.X + P.X]);
             }
             return fields;
         }
@@ -119,7 +119,7 @@ namespace Tek1
             if (TopLeft.X + sArea.xSize > Board.Cols || TopLeft.Y + sArea.ySize > Board.Rows)
                 return false;
             foreach (TekField field in GetAreaFields(TopLeft, sArea))
-                if (field.area != null)
+                if (field.Area != null)
                     return false;
             return true;
         }
@@ -130,7 +130,7 @@ namespace Tek1
             int r = r0, c = c0;
             while (r < Board.Rows && c < Board.Cols)
             {
-                if (Board.values[r, c].area == null)
+                if (Board.Fields[r, c].Area == null)
                     break;
                 c++;
                 if (c >= Board.Cols)
@@ -154,13 +154,13 @@ namespace Tek1
                 int r0 = P.Y, c0 = P.X;
                 int r1 = r0, c1 = c0;
                 // go to the right as far as possible and then go down as far as possible
-                while (r1 < Board.Rows && c1 < Board.Cols && Board.values[r1, c1].area == null)
+                while (r1 < Board.Rows && c1 < Board.Cols && Board.Fields[r1, c1].Area == null)
                 {
                     c1++;
                 }
                 int c = c0;
                 r1++;      
-                while (r1 < Board.Rows && c < c1 && Board.values[r1, c].area == null)
+                while (r1 < Board.Rows && c < c1 && Board.Fields[r1, c].Area == null)
                 {
                     r1++;
                 }
@@ -168,7 +168,7 @@ namespace Tek1
                 for (int r = r0; r < r1; r++)
                     for (c = c0; c < c1; c++)
                     {
-                        if (Board.values[r, c].area == null)
+                        if (Board.Fields[r, c].Area == null)
                             result.Add(new Point(c, r));
                     }
             }

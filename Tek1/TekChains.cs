@@ -32,7 +32,7 @@ namespace Tek1
 
         private void SortChains()
         {// give a more logical order to the fields (debugging purposes)
-            TekFieldComparer2 sorter = new TekFieldComparer2();
+            TekFieldComparer sorter = new TekFieldComparer();
             for (int i = 0; i < Chains.Count; i++)
                 Chains[i].Sort(sorter);
         }
@@ -42,9 +42,9 @@ namespace Tek1
             for (int r = 0; r < board.Rows; r++)
                 for (int c = 0; c < board.Cols; c++)
                 {
-                    if (board.values[r, c].Value == 0 && 
-                        board.values[r, c].PossibleValues.Count == 2)
-                        AddField(board, board.values[r, c]);
+                    if (board.Fields[r, c].Value == 0 && 
+                        board.Fields[r, c].PossibleValues.Count == 2)
+                        AddField(board, board.Fields[r, c]);
                 }
         }
 
@@ -277,25 +277,4 @@ namespace Tek1
             }
         }
     } // TekChains
-
-    public class TekFieldComparer2 : IComparer<TekField>
-    // to sort the chains to get a more logical order, mainly for debugging purposes
-    {
-        public int Compare(TekField x, TekField y)
-        {
-            if (x.Row == y.Row && x.Col == y.Col)
-                return 0;
-            else if (x.Row < y.Row)
-                return -1;
-            else if (x.Row == y.Row)
-            {
-                if (x.Col < y.Col)
-                    return -1;
-                else
-                    return 1;
-            }
-            else 
-                return 1;
-        }
-    } 
 }

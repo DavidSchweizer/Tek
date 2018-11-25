@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 
@@ -39,7 +40,7 @@ namespace Tek1
             Enabled = true;
         }
 
-        public string AsString()
+        public virtual string AsString()
         {
             if (Action == HeuristicAction.haNone)
                 return Description;                    
@@ -125,7 +126,7 @@ namespace Tek1
         {
             Reset();
             BeforeProcessingBoard(board);
-            foreach (TekField field in board.values)
+            foreach (TekField field in board.Fields)
             {
                 if (field.Value > 0 )
                     continue;
@@ -231,7 +232,7 @@ namespace Tek1
             foreach(int value in field.PossibleValues)
             {
                 bool isSingle = true;
-                foreach (TekField field2 in field.area.Fields)
+                foreach (TekField field2 in field.Area.Fields)
                     if (field2 != field && field2.ValuePossible(value))
                         isSingle = false;
                 if (isSingle)
@@ -298,7 +299,7 @@ namespace Tek1
         }
         public override bool HeuristicApplies(TekBoard board, TekField field)
         {
-            Dictionary<int, List<TekField>> FieldsPerValueInArea = field.area.GetFieldsForValues();
+            Dictionary<int, List<TekField>> FieldsPerValueInArea = field.Area.GetFieldsForValues();
             List<int> CandidateValues = new List<int>();
             List<TekField> CandidateFields = new List<TekField>();
             foreach (int value in field.PossibleValues)
@@ -434,7 +435,7 @@ namespace Tek1
 
         public override bool HeuristicApplies(TekBoard board, TekField field)
         {
-            List<TekArea> AdjacentAreas = field.area.GetAdjacentAreas();
+            List<TekArea> AdjacentAreas = field.Area.GetAdjacentAreas();
             foreach (TekArea area in AdjacentAreas)
             {
                 foreach (int value in field.PossibleValues)
@@ -679,13 +680,17 @@ namespace Tek1
     } // CompactRegionsHeuristic
 
     public class TrialAndErrorHeuristic : TekHeuristic
+    // try setting a value in a field, then see whether it can be solved using the other heuristics
+    // in most cases you reach either an impossible situation (which means the tried value must be excluded)
+    // or a solution (which means you set the tried value)
+    // in the case you've found a solution, the heuristics steps you made are saved so that you can repeat the
+    // steps without repeating the heuristics themselves
     //
     {
         public TekHeuristics heuristics;
         public TekMoves temMoves;
         const string STARTSTRING = @"startTrialAndError";
         List<TekHeuristicResult> temStoredResults;
-
 
         public TrialAndErrorHeuristic(TekHeuristics Heuristics) : base("Trial-and-Error", HeuristicAction.haSetValue)
         {
@@ -789,24 +794,26 @@ namespace Tek1
         public override bool HeuristicApplies(TekBoard board, TekField field)
         {
             HeuristicAction action = HeuristicAction.haNone;
+            HeuristicAction found = HeuristicAction.haNone;
+            HeuristicValues.Clear(); // clear any values already set
             foreach (int value in new List<int>(field.PossibleValues)) // can't use the list directly in foreach
             {
                 switch (action = TryValue(board, field, value))
                 {
                     case HeuristicAction.haSetValue:
-                        HeuristicValues.Clear(); // clear any values already set
-                        AddValue(value);
-                        break;
                     case HeuristicAction.haExcludeValue:
                         AddValue(value);
+                        found = action;
                         break;
                 }
-                if (action == HeuristicAction.haSetValue) // solution found
+                if (action == HeuristicAction.haSetValue) // solution found, so we can stop
                     break;
+                // if you haven't found a solution, it doesnt hurt to continue maybe you can find a solution
+                // or maybe you can add a second value to exclude
             }
-            if (action == HeuristicAction.haSetValue || action == HeuristicAction.haExcludeValue)
+            if (found == HeuristicAction.haSetValue || found == HeuristicAction.haExcludeValue)
             {
-                SetHeuristicAction(action);
+                SetHeuristicAction(found);
                 AddHeuristicField(field);
                 AddAffectedField(field);
             }
@@ -814,48 +821,69 @@ namespace Tek1
         }
     } // TrialAndErrorHeuristic
 
-    public class TekFieldComparer : IComparer<TekField>
-    {
-        public int Compare(TekField x, TekField y)
-        {
-            if (x.PossibleValues.Count == y.PossibleValues.Count)
-                return 0;
-            else if (x.PossibleValues.Count == 0)
-                return 1;
-            else if (y.PossibleValues.Count == 0 || x.PossibleValues.Count < y.PossibleValues.Count)
-                return -1;
-            else
-                return 1;
-        }
-    }
 
     public class BruteForceHeuristic : TekHeuristic
-    {   // simple brute force solving with backtracking making sure that IF there is a solution it will be found even in no other heuristics do
+    {   // simple brute force solving with backtracking making sure that IF there is a solution it will be found even if no other heuristics do
         // in theory trial-and-error might not find always find either a solution or an impossible situation
         //
 
-        private List<TekField> _sortedFields;
-        protected List<TekField> SortedFields { get { return _sortedFields; } }
+        private class TekFieldComparer : IComparer<TekField>
+        {
+            public int Compare(TekField x, TekField y)
+            {
+                if (x.PossibleValues.Count == y.PossibleValues.Count)
+                    return 0;
+                else if (x.PossibleValues.Count == 0)
+                    return 1;
+                else if (y.PossibleValues.Count == 0 || x.PossibleValues.Count < y.PossibleValues.Count)
+                    return -1;
+                else
+                    return 1;
+            }
+        }
+
+        private List<TekField> _SortedCandidates;
+        private List<TekField> _NonCandidates;
+        protected List<TekField> SortedCandidates { get { return _SortedCandidates; } }
+        protected List<TekField> NonCandidates { get { return _NonCandidates; } }
         private TekFieldComparer sorter;
         private TekBoard Board;
+        public TimeSpan timeElapsed;
 
+        public override string AsString()
+        {
+            return String.Format("{0} (time: {1:00}:{2:00}.{3:00})", Description, timeElapsed.Minutes, timeElapsed.Seconds, timeElapsed.Milliseconds);
+        }
         public BruteForceHeuristic() : base("Brute Force", HeuristicAction.haNone)
         {
-            _sortedFields = new List<TekField>();
+            _SortedCandidates = new List<TekField>();
+            _NonCandidates = new List<TekField>();
             sorter = new TekFieldComparer();
         }
         public void SortFields()
         {
-            SortedFields.Sort(sorter);
+            SortedCandidates.Sort(sorter);
         }
         private void SetFieldValue(TekField field, int value)
         {
             field.Value = value;
+            if (value != 0)
+            {
+                NonCandidates.Add(field);
+                SortedCandidates.Remove(field);
+            }
+            else
+            {
+                SortedCandidates.Add(field);
+                NonCandidates.Remove(field);
+            }
             SortFields();
         }
         private bool BruteForceSolve()
         {
-            TekField Field0 = SortedFields[0];
+            if (SortedCandidates.Count == 0)
+                return Board.IsSolved();
+            TekField Field0 = SortedCandidates[0];
             if (Field0.PossibleValues.Count == 0)
                 return Board.IsSolved();
             for (int i = 0; i < Field0.PossibleValues.Count; i++)
@@ -873,19 +901,23 @@ namespace Tek1
         protected override void BeforeProcessingBoard(TekBoard board)
         {
             Board = new TekBoard(board);
-            SortedFields.Clear();
-            foreach (TekField field in Board.values)
-                SortedFields.Add(field);
+            SortedCandidates.Clear();
+            foreach (TekField field in Board.Fields)
+                if (field.Value == 0)
+                    SortedCandidates.Add(field);
             SortFields();
         }
         public override bool HeuristicApplies(TekBoard board, TekField field)
         {
+            Stopwatch s = Stopwatch.StartNew();
             if (BruteForceSolve())
             {
+                s.Stop();
+                timeElapsed = s.Elapsed;
                 board.LoadValues(Board.CopyValues());
                 return true;
             }
-            return false; // can't be solved
+            return false; // can't be solved            
         }
     } // BruteForceHeuristic
 

@@ -91,7 +91,7 @@ namespace Tek1
         protected bool IsTriplet(TekField field1, TekField field2, TekField field3, bool inSameArea = true)
         // hidden triplets are ignored
         {
-            if (inSameArea && (field1.area != field2.area || field1.area != field3.area || field2.area != field3.area))
+            if (inSameArea && (field1.Area != field2.Area || field1.Area != field3.Area || field2.Area != field3.Area))
                 return false;
             if (field1.TotalPossibleValues(field2, field3).Count != 3)
                 return false;
