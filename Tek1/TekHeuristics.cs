@@ -801,6 +801,10 @@ namespace Tek1
                 switch (action = TryValue(board, field, value))
                 {
                     case HeuristicAction.haSetValue:
+                        HeuristicValues.Clear();
+                        AddValue(value);
+                        found = action;
+                        break;
                     case HeuristicAction.haExcludeValue:
                         AddValue(value);
                         found = action;
