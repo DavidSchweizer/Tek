@@ -924,7 +924,7 @@ namespace Tek1
                 _tileSize = MAXTILESIZE;
             else
                 if (value < MINTILESIZE)
-                value = MINTILESIZE;
+                _tileSize = MINTILESIZE;
             else
                 _tileSize = value;
             FontSize = Convert.ToInt32(TileSize * 0.7);
